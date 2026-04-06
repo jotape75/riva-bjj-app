@@ -1,1 +1,68 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#c0392b" />
+  <title>Riva BJJ</title>
 
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body>
+  <header class="hdr">
+    <div class="hdr-inner">
+      <img class="logo" src="./icon-512.png" alt="Riva BJJ" />
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="card" id="cardLogin">
+      <h1 class="title">Acesso do Aluno</h1>
+
+      <label class="label" for="cpf">CPF</label>
+      <input id="cpf" class="input" inputmode="numeric" autocomplete="off" placeholder="Digite seu CPF" maxlength="14" />
+
+      <button class="btn primary" id="btnLogin">Entrar</button>
+
+      <p class="msg err" id="err"></p>
+      <p class="msg info" id="info"></p>
+    </section>
+
+    <section class="card hidden" id="cardAluno">
+      <div class="row">
+        <div>
+          <div class="name" id="aNome">—</div>
+          <div class="badge">ATIVO</div>
+        </div>
+        <button class="btn ghost" id="btnSair">Sair</button>
+      </div>
+
+      <div class="kv">
+        <div class="k">Faixa</div><div class="v" id="aFaixa">—</div>
+        <div class="k">Grau</div><div class="v" id="aGrau">—</div>
+        <div class="k">Aulas no grau</div><div class="v" id="aAulas">—</div>
+        <div class="k">Último grau em</div><div class="v" id="aData">—</div>
+      </div>
+
+      <div class="status" id="aStatus">—</div>
+
+      <button class="btn secondary" id="btnAtualizar">Atualizar</button>
+    </section>
+  </main>
+
+  <nav class="bnav">
+    <button class="navbtn on" id="navHome">Início</button>
+    <button class="navbtn" id="navReload">Recarregar</button>
+  </nav>
+
+  <script src="./app.js"></script>
+  <script>
+    // registra service worker
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js").catch(()=>{});
+    }
+  </script>
+</body>
+</html>
