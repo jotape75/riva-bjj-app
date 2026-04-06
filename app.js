@@ -27,11 +27,45 @@ function renderAluno(a){
   el("aStatus").textContent = a.statusExame || a.status || "—";
 }
 
-async function apiLoginCpf(cpf){
-  const url = `${API_BASE}?action=loginCpf&cpf=${encodeURIComponent(cpf)}`;
-  const res = await fetch(url, { method:"GET", mode:"cors", cache:"no-store" });
-  if (!res.ok) throw new Error(`Erro HTTP ${res.status}`);
-  return await res.json();
+/**
+ * ✅ JSONP (evita CORS do Apps Script)
+ * Espera resposta do Apps Script no formato:
+ *   callback({ ok: true, data: {...} })
+ */
+function apiLoginCpf(cpf){
+  return new Promise((resolve, reject) => {
+    const cbName = "__rv_cb_" + Date.now() + "_" + Math.floor(Math.random() * 1e6);
+
+    const cleanup = () => {
+      try { delete window[cbName]; } catch {}
+      if (script && script.parentNode) script.parentNode.removeChild(script);
+      if (timer) clearTimeout(timer);
+    };
+
+    window[cbName] = (resp) => {
+      cleanup();
+      resolve(resp);
+    };
+
+    const url = `${API_BASE}?action=loginCpf&cpf=${encodeURIComponent(cpf)}&callback=${encodeURIComponent(cbName)}`;
+
+    const script = document.createElement("script");
+    script.src = url;
+    script.async = true;
+
+    script.onerror = () => {
+      cleanup();
+      reject(new Error("Falha ao carregar API (JSONP)."));
+    };
+
+    // timeout de segurança
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new Error("Tempo esgotado ao consultar a API."));
+    }, 15000);
+
+    document.head.appendChild(script);
+  });
 }
 
 async function login(){
@@ -46,13 +80,18 @@ async function login(){
   }
 
   try {
-    const data = await apiLoginCpf(cpf);
-    if (data.erro) {
+    const resp = await apiLoginCpf(cpf);
+
+    // resp = { ok: true|false, data: {...} }  (ou { ok:false, erro:"..." })
+    const data = resp && resp.data ? resp.data : null;
+
+    if (!resp || resp.ok !== true || (data && data.erro)) {
       showAlunoCard(false);
       setInfo("");
-      setErr(data.erro);
+      setErr((data && data.erro) ? data.erro : (resp && resp.erro) ? resp.erro : "Erro ao autenticar.");
       return;
     }
+
     localStorage.setItem("rv_cpf", cpf);
     localStorage.setItem("rv_user", JSON.stringify(data));
     renderAluno(data);
