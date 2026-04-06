@@ -1,4 +1,4 @@
-const API_BASE = "https://script.google.com/macros/s/AKfycbyBLlVjEvO35RufIh6pH9XOOTDXuj_BMrNHAJfdw9I-reScWX31dsVdOFJna1ZbJVqX/exec";
+const API_BASE = "https://script.google.com/macros/s/AKfycbyJ8HXBfo48xctXE7G96-kyg8bcuDmuWrS8VqeOuVL77WGmuJXsuQoJCNr4hALEdh-1fw/exec";
 
 const el = (id) => document.getElementById(id);
 
