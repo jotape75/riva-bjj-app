@@ -104,7 +104,7 @@ body{
 .msg.err{color:#ff6b6b}
 .msg.info{color:var(--muted)}
 
-.hidden{display:none}
+.hidden{display:none !important}
 
 /* ALUNO */
 .row{
