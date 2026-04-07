@@ -6,7 +6,7 @@ RivaBJJ frontend app
 - **HTTPS obrigatório** – o app está hospedado no GitHub Pages (HTTPS já ativo).
 - **Biometria obrigatória** – o app exige WebAuthn/Passkeys para desbloquear.  
   Dispositivos compatíveis:
-  - iPhone com **iOS 16 ou superior** (Safari ou Chrome)
+  - iPhone com **iOS 16 ou superior** (Safari — no iOS todos os navegadores usam o motor Safari/WebKit)
   - Android com biometria ativada e navegador atualizado (Chrome/Firefox)
 
 ## Como resetar a biometria

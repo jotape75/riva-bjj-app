@@ -4,6 +4,15 @@ const SEMANA_TTL     = 30000;  // 30 s
 const PRESENCA_TTL   = 15000;  // 15 s
 const RP_NAME        = 'Riva BJJ';
 
+/* ── localStorage key constants ──────────────────────────────── */
+const LS_EMAIL        = 'rv_email';
+const LS_NOME         = 'rv_nome';
+const LS_PROF_EMAIL   = 'rv_prof_email';
+const LS_PROF_NOME    = 'rv_prof_nome';
+// Biometric keys – intentionally kept on logout so next login skips re-registration
+const LS_CREDENTIAL   = 'rv_credentialId';
+const LS_BIO_ATIVADA  = 'rv_biometria_ativada';
+
 /* ── JSONP helper ─────────────────────────────────────────────── */
 function apiCall(params) {
   return new Promise((resolve, reject) => {
@@ -77,13 +86,13 @@ async function bioRegister(email) {
       attestation: 'none',
     },
   });
-  localStorage.setItem('rv_credentialId',      b64urlEncode(cred.rawId));
-  localStorage.setItem('rv_biometria_ativada', '1');
+  localStorage.setItem(LS_CREDENTIAL,      b64urlEncode(cred.rawId));
+  localStorage.setItem(LS_BIO_ATIVADA, '1');
 }
 
 async function bioAuthenticate() {
   const challenge  = crypto.getRandomValues(new Uint8Array(32));
-  const credIdStr  = localStorage.getItem('rv_credentialId');
+  const credIdStr  = localStorage.getItem(LS_CREDENTIAL);
   const allowCreds = credIdStr
     ? [{ type: 'public-key', id: b64urlDecode(credIdStr) }]
     : [];
@@ -121,7 +130,7 @@ async function onBioAction() {
   $('btnBioAction').disabled = true;
   $('bioErr').textContent    = '';
   $('bioInfo').textContent   = 'Aguardando biometria…';
-  const email = localStorage.getItem('rv_email') || localStorage.getItem('rv_prof_email') || '';
+  const email = localStorage.getItem(LS_EMAIL) || localStorage.getItem(LS_PROF_EMAIL) || '';
   try {
     if (bioAction === 'register') {
       await bioRegister(email);
@@ -139,10 +148,10 @@ async function onBioAction() {
 }
 
 function afterBioSuccess() {
-  const email  = localStorage.getItem('rv_email');
-  const nome   = localStorage.getItem('rv_nome');
-  const pEmail = localStorage.getItem('rv_prof_email');
-  const pNome  = localStorage.getItem('rv_prof_nome');
+  const email  = localStorage.getItem(LS_EMAIL);
+  const nome   = localStorage.getItem(LS_NOME);
+  const pEmail = localStorage.getItem(LS_PROF_EMAIL);
+  const pNome  = localStorage.getItem(LS_PROF_NOME);
 
   if (pEmail && pNome) {
     profData = { nome: pNome, email: pEmail };
@@ -170,17 +179,17 @@ function afterBioSuccess() {
 function onBioSwitchAccount() {
   alunoData = null;
   profData  = null;
-  localStorage.removeItem('rv_email');
-  localStorage.removeItem('rv_nome');
-  localStorage.removeItem('rv_prof_email');
-  localStorage.removeItem('rv_prof_nome');
+  localStorage.removeItem(LS_EMAIL);
+  localStorage.removeItem(LS_NOME);
+  localStorage.removeItem(LS_PROF_EMAIL);
+  localStorage.removeItem(LS_PROF_NOME);
   hide('cardBioLock');
   showTab('Home');
 }
 
 function afterLoginSuccess() {
-  const bioOk  = localStorage.getItem('rv_biometria_ativada') === '1';
-  const credId = localStorage.getItem('rv_credentialId');
+  const bioOk  = localStorage.getItem(LS_BIO_ATIVADA) === '1';
+  const credId = localStorage.getItem(LS_CREDENTIAL);
   if (bioOk && credId) {
     afterBioSuccess();
   } else {
@@ -429,7 +438,7 @@ async function fazerCheckin() {
   try {
     const r = await apiCall({
       action:  'checkin',
-      email:   localStorage.getItem('rv_email') || '',
+      email:   localStorage.getItem(LS_EMAIL) || '',
       data:    aSelSessao.data,
       horario: aSelSessao.horario,
       treino:  aSelSessao.nome,
@@ -451,7 +460,7 @@ async function deletarCheckin() {
   try {
     const r = await apiCall({
       action:  'deletarCheckin',
-      email:   localStorage.getItem('rv_email') || '',
+      email:   localStorage.getItem(LS_EMAIL) || '',
       data:    aSelSessao.data,
       horario: aSelSessao.horario,
     });
@@ -471,7 +480,7 @@ async function profAprovar(linha, sessao, btn) {
   try {
     const r = await apiCall({
       action:    'aprovar',
-      emailProf: localStorage.getItem('rv_prof_email') || '',
+      emailProf: localStorage.getItem(LS_PROF_EMAIL) || '',
       linha,
     });
     if (r.ok) {
@@ -489,7 +498,7 @@ async function profReprovar(linha, sessao, btn) {
   try {
     const r = await apiCall({
       action:    'reprovar',
-      emailProf: localStorage.getItem('rv_prof_email') || '',
+      emailProf: localStorage.getItem(LS_PROF_EMAIL) || '',
       linha,
     });
     if (r.ok) {
@@ -524,8 +533,8 @@ async function loginGeneric() {
     const rProf = await apiCall({ action: 'profLoginEmail', email });
     if (rProf.ok) {
       profData = rProf.data;
-      localStorage.setItem('rv_prof_email', email);
-      localStorage.setItem('rv_prof_nome',  profData.nome || '');
+      localStorage.setItem(LS_PROF_EMAIL, email);
+      localStorage.setItem(LS_PROF_NOME,  profData.nome || '');
       semanaCache = null;
       pSelDia = null; pSelSessao = null;
       $('info').textContent = '';
@@ -536,8 +545,8 @@ async function loginGeneric() {
     const r = await apiCall({ action: 'loginEmail', email });
     if (!r.ok) { $('err').textContent = r.erro || 'Email não encontrado.'; $('info').textContent = ''; return; }
     alunoData = r.data;
-    localStorage.setItem('rv_email',  email);
-    localStorage.setItem('rv_nome', alunoData.nome || '');
+    localStorage.setItem(LS_EMAIL,  email);
+    localStorage.setItem(LS_NOME, alunoData.nome || '');
     preencherCard(alunoData);
     $('info').textContent = '';
     afterLoginSuccess();
@@ -554,8 +563,8 @@ function logout() {
   semanaCache = null;
   presenceCache = {};
   aSelDia = null; aSelSessao = null;
-  localStorage.removeItem('rv_email');
-  localStorage.removeItem('rv_nome');
+  localStorage.removeItem(LS_EMAIL);
+  localStorage.removeItem(LS_NOME);
   // Keep rv_credentialId and rv_biometria_ativada so next login skips re-registration
   $('email').value = '';
   hide('mainNav');
@@ -568,8 +577,8 @@ function profLogout() {
   semanaCache  = null;
   presenceCache = {};
   pSelDia = null; pSelSessao = null;
-  localStorage.removeItem('rv_prof_email');
-  localStorage.removeItem('rv_prof_nome');
+  localStorage.removeItem(LS_PROF_EMAIL);
+  localStorage.removeItem(LS_PROF_NOME);
   // Keep rv_credentialId and rv_biometria_ativada so next login skips re-registration
   hide('cardProf');
   showTab('Home');
@@ -594,7 +603,7 @@ function init() {
   $('email').addEventListener('keydown', e => { if (e.key === 'Enter') loginGeneric(); });
   $('btnSair').addEventListener('click', logout);
   $('btnAtualizar').addEventListener('click', async () => {
-    const e = localStorage.getItem('rv_email');
+    const e = localStorage.getItem(LS_EMAIL);
     if (!e) return;
     const r = await apiCall({ action: 'loginEmail', email: e }).catch(() => null);
     if (r && r.ok) { alunoData = r.data; preencherCard(alunoData); }
@@ -610,12 +619,12 @@ function init() {
   $('navAgendar').addEventListener('click', () => showTab('Agendar'));
 
   // 6) Check for existing session and decide initial screen
-  const email  = localStorage.getItem('rv_email');
-  const nome   = localStorage.getItem('rv_nome');
-  const pEmail = localStorage.getItem('rv_prof_email');
-  const pNome  = localStorage.getItem('rv_prof_nome');
-  const bioOk  = localStorage.getItem('rv_biometria_ativada') === '1';
-  const credId = localStorage.getItem('rv_credentialId');
+  const email  = localStorage.getItem(LS_EMAIL);
+  const nome   = localStorage.getItem(LS_NOME);
+  const pEmail = localStorage.getItem(LS_PROF_EMAIL);
+  const pNome  = localStorage.getItem(LS_PROF_NOME);
+  const bioOk  = localStorage.getItem(LS_BIO_ATIVADA) === '1';
+  const credId = localStorage.getItem(LS_CREDENTIAL);
 
   if (email && nome) {
     alunoData = { nome };
