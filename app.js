@@ -734,6 +734,16 @@ function preencherCard(d) {
   $('aAulas').textContent = (d.aulasNoGrau != null) ? `${d.aulasNoGrau} / ${d.metaGrau}` : '—';
   $('aData').textContent  = d.dataGrau || '—';
   $('aStatus').textContent = d.statusExame || d.status || '—';
+
+  // Stats cards
+  if (d.aulasNoGrau != null) {
+    $('statAulasNum').textContent = d.aulasNoGrau;
+    const restantes = (d.metaGrau != null) ? Math.max(0, d.metaGrau - d.aulasNoGrau) : '—';
+    $('statRestantesNum').textContent = restantes;
+  } else {
+    $('statAulasNum').textContent = '—';
+    $('statRestantesNum').textContent = '—';
+  }
 }
 
 /* ── Generic login ────────────────────────────────────────────── */
