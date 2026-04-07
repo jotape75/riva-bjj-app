@@ -69,6 +69,7 @@ function showTab(tab) {
   ['cardLogin', 'cardAluno', 'cardAgendar', 'cardProf'].forEach(hide);
   ['navHome', 'navAgendar'].forEach(id => $(id).classList.remove('on'));
 
+  // Show nav only for logged-in students; professors have no bottom nav (handled in showProfPage)
   if (alunoData) show('mainNav'); else hide('mainNav');
 
   if (tab === 'Home') {
@@ -370,12 +371,13 @@ async function loginGeneric() {
       localStorage.setItem('rv_prof_nome', profData.nome || '');
       semanaCache = null;
       pSelDia = null; pSelSessao = null;
+      $('info').textContent = '';
       showProfPage();
       return;
     }
     // Try student
     const r = await apiCall({ action: 'loginCpf', cpf });
-    if (!r.ok) { $('err').textContent = r.erro || 'Não encontrado.'; $('info').textContent = ''; return; }
+    if (!r.ok) { $('err').textContent = r.erro || 'CPF não encontrado.'; $('info').textContent = ''; return; }
     alunoData = r.data;
     localStorage.setItem('rv_cpf',  cpf);
     localStorage.setItem('rv_nome', alunoData.nome || '');
