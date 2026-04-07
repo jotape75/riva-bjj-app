@@ -1,5 +1,7 @@
 const API_BASE       = 'https://script.google.com/macros/s/AKfycbyBLlVjEvO35RufIh6pH9XOOTDXuj_BMrNHAJfdw9I-reScWX31dsVdOFJna1ZbJVqX/exec';
 const API_TIMEOUT_MS = 15000;
+const SEMANA_TTL     = 30000;  // 30 s
+const PRESENCA_TTL   = 15000;  // 15 s
 
 /* ── JSONP helper ─────────────────────────────────────────────── */
 function apiCall(params) {
@@ -30,53 +32,88 @@ function fmtCpf(v) {
 }
 
 /* ── State ────────────────────────────────────────────────────── */
-let alunoData   = null;
-let profData    = null;
-let semanaCache = null;
-let aSelDia     = null;
-let aSelSessao  = null;
-let pSelDia     = null;
-let pSelSessao  = null;
+let alunoData    = null;
+let profData     = null;
+let semanaCache  = null;   // { ts, data }
+let presenceCache = {};    // { "data|horario": { ts, data } }
+let aSelDia      = null;
+let aSelSessao   = null;
+let pSelDia      = null;
+let pSelSessao   = null;
+
+/* ── Cache helpers ────────────────────────────────────────────── */
+function getCachedSemana() {
+  if (semanaCache && Date.now() - semanaCache.ts < SEMANA_TTL) return semanaCache.data;
+  return null;
+}
+
+function presencaCacheKey(data, horario) { return data + '|' + horario; }
+
+function getCachedPresenca(data, horario) {
+  const c = presenceCache[presencaCacheKey(data, horario)];
+  if (c && Date.now() - c.ts < PRESENCA_TTL) return c.data;
+  return null;
+}
+
+function setCachedPresenca(data, horario, lista) {
+  presenceCache[presencaCacheKey(data, horario)] = { ts: Date.now(), data: lista };
+}
+
+function invalidatePresenca(data, horario) {
+  delete presenceCache[presencaCacheKey(data, horario)];
+}
 
 /* ── Navigation ───────────────────────────────────────────────── */
 function showTab(tab) {
   ['cardLogin', 'cardAluno', 'cardAgendar', 'cardProf'].forEach(hide);
-  ['navHome', 'navAgendar', 'navProf'].forEach(id => $(id).classList.remove('on'));
+  ['navHome', 'navAgendar'].forEach(id => $(id).classList.remove('on'));
 
   if (tab === 'Home') {
     $('navHome').classList.add('on');
+    if (profData) { showProfPage(); return; }
     alunoData ? show('cardAluno') : show('cardLogin');
   } else if (tab === 'Agendar') {
     $('navAgendar').classList.add('on');
     if (!alunoData) { show('cardLogin'); return; }
     show('cardAgendar');
     loadSemana('aluno');
-  } else if (tab === 'Prof') {
-    $('navProf').classList.add('on');
-    show('cardProf');
-    if (profData) {
-      hide('profLoginBox'); show('profLogadoBox');
-      loadSemana('prof');
-    } else {
-      show('profLoginBox'); hide('profLogadoBox');
-    }
   }
+}
+
+function showProfPage() {
+  ['cardLogin', 'cardAluno', 'cardAgendar'].forEach(hide);
+  show('cardProf');
+  hide('mainNav');
+  $('pNome').textContent = profData ? (profData.nome || 'Professor') : '—';
+  loadSemana('prof');
 }
 
 /* ── Week schedule ────────────────────────────────────────────── */
 async function loadSemana(ctx) {
-  if (semanaCache) { renderDias(ctx, semanaCache); return; }
+  const cached = getCachedSemana();
+  if (cached) { renderDias(ctx, cached); return; }
+
+  const rowId = ctx === 'prof' ? 'profDiasRow' : 'diasRow';
+  $(rowId).innerHTML = '<p class="loading">Carregando…</p>';
   try {
     const r = await apiCall({ action: 'treinosSemana' });
-    if (r.ok) { semanaCache = r.data; renderDias(ctx, semanaCache); }
-  } catch (e) { /* silently ignore */ }
+    if (r.ok) {
+      semanaCache = { ts: Date.now(), data: r.data };
+      renderDias(ctx, r.data);
+    } else {
+      $(rowId).innerHTML = '<p class="msg err">Erro ao carregar treinos.</p>';
+    }
+  } catch (e) {
+    $(rowId).innerHTML = '<p class="msg err">Erro de conexão.</p>';
+  }
 }
 
 function renderDias(ctx, semana) {
   const rowId = ctx === 'prof' ? 'profDiasRow' : 'diasRow';
   const row   = $(rowId);
   row.innerHTML = '';
-  semana.filter(d => d.treinos && d.treinos.length).forEach(dia => {
+  const dias = semana.filter(d => d.treinos && d.treinos.length);
+  dias.forEach(dia => {
     const btn = document.createElement('button');
     btn.className = 'dia-btn';
     btn.innerHTML =
@@ -89,8 +126,17 @@ function renderDias(ctx, semana) {
     });
     row.appendChild(btn);
   });
-  if (ctx === 'prof') { hide('profSessoesLista'); hide('profPresencaBox'); }
-  else                { hide('sessoesLista');     hide('presencaBox');     }
+
+  // Prefetch: auto-select first available day
+  if (dias.length > 0) {
+    row.children[0].classList.add('active');
+    if (ctx === 'prof') { pSelDia = dias[0]; pSelSessao = null; hide('profPresencaBox'); }
+    else                { aSelDia = dias[0]; aSelSessao = null; hide('presencaBox'); }
+    renderSessoes(ctx, dias[0]);
+  } else {
+    if (ctx === 'prof') { hide('profSessoesLista'); hide('profPresencaBox'); }
+    else                { hide('sessoesLista');     hide('presencaBox'); }
+  }
 }
 
 function selectDia(ctx, dia) {
@@ -119,6 +165,15 @@ function renderSessoes(ctx, dia) {
     lista.appendChild(card);
   });
   show(listaId);
+
+  // Prefetch: auto-select first session
+  if (dia.treinos.length > 0) {
+    lista.children[0].classList.add('active');
+    const t = dia.treinos[0];
+    const sessao = { data: dia.data, horario: t.horario, nome: t.nome };
+    if (ctx === 'prof') pSelSessao = sessao; else aSelSessao = sessao;
+    loadPresenca(ctx, sessao);
+  }
 }
 
 /* ── Presence list ────────────────────────────────────────────── */
@@ -128,13 +183,22 @@ async function loadPresenca(ctx, sessao) {
   const tituloId = ctx === 'prof' ? 'profPresencaTitulo' : 'presencaTitulo';
 
   $(tituloId).textContent = `${sessao.data.slice(0, 5)} · ${sessao.horario} · ${sessao.nome}`;
+  show(boxId);
+
+  // Serve from cache if fresh
+  const cached = getCachedPresenca(sessao.data, sessao.horario);
+  if (cached) {
+    renderPresencaLista(ctx, cached, sessao);
+    return;
+  }
+
   $(listaId).innerHTML = '<p class="loading">Carregando…</p>';
   if (ctx !== 'prof') { hide('btnCheckin'); hide('btnDeletarCheckin'); }
-  show(boxId);
 
   try {
     const r = await apiCall({ action: 'listaPresenca', data: sessao.data, horario: sessao.horario });
     if (!r.ok) { $(listaId).innerHTML = `<p class="msg err">${r.erro || 'Erro'}</p>`; return; }
+    setCachedPresenca(sessao.data, sessao.horario, r.data || []);
     renderPresencaLista(ctx, r.data || [], sessao);
   } catch (e) {
     $(listaId).innerHTML = '<p class="msg err">Erro de conexão.</p>';
@@ -172,10 +236,10 @@ function renderPresencaLista(ctx, lista, sessao) {
     }).join('');
 
     if (ctx === 'prof') {
-      el.querySelectorAll('.btn-ap.aprovar').forEach(b =>
-        b.addEventListener('click', () => profAprovar(+b.dataset.linha, sessao)));
-      el.querySelectorAll('.btn-ap.reprovar').forEach(b =>
-        b.addEventListener('click', () => profReprovar(+b.dataset.linha, sessao)));
+      el.querySelectorAll('.btn-ap.aprovar').forEach(btn =>
+        btn.addEventListener('click', () => profAprovar(+btn.dataset.linha, sessao, btn)));
+      el.querySelectorAll('.btn-ap.reprovar').forEach(btn =>
+        btn.addEventListener('click', () => profReprovar(+btn.dataset.linha, sessao, btn)));
     }
   }
 
@@ -204,8 +268,12 @@ async function fazerCheckin() {
       horario: aSelSessao.horario,
       treino:  aSelSessao.nome,
     });
-    if (r.ok) loadPresenca('aluno', aSelSessao);
-    else alert(r.erro || 'Erro ao fazer check-in.');
+    if (r.ok) {
+      invalidatePresenca(aSelSessao.data, aSelSessao.horario);
+      loadPresenca('aluno', aSelSessao);
+    } else {
+      alert(r.erro || 'Erro ao fazer check-in.');
+    }
   } catch (e) { alert('Erro de conexão.'); }
   finally { $('btnCheckin').disabled = false; }
 }
@@ -221,35 +289,51 @@ async function deletarCheckin() {
       data:    aSelSessao.data,
       horario: aSelSessao.horario,
     });
-    if (r.ok) loadPresenca('aluno', aSelSessao);
-    else alert(r.erro || 'Erro ao cancelar check-in.');
+    if (r.ok) {
+      invalidatePresenca(aSelSessao.data, aSelSessao.horario);
+      loadPresenca('aluno', aSelSessao);
+    } else {
+      alert(r.erro || 'Erro ao cancelar check-in.');
+    }
   } catch (e) { alert('Erro de conexão.'); }
   finally { $('btnDeletarCheckin').disabled = false; }
 }
 
 /* ── Professor approve / reject ───────────────────────────────── */
-async function profAprovar(linha, sessao) {
+async function profAprovar(linha, sessao, btn) {
+  btn.disabled = true;
   try {
     const r = await apiCall({
       action:   'aprovar',
       cpfProf:  localStorage.getItem('rv_prof_cpf') || '',
       linha,
     });
-    if (r.ok) loadPresenca('prof', sessao);
-    else alert(r.erro || 'Erro ao aprovar.');
+    if (r.ok) {
+      invalidatePresenca(sessao.data, sessao.horario);
+      loadPresenca('prof', sessao);
+    } else {
+      alert(r.erro || 'Erro ao aprovar.');
+    }
   } catch (e) { alert('Erro de conexão.'); }
+  finally { btn.disabled = false; }
 }
 
-async function profReprovar(linha, sessao) {
+async function profReprovar(linha, sessao, btn) {
+  btn.disabled = true;
   try {
     const r = await apiCall({
       action:   'reprovar',
       cpfProf:  localStorage.getItem('rv_prof_cpf') || '',
       linha,
     });
-    if (r.ok) loadPresenca('prof', sessao);
-    else alert(r.erro || 'Erro ao reprovar.');
+    if (r.ok) {
+      invalidatePresenca(sessao.data, sessao.horario);
+      loadPresenca('prof', sessao);
+    } else {
+      alert(r.erro || 'Erro ao reprovar.');
+    }
   } catch (e) { alert('Erro de conexão.'); }
+  finally { btn.disabled = false; }
 }
 
 /* ── Student card ─────────────────────────────────────────────── */
@@ -288,6 +372,8 @@ async function login() {
 function logout() {
   alunoData   = null;
   semanaCache = null;
+  presenceCache = {};
+  aSelDia = null; aSelSessao = null;
   localStorage.removeItem('rv_cpf');
   localStorage.removeItem('rv_nome');
   $('cpf').value = '';
@@ -306,9 +392,9 @@ async function profLogin() {
     profData = r.data;
     localStorage.setItem('rv_prof_cpf',  cpf);
     localStorage.setItem('rv_prof_nome', profData.nome || '');
-    $('pNome').textContent = profData.nome || 'Professor';
-    hide('profLoginBox'); show('profLogadoBox');
-    loadSemana('prof');
+    semanaCache = null;
+    pSelDia = null; pSelSessao = null;
+    showProfPage();
   } catch (e) {
     $('profErr').textContent = 'Erro de conexão.';
   } finally {
@@ -317,12 +403,17 @@ async function profLogin() {
 }
 
 function profLogout() {
-  profData    = null;
-  semanaCache = null;
+  profData     = null;
+  semanaCache  = null;
+  presenceCache = {};
+  pSelDia = null; pSelSessao = null;
   localStorage.removeItem('rv_prof_cpf');
   localStorage.removeItem('rv_prof_nome');
   $('profCpf').value = '';
-  show('profLoginBox'); hide('profLogadoBox');
+  $('profErr').textContent = '';
+  hide('cardProf');
+  show('mainNav');
+  showTab('Home');
 }
 
 /* ── Init ─────────────────────────────────────────────────────── */
@@ -343,7 +434,6 @@ function init() {
   const pNome = localStorage.getItem('rv_prof_nome');
   if (pCpf && pNome) {
     profData = { nome: pNome, cpf: pCpf };
-    $('pNome').textContent = pNome;
   }
 
   // CPF input formatting
@@ -371,9 +461,12 @@ function init() {
   // Bottom nav
   $('navHome').addEventListener('click',    () => showTab('Home'));
   $('navAgendar').addEventListener('click', () => showTab('Agendar'));
-  $('navProf').addEventListener('click',    () => showTab('Prof'));
 
-  showTab('Home');
+  if (profData) {
+    showProfPage();
+  } else {
+    showTab('Home');
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);

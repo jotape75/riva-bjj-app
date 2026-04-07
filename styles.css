@@ -349,3 +349,9 @@ body{
 
 /* ── UTILITIES ───────────────────────────────────────────────────── */
 .mb8{margin-bottom:8px}
+
+.divider{
+  border:none;
+  border-top:1px solid var(--border);
+  margin:16px 0;
+}
