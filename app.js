@@ -148,6 +148,7 @@ async function onBioAction() {
 }
 
 function afterBioSuccess() {
+  hide('cardBioLock'); // hide biometrics card after successful unlock/register
   const email  = localStorage.getItem(LS_EMAIL);
   const nome   = localStorage.getItem(LS_NOME);
   const pEmail = localStorage.getItem(LS_PROF_EMAIL);
