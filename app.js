@@ -346,21 +346,39 @@ function preencherCard(d) {
   $('aStatus').textContent = d.statusExame || d.status || '—';
 }
 
-/* ── Student login / logout ───────────────────────────────────── */
-async function login() {
+/* ── Generic login (professor first, else student) ────────────── */
+async function loginGeneric() {
   const cpf = $('cpf').value.replace(/\D/g, '');
   if (cpf.length !== 11) { $('err').textContent = 'CPF inválido.'; return; }
-  $('err').textContent  = '';
-  $('info').textContent = 'Buscando…';
+  $('err').textContent   = '';
+  $('info').textContent  = 'Buscando…';
   $('btnLogin').disabled = true;
   try {
-    const r = await apiCall({ action: 'loginCpf', cpf });
-    if (!r.ok) { $('err').textContent = r.erro || 'Não encontrado.'; $('info').textContent = ''; return; }
-    alunoData = r.data;
-    localStorage.setItem('rv_cpf',  cpf);
-    localStorage.setItem('rv_nome', alunoData.nome || '');
-    preencherCard(alunoData);
-    showTab('Home');
+    // 1) try professor first
+    let r = await apiCall({ action: 'profLogin', cpf }).catch(() => null);
+    if (r && r.ok) {
+      profData = r.data;
+      localStorage.setItem('rv_prof_cpf',  cpf);
+      localStorage.setItem('rv_prof_nome', profData.nome || '');
+      semanaCache = null;
+      presenceCache = {};
+      pSelDia = null; pSelSessao = null;
+      showProfPage();
+      return;
+    }
+
+    // 2) else try student
+    r = await apiCall({ action: 'loginCpf', cpf }).catch(() => null);
+    if (r && r.ok) {
+      alunoData = r.data;
+      localStorage.setItem('rv_cpf',  cpf);
+      localStorage.setItem('rv_nome', alunoData.nome || '');
+      preencherCard(alunoData);
+      showTab('Home');
+      return;
+    }
+
+    $('err').textContent = (r && r.erro) ? r.erro : 'CPF não encontrado.';
   } catch (e) {
     $('err').textContent = 'Erro de conexão.';
   } finally {
@@ -380,28 +398,7 @@ function logout() {
   showTab('Home');
 }
 
-/* ── Professor login / logout ─────────────────────────────────── */
-async function profLogin() {
-  const cpf = $('profCpf').value.replace(/\D/g, '');
-  if (cpf.length !== 11) { $('profErr').textContent = 'CPF inválido.'; return; }
-  $('profErr').textContent   = '';
-  $('btnProfLogin').disabled = true;
-  try {
-    const r = await apiCall({ action: 'profLogin', cpf });
-    if (!r.ok) { $('profErr').textContent = r.erro || 'Não encontrado.'; return; }
-    profData = r.data;
-    localStorage.setItem('rv_prof_cpf',  cpf);
-    localStorage.setItem('rv_prof_nome', profData.nome || '');
-    semanaCache = null;
-    pSelDia = null; pSelSessao = null;
-    showProfPage();
-  } catch (e) {
-    $('profErr').textContent = 'Erro de conexão.';
-  } finally {
-    $('btnProfLogin').disabled = false;
-  }
-}
-
+/* ── Professor logout ─────────────────────────────────────────── */
 function profLogout() {
   profData     = null;
   semanaCache  = null;
@@ -409,8 +406,6 @@ function profLogout() {
   pSelDia = null; pSelSessao = null;
   localStorage.removeItem('rv_prof_cpf');
   localStorage.removeItem('rv_prof_nome');
-  $('profCpf').value = '';
-  $('profErr').textContent = '';
   hide('cardProf');
   show('mainNav');
   showTab('Home');
@@ -438,12 +433,10 @@ function init() {
 
   // CPF input formatting
   $('cpf').addEventListener('input', e => { e.target.value = fmtCpf(e.target.value); });
-  $('cpf').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
-  $('profCpf').addEventListener('input', e => { e.target.value = fmtCpf(e.target.value); });
-  $('profCpf').addEventListener('keydown', e => { if (e.key === 'Enter') profLogin(); });
+  $('cpf').addEventListener('keydown', e => { if (e.key === 'Enter') loginGeneric(); });
 
   // Student buttons
-  $('btnLogin').addEventListener('click', login);
+  $('btnLogin').addEventListener('click', loginGeneric);
   $('btnSair').addEventListener('click', logout);
   $('btnAtualizar').addEventListener('click', async () => {
     const c = localStorage.getItem('rv_cpf');
@@ -455,7 +448,6 @@ function init() {
   $('btnDeletarCheckin').addEventListener('click', deletarCheckin);
 
   // Professor buttons
-  $('btnProfLogin').addEventListener('click', profLogin);
   $('btnProfSair').addEventListener('click', profLogout);
 
   // Bottom nav
