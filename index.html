@@ -50,11 +50,65 @@
 
       <button class="btn secondary" id="btnAtualizar">Atualizar</button>
     </section>
+
+    <!-- ── AGENDAR ─────────────────────────────────────────── -->
+    <section class="card hidden" id="cardAgendar">
+      <h2 class="title">Agendar Treino</h2>
+
+      <div id="diasRow" class="dias-row"></div>
+
+      <div id="sessoesLista" class="sessoes-lista hidden"></div>
+
+      <div id="presencaBox" class="hidden">
+        <div class="presenca-header">
+          <span class="presenca-titulo" id="presencaTitulo"></span>
+          <button class="btn primary btn-sm hidden" id="btnCheckin">Check-in</button>
+        </div>
+        <div id="presencaLista"></div>
+        <button class="btn btn-cancel hidden" id="btnDeletarCheckin">Cancelar meu check-in</button>
+      </div>
+    </section>
+
+    <!-- ── PROFESSOR ──────────────────────────────────────── -->
+    <section class="card hidden" id="cardProf">
+
+      <!-- Login form -->
+      <div id="profLoginBox">
+        <h2 class="title">Acesso do Professor</h2>
+        <label class="label" for="profCpf">CPF</label>
+        <input id="profCpf" class="input" inputmode="numeric" autocomplete="off"
+               placeholder="CPF do professor" maxlength="14" />
+        <button class="btn primary" id="btnProfLogin">Entrar como Professor</button>
+        <p class="msg err" id="profErr"></p>
+      </div>
+
+      <!-- Logged-in view -->
+      <div id="profLogadoBox" class="hidden">
+        <div class="row">
+          <div>
+            <div class="name" id="pNome">—</div>
+            <div class="badge badge-prof">PROFESSOR</div>
+          </div>
+          <button class="btn ghost" id="btnProfSair">Sair</button>
+        </div>
+
+        <div id="profDiasRow" class="dias-row"></div>
+
+        <div id="profSessoesLista" class="sessoes-lista hidden"></div>
+
+        <div id="profPresencaBox" class="hidden">
+          <div class="presenca-titulo mb8" id="profPresencaTitulo"></div>
+          <div id="profPresencaLista"></div>
+        </div>
+      </div>
+
+    </section>
   </main>
 
   <nav class="bnav">
     <button class="navbtn on" id="navHome">Início</button>
-    <button class="navbtn" id="navReload">Recarregar</button>
+    <button class="navbtn" id="navAgendar">Agendar</button>
+    <button class="navbtn" id="navProf">Professor</button>
   </nav>
 
   <script src="./app.js"></script>
