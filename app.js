@@ -36,6 +36,7 @@ let alunoData    = null;
 let profData     = null;
 let semanaCache  = null;   // { ts, data }
 let presenceCache = {};    // { "data|horario": { ts, data } }
+let presencaInFlight = {}; // { "data|horario": true }
 let aSelDia      = null;
 let aSelSessao   = null;
 let pSelDia      = null;
@@ -166,18 +167,18 @@ function renderSessoes(ctx, dia) {
   });
   show(listaId);
 
-  // Prefetch: auto-select first session
+  // Prefetch: auto-select first session (no API call until user taps)
   if (dia.treinos.length > 0) {
     lista.children[0].classList.add('active');
     const t = dia.treinos[0];
     const sessao = { data: dia.data, horario: t.horario, nome: t.nome };
     if (ctx === 'prof') pSelSessao = sessao; else aSelSessao = sessao;
-    loadPresenca(ctx, sessao);
   }
 }
 
 /* ── Presence list ────────────────────────────────────────────── */
 async function loadPresenca(ctx, sessao) {
+  const key      = presencaCacheKey(sessao.data, sessao.horario);
   const boxId    = ctx === 'prof' ? 'profPresencaBox'    : 'presencaBox';
   const listaId  = ctx === 'prof' ? 'profPresencaLista'  : 'presencaLista';
   const tituloId = ctx === 'prof' ? 'profPresencaTitulo' : 'presencaTitulo';
@@ -192,6 +193,10 @@ async function loadPresenca(ctx, sessao) {
     return;
   }
 
+  // In-flight guard: avoid duplicate concurrent requests for same session
+  if (presencaInFlight[key]) return;
+  presencaInFlight[key] = true;
+
   $(listaId).innerHTML = '<p class="loading">Carregando…</p>';
   if (ctx !== 'prof') { hide('btnCheckin'); hide('btnDeletarCheckin'); }
 
@@ -202,6 +207,8 @@ async function loadPresenca(ctx, sessao) {
     renderPresencaLista(ctx, r.data || [], sessao);
   } catch (e) {
     $(listaId).innerHTML = '<p class="msg err">Erro de conexão.</p>';
+  } finally {
+    delete presencaInFlight[key];
   }
 }
 
@@ -346,20 +353,33 @@ function preencherCard(d) {
   $('aStatus').textContent = d.statusExame || d.status || '—';
 }
 
-/* ── Student login / logout ───────────────────────────────────── */
-async function login() {
+/* ── Generic login (tries professor first, then student) ──────── */
+async function loginGeneric() {
   const cpf = $('cpf').value.replace(/\D/g, '');
   if (cpf.length !== 11) { $('err').textContent = 'CPF inválido.'; return; }
   $('err').textContent  = '';
   $('info').textContent = 'Buscando…';
   $('btnLogin').disabled = true;
   try {
+    // Try professor first
+    const rProf = await apiCall({ action: 'profLogin', cpf });
+    if (rProf.ok) {
+      profData = rProf.data;
+      localStorage.setItem('rv_prof_cpf',  cpf);
+      localStorage.setItem('rv_prof_nome', profData.nome || '');
+      semanaCache = null;
+      pSelDia = null; pSelSessao = null;
+      showProfPage();
+      return;
+    }
+    // Try student
     const r = await apiCall({ action: 'loginCpf', cpf });
     if (!r.ok) { $('err').textContent = r.erro || 'Não encontrado.'; $('info').textContent = ''; return; }
     alunoData = r.data;
     localStorage.setItem('rv_cpf',  cpf);
     localStorage.setItem('rv_nome', alunoData.nome || '');
     preencherCard(alunoData);
+    show('mainNav');
     showTab('Home');
   } catch (e) {
     $('err').textContent = 'Erro de conexão.';
@@ -377,31 +397,11 @@ function logout() {
   localStorage.removeItem('rv_cpf');
   localStorage.removeItem('rv_nome');
   $('cpf').value = '';
+  hide('mainNav');
   showTab('Home');
 }
 
-/* ── Professor login / logout ─────────────────────────────────── */
-async function profLogin() {
-  const cpf = $('profCpf').value.replace(/\D/g, '');
-  if (cpf.length !== 11) { $('profErr').textContent = 'CPF inválido.'; return; }
-  $('profErr').textContent   = '';
-  $('btnProfLogin').disabled = true;
-  try {
-    const r = await apiCall({ action: 'profLogin', cpf });
-    if (!r.ok) { $('profErr').textContent = r.erro || 'Não encontrado.'; return; }
-    profData = r.data;
-    localStorage.setItem('rv_prof_cpf',  cpf);
-    localStorage.setItem('rv_prof_nome', profData.nome || '');
-    semanaCache = null;
-    pSelDia = null; pSelSessao = null;
-    showProfPage();
-  } catch (e) {
-    $('profErr').textContent = 'Erro de conexão.';
-  } finally {
-    $('btnProfLogin').disabled = false;
-  }
-}
-
+/* ── Professor logout ─────────────────────────────────────────── */
 function profLogout() {
   profData     = null;
   semanaCache  = null;
@@ -409,10 +409,7 @@ function profLogout() {
   pSelDia = null; pSelSessao = null;
   localStorage.removeItem('rv_prof_cpf');
   localStorage.removeItem('rv_prof_nome');
-  $('profCpf').value = '';
-  $('profErr').textContent = '';
   hide('cardProf');
-  show('mainNav');
   showTab('Home');
 }
 
@@ -438,12 +435,10 @@ function init() {
 
   // CPF input formatting
   $('cpf').addEventListener('input', e => { e.target.value = fmtCpf(e.target.value); });
-  $('cpf').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
-  $('profCpf').addEventListener('input', e => { e.target.value = fmtCpf(e.target.value); });
-  $('profCpf').addEventListener('keydown', e => { if (e.key === 'Enter') profLogin(); });
+  $('cpf').addEventListener('keydown', e => { if (e.key === 'Enter') loginGeneric(); });
 
-  // Student buttons
-  $('btnLogin').addEventListener('click', login);
+  // Login / student buttons
+  $('btnLogin').addEventListener('click', loginGeneric);
   $('btnSair').addEventListener('click', logout);
   $('btnAtualizar').addEventListener('click', async () => {
     const c = localStorage.getItem('rv_cpf');
@@ -455,7 +450,6 @@ function init() {
   $('btnDeletarCheckin').addEventListener('click', deletarCheckin);
 
   // Professor buttons
-  $('btnProfLogin').addEventListener('click', profLogin);
   $('btnProfSair').addEventListener('click', profLogout);
 
   // Bottom nav
@@ -464,6 +458,9 @@ function init() {
 
   if (profData) {
     showProfPage();
+  } else if (alunoData) {
+    show('mainNav');
+    showTab('Home');
   } else {
     showTab('Home');
   }

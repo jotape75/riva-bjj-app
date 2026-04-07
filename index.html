@@ -19,7 +19,7 @@
 
   <main class="page">
     <section class="card" id="cardLogin">
-      <h1 class="title">Acesso do Aluno</h1>
+      <h1 class="title">Acesso</h1>
 
       <label class="label" for="cpf">CPF</label>
       <input id="cpf" class="input" inputmode="numeric" autocomplete="off" placeholder="Digite seu CPF" maxlength="14" />
@@ -28,15 +28,6 @@
 
       <p class="msg err" id="err"></p>
       <p class="msg info" id="info"></p>
-
-      <hr class="divider" />
-
-      <h2 class="title" style="font-size:15px">Acesso do Professor</h2>
-      <label class="label" for="profCpf">CPF do Professor</label>
-      <input id="profCpf" class="input" inputmode="numeric" autocomplete="off"
-             placeholder="CPF do professor" maxlength="14" />
-      <button class="btn secondary" id="btnProfLogin">Entrar como Professor</button>
-      <p class="msg err" id="profErr"></p>
     </section>
 
     <section class="card hidden" id="cardAluno">
@@ -101,9 +92,13 @@
     </section>
   </main>
 
-  <nav class="bnav" id="mainNav">
-    <button class="navbtn on" id="navHome">Início</button>
-    <button class="navbtn" id="navAgendar">Agendar</button>
+  <nav class="bnav hidden" id="mainNav">
+    <button class="navbtn on" id="navHome">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    </button>
+    <button class="navbtn" id="navAgendar">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM7 11h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2zM7 14h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2zM7 17h2v2H7zm4 0h2v2h-2z"/></svg>
+    </button>
   </nav>
 
   <script src="./app.js"></script>
