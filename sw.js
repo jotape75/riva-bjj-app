@@ -1,4 +1,4 @@
-const CACHE = "riva-bjj-v16";
+const CACHE = "riva-bjj-v17";
 const ASSETS = [
   "./",
   "./index.html",
@@ -25,24 +25,72 @@ self.addEventListener("activate", (event) => {
   })());
 });
 
+/* ── Caching strategies ─────────────────────────────────────── */
+
+// Network-first: try network, fall back to cache (for HTML navigation)
+async function networkFirst(req) {
+  const cache = await caches.open(CACHE);
+  try {
+    const res = await fetch(req);
+    if (req.method === "GET") cache.put(req, res.clone());
+    return res;
+  } catch {
+    const cached = await cache.match(req);
+    return cached || new Response("Offline", { status: 503 });
+  }
+}
+
+// Stale-while-revalidate: serve cache immediately, update in background
+async function staleWhileRevalidate(req) {
+  const cache  = await caches.open(CACHE);
+  const cached = await cache.match(req);
+  const fetchPromise = fetch(req).then(res => {
+    if (req.method === "GET") cache.put(req, res.clone());
+    return res;
+  }).catch(() => null);
+  return cached || (await fetchPromise) || new Response("Offline", { status: 503 });
+}
+
+// Cache-first: serve cache, fetch on miss
+async function cacheFirst(req) {
+  const cache  = await caches.open(CACHE);
+  const cached = await cache.match(req);
+  if (cached) return cached;
+  const res = await fetch(req);
+  if (req.method === "GET") cache.put(req, res.clone());
+  return res;
+}
+
 self.addEventListener("fetch", (event) => {
+  const url = new URL(event.request.url);
+
   // Never cache Apps Script API calls (JSONP / action= requests)
-  const url = event.request.url;
-  if (url.includes("script.google.com/macros") ||
-      url.includes("action=") ||
-      url.includes("callback=_rv")) {
+  if (
+    url.href.includes("script.google.com/macros") ||
+    url.searchParams.has("action") ||
+    url.searchParams.has("callback")
+  ) {
     event.respondWith(fetch(event.request));
     return;
   }
 
-  event.respondWith((async () => {
-    const cache = await caches.open(CACHE);
-    const cached = await cache.match(event.request);
-    if (cached) return cached;
+  // HTML navigation: prefer fresh HTML so deployments propagate quickly
+  const isNav = event.request.mode === "navigate" ||
+                event.request.destination === "document";
+  if (isNav) {
+    event.respondWith(networkFirst(event.request));
+    return;
+  }
 
-    const res = await fetch(event.request);
-    // só cacheia GET
-    if (event.request.method === "GET") cache.put(event.request, res.clone());
-    return res;
-  })());
+  // Core app assets: serve instantly from cache, update in background
+  const isCoreAsset =
+    url.origin === location.origin &&
+    (url.pathname.endsWith("/app.js") || url.pathname.endsWith("/styles.css"));
+  if (isCoreAsset) {
+    event.respondWith(staleWhileRevalidate(event.request));
+    return;
+  }
+
+  // Everything else (icons, manifest, …): cache-first
+  event.respondWith(cacheFirst(event.request));
 });

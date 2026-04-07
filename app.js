@@ -1,6 +1,6 @@
 const API_BASE       = 'https://script.google.com/macros/s/AKfycbyBLlVjEvO35RufIh6pH9XOOTDXuj_BMrNHAJfdw9I-reScWX31dsVdOFJna1ZbJVqX/exec';
 const API_TIMEOUT_MS = 15000;
-const SEMANA_TTL     = 30000;  // 30 s
+const SEMANA_TTL     = 300000; // 5 min
 const PRESENCA_TTL   = 15000;  // 15 s
 const RP_NAME        = 'Riva BJJ';
 
@@ -204,6 +204,7 @@ let alunoData    = null;
 let profData     = null;
 let semanaCache  = null;   // { ts, data }
 let presenceCache = {};    // { "data|horario": { ts, data } }
+let semanaInFlight   = false; // guard for concurrent treinosSemana fetches
 let presencaInFlight = {}; // key -> true (in-flight guard)
 let aSelDia      = null;
 let aSelSessao   = null;
@@ -259,6 +260,14 @@ function invalidatePresenca(data, horario) {
   delete presenceCache[presencaCacheKey(data, horario)];
 }
 
+/* ── UI helpers ───────────────────────────────────────────────── */
+// Shows the loading message only if the response takes longer than `delay` ms,
+// preventing a "Carregando…" flash on fast or cached responses.
+function delayedLoader(el, delay = 250) {
+  const t = setTimeout(() => { el.innerHTML = '<p class="loading">Carregando…</p>'; }, delay);
+  return () => clearTimeout(t);
+}
+
 /* ── Navigation ───────────────────────────────────────────────── */
 function showTab(tab) {
   ['cardLogin', 'cardAluno', 'cardAgendar', 'cardProf', 'cardBioLock', 'cardNoSupport'].forEach(hide);
@@ -288,14 +297,35 @@ function showProfPage() {
 }
 
 /* ── Week schedule ────────────────────────────────────────────── */
-async function loadSemana(ctx) {
-  const cached = getCachedSemana();
-  if (cached) { renderDias(ctx, cached); return; }
 
-  const rowId = ctx === 'prof' ? 'profDiasRow' : 'diasRow';
-  $(rowId).innerHTML = '<p class="loading">Carregando…</p>';
+// Background fetch of treinosSemana; updates cache and calls onSuccess if data arrives.
+async function revalidateSemana(onSuccess) {
+  if (semanaInFlight) return;
+  semanaInFlight = true;
   try {
     const r = await apiCall({ action: 'treinosSemana' });
+    if (r.ok) { semanaCache = { ts: Date.now(), data: r.data }; onSuccess(r.data); }
+  } catch (_) { /* keep stale */ }
+  finally { semanaInFlight = false; }
+}
+
+async function loadSemana(ctx) {
+  const rowId  = ctx === 'prof' ? 'profDiasRow' : 'diasRow';
+  const cached = getCachedSemana();
+
+  if (cached) {
+    renderDias(ctx, cached);
+    // Background revalidation – keep data fresh without blocking UI
+    revalidateSemana(data => renderDias(ctx, data));
+    return;
+  }
+
+  if (semanaInFlight) return;
+  semanaInFlight = true;
+  const cancel = delayedLoader($(rowId));
+  try {
+    const r = await apiCall({ action: 'treinosSemana' });
+    cancel();
     if (r.ok) {
       semanaCache = { ts: Date.now(), data: r.data };
       renderDias(ctx, r.data);
@@ -303,7 +333,10 @@ async function loadSemana(ctx) {
       $(rowId).innerHTML = '<p class="msg err">Erro ao carregar treinos.</p>';
     }
   } catch (e) {
+    cancel();
     $(rowId).innerHTML = '<p class="msg err">Erro de conexão.</p>';
+  } finally {
+    semanaInFlight = false;
   }
 }
 
@@ -339,36 +372,45 @@ function renderDias(ctx, semana) {
 }
 
 /* ── Professor week loader (Mon–Sat of current week) ─────────── */
+function buildProfSemana(semanaData) {
+  const treinosByDow = {};
+  semanaData.forEach(d => { treinosByDow[d.diaSemana] = d.treinos || []; });
+  return getProfWeekDays().map(date => ({
+    data:      formatDate(date),
+    diaSemana: date.getDay(),
+    nomeDia:   NOMES_DIA_PT[date.getDay()],
+    treinos:   treinosByDow[date.getDay()] || [],
+  }));
+}
+
 async function loadSemanaProfessor() {
-  const rowId = 'profDiasRow';
-  $(rowId).innerHTML = '<p class="loading">Carregando…</p>';
+  const rowId  = 'profDiasRow';
+  const cached = getCachedSemana();
+
+  if (cached) {
+    renderDiasProfessor(buildProfSemana(cached));
+    // Background revalidation
+    revalidateSemana(data => renderDiasProfessor(buildProfSemana(data)));
+    return;
+  }
+
+  if (semanaInFlight) return;
+  semanaInFlight = true;
+  const cancel = delayedLoader($(rowId));
   try {
-    let semanaData = getCachedSemana();
-    if (!semanaData) {
-      const r = await apiCall({ action: 'treinosSemana' });
-      if (!r.ok) {
-        $(rowId).innerHTML = '<p class="msg err">Erro ao carregar treinos.</p>';
-        return;
-      }
-      semanaCache = { ts: Date.now(), data: r.data };
-      semanaData  = r.data;
+    const r = await apiCall({ action: 'treinosSemana' });
+    cancel();
+    if (!r.ok) {
+      $(rowId).innerHTML = '<p class="msg err">Erro ao carregar treinos.</p>';
+      return;
     }
-
-    // Build dow → treinos map (0=Dom … 6=Sáb)
-    const treinosByDow = {};
-    semanaData.forEach(d => { treinosByDow[d.diaSemana] = d.treinos || []; });
-
-    // Build Mon–Sat array with locally-computed dates
-    const profSemana = getProfWeekDays().map(date => ({
-      data:      formatDate(date),
-      diaSemana: date.getDay(),
-      nomeDia:   NOMES_DIA_PT[date.getDay()],
-      treinos:   treinosByDow[date.getDay()] || [],
-    }));
-
-    renderDiasProfessor(profSemana);
+    semanaCache = { ts: Date.now(), data: r.data };
+    renderDiasProfessor(buildProfSemana(r.data));
   } catch (e) {
+    cancel();
     $(rowId).innerHTML = '<p class="msg err">Erro de conexão.</p>';
+  } finally {
+    semanaInFlight = false;
   }
 }
 
@@ -461,23 +503,35 @@ async function loadPresenca(ctx, sessao) {
   $(tituloId).textContent = `${sessao.data.slice(0, 5)} · ${sessao.horario} · ${sessao.nome}`;
   show(boxId);
 
-  // Serve from cache if fresh
+  // Set in-flight early so concurrent calls are rejected even in the cached branch
+  presencaInFlight[k] = true;
+
+  // Serve from cache immediately, then revalidate in background
   const cached = getCachedPresenca(sessao.data, sessao.horario);
   if (cached) {
     renderPresencaLista(ctx, cached, sessao);
+    try {
+      const r = await apiCall({ action: 'listaPresenca', data: sessao.data, horario: sessao.horario });
+      if (r.ok) {
+        setCachedPresenca(sessao.data, sessao.horario, r.data || []);
+        renderPresencaLista(ctx, r.data || [], sessao);
+      }
+    } catch (_) { /* keep stale */ }
+    finally { delete presencaInFlight[k]; }
     return;
   }
 
-  presencaInFlight[k] = true;
-  $(listaId).innerHTML = '<p class="loading">Carregando…</p>';
+  const cancel = delayedLoader($(listaId));
   if (ctx !== 'prof') { hide('btnCheckin'); hide('btnDeletarCheckin'); }
 
   try {
     const r = await apiCall({ action: 'listaPresenca', data: sessao.data, horario: sessao.horario });
+    cancel();
     if (!r.ok) { $(listaId).innerHTML = `<p class="msg err">${r.erro || 'Erro'}</p>`; return; }
     setCachedPresenca(sessao.data, sessao.horario, r.data || []);
     renderPresencaLista(ctx, r.data || [], sessao);
   } catch (e) {
+    cancel();
     $(listaId).innerHTML = '<p class="msg err">Erro de conexão.</p>';
   } finally {
     delete presencaInFlight[k];
