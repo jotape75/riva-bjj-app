@@ -642,7 +642,16 @@ async function deletarCheckin() {
 
 /* ── Professor approve / reject ───────────────────────────────── */
 async function profAprovar(linha, sessao, btn) {
-  btn.disabled = true;
+  const item      = btn.closest('.presenca-item');
+  const statusEl  = item ? item.querySelector('.presenca-status') : null;
+  const actionsEl = item ? item.querySelector('.prof-actions') : null;
+
+  if (statusEl) {
+    statusEl.textContent = 'VALIDADO';
+    statusEl.className   = 'presenca-status status-ok';
+  }
+  if (actionsEl) actionsEl.remove();
+
   try {
     const r = await apiCall({
       action:    'aprovar',
@@ -653,14 +662,34 @@ async function profAprovar(linha, sessao, btn) {
       invalidatePresenca(sessao.data, sessao.horario);
       loadPresenca('prof', sessao);
     } else {
+      if (statusEl) {
+        statusEl.textContent = 'PENDENTE';
+        statusEl.className   = 'presenca-status status-pend';
+      }
+      if (item && actionsEl) item.appendChild(actionsEl);
       alert(r.erro || 'Erro ao aprovar.');
     }
-  } catch (e) { alert('Erro de conexão.'); }
-  finally { btn.disabled = false; }
+  } catch (e) {
+    if (statusEl) {
+      statusEl.textContent = 'PENDENTE';
+      statusEl.className   = 'presenca-status status-pend';
+    }
+    if (item && actionsEl) item.appendChild(actionsEl);
+    alert('Erro de conexão.');
+  }
 }
 
 async function profReprovar(linha, sessao, btn) {
-  btn.disabled = true;
+  const item      = btn.closest('.presenca-item');
+  const statusEl  = item ? item.querySelector('.presenca-status') : null;
+  const actionsEl = item ? item.querySelector('.prof-actions') : null;
+
+  if (statusEl) {
+    statusEl.textContent = 'REPROVADO';
+    statusEl.className   = 'presenca-status status-err';
+  }
+  if (actionsEl) actionsEl.remove();
+
   try {
     const r = await apiCall({
       action:    'reprovar',
@@ -671,10 +700,21 @@ async function profReprovar(linha, sessao, btn) {
       invalidatePresenca(sessao.data, sessao.horario);
       loadPresenca('prof', sessao);
     } else {
+      if (statusEl) {
+        statusEl.textContent = 'PENDENTE';
+        statusEl.className   = 'presenca-status status-pend';
+      }
+      if (item && actionsEl) item.appendChild(actionsEl);
       alert(r.erro || 'Erro ao reprovar.');
     }
-  } catch (e) { alert('Erro de conexão.'); }
-  finally { btn.disabled = false; }
+  } catch (e) {
+    if (statusEl) {
+      statusEl.textContent = 'PENDENTE';
+      statusEl.className   = 'presenca-status status-pend';
+    }
+    if (item && actionsEl) item.appendChild(actionsEl);
+    alert('Erro de conexão.');
+  }
 }
 
 /* ── Graduandos ───────────────────────────────────────────────── */
@@ -731,7 +771,6 @@ function preencherCard(d) {
   $('aFaixa').textContent = d.faixa || '—';
   const g = (d.grau != null && d.grau !== '') ? Number(d.grau) : null;
   $('aGrau').textContent = (g === 0) ? 'Iniciante' : (g != null ? String(g) : '—');
-  $('aAulas').textContent = (d.aulasNoGrau != null) ? `${d.aulasNoGrau} / ${d.metaGrau}` : '—';
   $('aData').textContent  = d.dataGrau || '—';
   $('aStatus').textContent = d.statusExame || d.status || '—';
 
