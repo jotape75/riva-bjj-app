@@ -1,7 +1,7 @@
 const API_BASE       = 'https://script.google.com/macros/s/AKfycbyBLlVjEvO35RufIh6pH9XOOTDXuj_BMrNHAJfdw9I-reScWX31dsVdOFJna1ZbJVqX/exec';
 const API_TIMEOUT_MS = 15000;
 const SEMANA_TTL     = 300000; // 5 min
-const PRESENCA_TTL   = 140000;  // 2 min 
+const PRESENCA_TTL   = 300000;  // 5 min
 const GRADUANDOS_TTL = 21600000; // 6 h
 const RP_NAME        = 'Riva BJJ';
 
@@ -611,7 +611,26 @@ async function fazerCheckin() {
     });
     if (r.ok) {
       invalidatePresenca(aSelSessao.data, aSelSessao.horario);
-      loadPresenca('aluno', aSelSessao);
+      // Atualiza DOM direto, sem nova chamada à API
+      const lista = $('presencaLista');
+      if (lista) {
+        const novoItem = document.createElement('div');
+        novoItem.className = 'presenca-item';
+        const info = document.createElement('div');
+        info.className = 'presenca-info';
+        const spanNome = document.createElement('span');
+        spanNome.className = 'presenca-nome';
+        spanNome.textContent = alunoData.nome;
+        const spanStatus = document.createElement('span');
+        spanStatus.className = 'presenca-status status-pend';
+        spanStatus.textContent = 'PENDENTE ⏳';
+        info.appendChild(spanNome);
+        info.appendChild(spanStatus);
+        novoItem.appendChild(info);
+        lista.appendChild(novoItem);
+      }
+      hide('btnCheckin');
+      show('btnDeletarCheckin');
     } else {
       alert(r.erro || 'Erro ao fazer check-in.');
     }
@@ -632,7 +651,19 @@ async function deletarCheckin() {
     });
     if (r.ok) {
       invalidatePresenca(aSelSessao.data, aSelSessao.horario);
-      loadPresenca('aluno', aSelSessao);
+      // Remove item do DOM direto, sem nova chamada à API
+      const lista = $('presencaLista');
+      if (lista) {
+        const items = lista.querySelectorAll('.presenca-item');
+        items.forEach(item => {
+          const nome = item.querySelector('.presenca-nome');
+          if (nome && nome.textContent.trim().toLowerCase() === alunoData.nome.trim().toLowerCase()) {
+            item.remove();
+          }
+        });
+      }
+      show('btnCheckin');
+      hide('btnDeletarCheckin');
     } else {
       alert(r.erro || 'Erro ao cancelar check-in.');
     }
@@ -659,8 +690,7 @@ async function profAprovar(linha, sessao, btn) {
       linha,
     });
     if (r.ok) {
-      invalidatePresenca(sessao.data, sessao.horario);
-      loadPresenca('prof', sessao);
+      // DOM already updated optimistically above
     } else {
       if (statusEl) {
         statusEl.textContent = 'PENDENTE';
@@ -697,8 +727,7 @@ async function profReprovar(linha, sessao, btn) {
       linha,
     });
     if (r.ok) {
-      invalidatePresenca(sessao.data, sessao.horario);
-      loadPresenca('prof', sessao);
+      // DOM already updated optimistically above
     } else {
       if (statusEl) {
         statusEl.textContent = 'PENDENTE';
@@ -793,25 +822,20 @@ async function loginGeneric() {
   $('info').textContent = 'Buscando…';
   $('btnLogin').disabled = true;
   try {
-    // Try professor first
-    const rProf = await apiCall({ action: 'profLoginEmail', email });
-    if (rProf.ok) {
-      profData = rProf.data;
-      localStorage.setItem(LS_PROF_EMAIL, email);
-      localStorage.setItem(LS_PROF_NOME,  profData.nome || '');
-      semanaCache = null;
-      pSelDia = null; pSelSessao = null;
-      $('info').textContent = '';
-      afterLoginSuccess();
-      return;
-    }
-    // Try student
-    const r = await apiCall({ action: 'loginEmail', email });
+    const r = await apiCall({ action: 'login', email });
     if (!r.ok) { $('err').textContent = r.erro || 'Email não encontrado.'; $('info').textContent = ''; return; }
-    alunoData = r.data;
-    localStorage.setItem(LS_EMAIL,  email);
-    localStorage.setItem(LS_NOME, alunoData.nome || '');
-    preencherCard(alunoData);
+
+    if (r.tipo === 'prof') {
+      profData = r.data;
+      localStorage.setItem(LS_PROF_EMAIL, email);
+      localStorage.setItem(LS_PROF_NOME, profData.nome || '');
+      semanaCache = null; pSelDia = null; pSelSessao = null;
+    } else {
+      alunoData = r.data;
+      localStorage.setItem(LS_EMAIL, email);
+      localStorage.setItem(LS_NOME, alunoData.nome || '');
+      preencherCard(alunoData);
+    }
     $('info').textContent = '';
     afterLoginSuccess();
   } catch (e) {
