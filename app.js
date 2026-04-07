@@ -14,8 +14,14 @@ function maskCpf(cpfRaw){
 function setErr(msg){ el("err").textContent = msg || ""; }
 function setInfo(msg){ el("info").textContent = msg || ""; }
 
-function showAlunoCard(show){
-  el("cardAluno").classList.toggle("hidden", !show);
+/** ✅ Controla qual card aparece */
+function setTela(logado){
+  el("cardLogin").classList.toggle("hidden", logado);
+  el("cardAluno").classList.toggle("hidden", !logado);
+
+  // opcional: limpa mensagens ao trocar de tela
+  setErr("");
+  setInfo("");
 }
 
 function renderAluno(a){
@@ -58,7 +64,6 @@ function apiLoginCpf(cpf){
       reject(new Error("Falha ao carregar API (JSONP)."));
     };
 
-    // timeout de segurança
     const timer = setTimeout(() => {
       cleanup();
       reject(new Error("Tempo esgotado ao consultar a API."));
@@ -69,37 +74,39 @@ function apiLoginCpf(cpf){
 }
 
 async function login(){
-  setErr(""); setInfo("Carregando...");
+  setErr("");
+  setInfo("Carregando...");
+
   const cpf = normCpf(el("cpf").value);
   el("cpf").value = maskCpf(cpf);
 
   if (cpf.length !== 11) {
     setInfo("");
     setErr("CPF deve ter 11 dígitos.");
+    setTela(false);
     return;
   }
 
   try {
     const resp = await apiLoginCpf(cpf);
-
-    // resp = { ok: true|false, data: {...} }  (ou { ok:false, erro:"..." })
     const data = resp && resp.data ? resp.data : null;
 
     if (!resp || resp.ok !== true || (data && data.erro)) {
-      showAlunoCard(false);
-      setInfo("");
+      setTela(false);
       setErr((data && data.erro) ? data.erro : (resp && resp.erro) ? resp.erro : "Erro ao autenticar.");
       return;
     }
 
     localStorage.setItem("rv_cpf", cpf);
     localStorage.setItem("rv_user", JSON.stringify(data));
+
     renderAluno(data);
-    showAlunoCard(true);
-    setInfo("OK ✅");
+    setTela(true);
+
+    // mensagem opcional (se não quiser nada, deixe "")
+    setInfo("Dados carregados.");
   } catch (e) {
-    showAlunoCard(false);
-    setInfo("");
+    setTela(false);
     setErr(e.message || "Erro ao conectar.");
   }
 }
@@ -107,22 +114,26 @@ async function login(){
 function sair(){
   localStorage.removeItem("rv_cpf");
   localStorage.removeItem("rv_user");
-  showAlunoCard(false);
-  setErr("");
+  setTela(false);
   setInfo("Saiu.");
+  el("cpf").focus();
 }
 
 function restore(){
   const cpf = localStorage.getItem("rv_cpf");
   if (cpf) el("cpf").value = maskCpf(cpf);
+
   const u = localStorage.getItem("rv_user");
-  if (u) {
+  if (cpf && u) {
     try {
       const obj = JSON.parse(u);
       renderAluno(obj);
-      showAlunoCard(true);
+      setTela(true);
+      return;
     } catch {}
   }
+
+  setTela(false);
 }
 
 // UI
