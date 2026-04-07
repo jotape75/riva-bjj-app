@@ -23,7 +23,7 @@ body{
   position:sticky;top:0;z-index:10;
   background:var(--card);
   border-bottom:2px solid var(--red);
-  padding:14px 16px; /* mais espaço para o logo maior */
+  padding:14px 16px;
 }
 
 .hdr-inner{
@@ -34,7 +34,7 @@ body{
   align-items:center;
 }
 
-/* ✅ LOGO REDONDO E MAIOR */
+/* LOGO (desktop/tablet) */
 .logo{
   width: 132px;
   height: 132px;
@@ -169,3 +169,34 @@ body{
   cursor:pointer;
 }
 .navbtn.on{color:var(--red);font-weight:900}
+
+/* ✅ MOBILE: logo menor + margens menores (fica melhor no celular) */
+@media (max-width: 420px){
+  .logo{
+    width: 96px;
+    height: 96px;
+    padding: 3px;
+    margin-top: 4px;
+  }
+
+  .page{
+    padding:12px 12px calc(88px + env(safe-area-inset-bottom, 0px));
+    max-width:520px;
+    margin:0 auto;
+  }
+
+  .card{
+    border-radius:14px;
+    padding:14px;
+  }
+
+  .btn{
+    padding:13px 14px;
+    font-size:15px;
+  }
+
+  .input{
+    padding:13px 14px;
+    font-size:15px;
+  }
+}
