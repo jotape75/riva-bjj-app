@@ -36,12 +36,12 @@ body{
 
 /* ✅ LOGO REDONDO E MAIOR */
 .logo{
-  width: 112px;
-  height: 112px;
+  width: 132px;
+  height: 132px;
   border-radius: 50%;
-  background: #fff;                 /* fundo branco para destacar o logo */
-  padding: 12px;                    /* respiro interno */
-  border: 3px solid var(--red);     /* aro vermelho */
+  background: #fff;
+  padding: 3px;
+  border: 3px solid var(--red);
   box-shadow: 0 10px 22px rgba(0,0,0,.45);
   object-fit: contain;
   display:block;
