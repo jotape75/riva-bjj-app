@@ -278,7 +278,7 @@ function showTab(tab) {
 }
 
 function showProfPage() {
-  ['cardLogin', 'cardAluno', 'cardAgendar'].forEach(hide);
+  ['cardLogin', 'cardAluno', 'cardAgendar', 'cardBioLock', 'cardNoSupport'].forEach(hide);
   show('cardProf');
   hide('mainNav');
   $('pNome').textContent = profData ? (profData.nome || 'Professor') : '—';
