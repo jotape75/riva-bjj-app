@@ -148,10 +148,12 @@ async function onBioAction() {
 }
 
 function afterBioSuccess() {
+  hide('cardBioLock');
   const email  = localStorage.getItem(LS_EMAIL);
   const nome   = localStorage.getItem(LS_NOME);
   const pEmail = localStorage.getItem(LS_PROF_EMAIL);
   const pNome  = localStorage.getItem(LS_PROF_NOME);
+  
 
   if (pEmail && pNome) {
     profData = { nome: pNome, email: pEmail };
