@@ -400,7 +400,10 @@ async function loadSemanaProfessor() {
   try {
     const r = await apiCall({ action: 'treinosSemana' });
     cancel();
-    if (!r.ok) { $(rowId).innerHTML = '<p class="msg err">Erro ao carregar treinos.</p>'; return; }
+    if (!r.ok) {
+      $(rowId).innerHTML = '<p class="msg err">Erro ao carregar treinos.</p>';
+      return;
+    }
     semanaCache = { ts: Date.now(), data: r.data };
     renderDiasProfessor(buildProfSemana(r.data));
   } catch (e) {
