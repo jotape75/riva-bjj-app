@@ -208,6 +208,33 @@ let aSelSessao   = null;
 let pSelDia      = null;
 let pSelSessao   = null;
 
+/* ── Professor week helpers ───────────────────────────────────── */
+const NOMES_DIA_PT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+function getProfWeekDays() {
+  // Returns 6 Date objects (Mon–Sat) for the current week.
+  // If today is Sunday, returns next week's Mon–Sat.
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dow = today.getDay(); // 0=Sun, 1=Mon, …, 6=Sat
+  const daysToMon = dow === 0 ? 1 : -(dow - 1);
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + daysToMon);
+  const days = [];
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    days.push(d);
+  }
+  return days;
+}
+
+function formatDate(d) {
+  return String(d.getDate()).padStart(2, '0') + '/' +
+         String(d.getMonth() + 1).padStart(2, '0') + '/' +
+         d.getFullYear();
+}
+
 /* ── Cache helpers ────────────────────────────────────────────── */
 function getCachedSemana() {
   if (semanaCache && Date.now() - semanaCache.ts < SEMANA_TTL) return semanaCache.data;
@@ -255,7 +282,7 @@ function showProfPage() {
   show('cardProf');
   hide('mainNav');
   $('pNome').textContent = profData ? (profData.nome || 'Professor') : '—';
-  loadSemana('prof');
+  loadSemanaProfessor();
 }
 
 /* ── Week schedule ────────────────────────────────────────────── */
@@ -309,6 +336,73 @@ function renderDias(ctx, semana) {
   }
 }
 
+/* ── Professor week loader (Mon–Sat of current week) ─────────── */
+async function loadSemanaProfessor() {
+  const rowId = 'profDiasRow';
+  $(rowId).innerHTML = '<p class="loading">Carregando…</p>';
+  try {
+    let semanaData = getCachedSemana();
+    if (!semanaData) {
+      const r = await apiCall({ action: 'treinosSemana' });
+      if (!r.ok) {
+        $(rowId).innerHTML = '<p class="msg err">Erro ao carregar treinos.</p>';
+        return;
+      }
+      semanaCache = { ts: Date.now(), data: r.data };
+      semanaData  = r.data;
+    }
+
+    // Build dow → treinos map (0=Dom … 6=Sáb)
+    const treinosByDow = {};
+    semanaData.forEach(d => { treinosByDow[d.diaSemana] = d.treinos || []; });
+
+    // Build Mon–Sat array with locally-computed dates
+    const profSemana = getProfWeekDays().map(date => ({
+      data:      formatDate(date),
+      diaSemana: date.getDay(),
+      nomeDia:   NOMES_DIA_PT[date.getDay()],
+      treinos:   treinosByDow[date.getDay()] || [],
+    }));
+
+    renderDiasProfessor(profSemana);
+  } catch (e) {
+    $(rowId).innerHTML = '<p class="msg err">Erro de conexão.</p>';
+  }
+}
+
+function renderDiasProfessor(profSemana) {
+  const row = $('profDiasRow');
+  row.innerHTML = '';
+
+  const today    = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayStr = formatDate(today);
+
+  let defaultIdx = 0; // fallback: Monday (first button)
+  profSemana.forEach((dia, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'dia-btn';
+    btn.innerHTML =
+      `<span class="dia-nome">${dia.nomeDia}</span>` +
+      `<span class="dia-data">${dia.data.slice(0, 5)}</span>`;
+    btn.addEventListener('click', () => {
+      row.querySelectorAll('.dia-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectDia('prof', dia);
+    });
+    row.appendChild(btn);
+    if (dia.data === todayStr) defaultIdx = i;
+  });
+
+  if (row.children.length > 0) {
+    row.children[defaultIdx].classList.add('active');
+    pSelDia    = profSemana[defaultIdx];
+    pSelSessao = null;
+    hide('profPresencaBox');
+    renderSessoes('prof', profSemana[defaultIdx]);
+  }
+}
+
 function selectDia(ctx, dia) {
   if (ctx === 'prof') { pSelDia = dia; pSelSessao = null; hide('profPresencaBox'); }
   else                { aSelDia = dia; aSelSessao = null; hide('presencaBox');     }
@@ -319,6 +413,14 @@ function renderSessoes(ctx, dia) {
   const listaId = ctx === 'prof' ? 'profSessoesLista' : 'sessoesLista';
   const lista   = $(listaId);
   lista.innerHTML = '';
+
+  if (!dia.treinos.length) {
+    lista.innerHTML = '<p class="presenca-vazia">Sem treinos neste dia.</p>';
+    if (ctx === 'prof') pSelSessao = null; else aSelSessao = null;
+    show(listaId);
+    return;
+  }
+
   dia.treinos.forEach(t => {
     const card = document.createElement('div');
     card.className = 'sessao-card';
@@ -511,6 +613,38 @@ async function profReprovar(linha, sessao, btn) {
   finally { btn.disabled = false; }
 }
 
+/* ── Graduandos ───────────────────────────────────────────────── */
+async function carregarGraduandos() {
+  const lista = $('profGraduandosLista');
+  lista.innerHTML = '<p class="loading">Carregando…</p>';
+  try {
+    const r = await apiCall({ action: 'graduandos' });
+    if (!r || !r.ok) throw new Error((r && r.erro) ? r.erro : 'Falha ao carregar.');
+    renderGraduandos(r.data || []);
+  } catch (e) {
+    lista.innerHTML = `<p class="msg err">Erro ao carregar graduandos. ${e.message || ''}</p>`;
+  }
+}
+
+function renderGraduandos(graduandos) {
+  const el = $('profGraduandosLista');
+  if (!graduandos.length) {
+    el.innerHTML = '<p class="presenca-vazia">Nenhum graduando no momento.</p>';
+    return;
+  }
+  el.innerHTML = graduandos.map(a => {
+    const restantes = (a.restantes != null && a.restantes !== '')
+      ? `<div class="prof-grad-restantes"><span class="presenca-status status-pend">${a.restantes} restantes</span></div>`
+      : '';
+    return `<div class="presenca-item">
+      <div class="presenca-info">
+        <span class="presenca-nome">${a.nome || ''}</span>
+        <span class="presenca-status status-ok">${a.faixa || ''}</span>
+      </div>${restantes}
+    </div>`;
+  }).join('');
+}
+
 /* ── Student card ─────────────────────────────────────────────── */
 function preencherCard(d) {
   $('aNome').textContent  = d.nome  || '—';
@@ -580,6 +714,7 @@ function profLogout() {
   localStorage.removeItem(LS_PROF_EMAIL);
   localStorage.removeItem(LS_PROF_NOME);
   // Keep rv_credentialId and rv_biometria_ativada so next login skips re-registration
+  hide('profGraduandosBox');
   hide('cardProf');
   showTab('Home');
 }
@@ -613,6 +748,15 @@ function init() {
 
   // 4) Wire up professor buttons
   $('btnProfSair').addEventListener('click', profLogout);
+  $('btnGraduandos').addEventListener('click', async () => {
+    const box = $('profGraduandosBox');
+    if (box.classList.contains('hidden')) {
+      show('profGraduandosBox');
+      await carregarGraduandos();
+    } else {
+      hide('profGraduandosBox');
+    }
+  });
 
   // 5) Bottom nav
   $('navHome').addEventListener('click',    () => showTab('Home'));
