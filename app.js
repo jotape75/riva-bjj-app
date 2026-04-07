@@ -1,7 +1,8 @@
 const API_BASE       = 'https://script.google.com/macros/s/AKfycbyBLlVjEvO35RufIh6pH9XOOTDXuj_BMrNHAJfdw9I-reScWX31dsVdOFJna1ZbJVqX/exec';
 const API_TIMEOUT_MS = 15000;
 const SEMANA_TTL     = 300000; // 5 min
-const PRESENCA_TTL   = 15000;  // 15 s
+const PRESENCA_TTL   = 120000;  // 2 min 
+const GRADUANDOS_TTL = 21600000; // 6 h
 const RP_NAME        = 'Riva BJJ';
 
 /* ── localStorage key constants ──────────────────────────────── */
@@ -210,6 +211,8 @@ let aSelDia      = null;
 let aSelSessao   = null;
 let pSelDia      = null;
 let pSelSessao   = null;
+let graduandosCache    = null;  // { ts, data }
+let graduandosInFlight = false;
 
 /* ── Professor week helpers ───────────────────────────────────── */
 const NOMES_DIA_PT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
@@ -258,6 +261,11 @@ function setCachedPresenca(data, horario, lista) {
 
 function invalidatePresenca(data, horario) {
   delete presenceCache[presencaCacheKey(data, horario)];
+}
+
+function getCachedGraduandos() {
+  if (graduandosCache && Date.now() - graduandosCache.ts < GRADUANDOS_TTL) return graduandosCache.data;
+  return null;
 }
 
 /* ── UI helpers ───────────────────────────────────────────────── */
@@ -670,18 +678,30 @@ async function profReprovar(linha, sessao, btn) {
 }
 
 /* ── Graduandos ───────────────────────────────────────────────── */
-async function carregarGraduandos() {
+async function carregarGraduandos(force = false) {
   const lista = $('profGraduandosLista');
+
+  const cached = !force ? getCachedGraduandos() : null;
+  if (cached) {
+    renderGraduandos(cached);
+    return;
+  }
+
+  if (graduandosInFlight) return;
+  graduandosInFlight = true;
+
   lista.innerHTML = '<p class="loading">Carregando…</p>';
   try {
     const r = await apiCall({ action: 'graduandos' });
     if (!r || !r.ok) throw new Error((r && r.erro) ? r.erro : 'Falha ao carregar.');
-    renderGraduandos(r.data || []);
+    graduandosCache = { ts: Date.now(), data: r.data || [] };
+    renderGraduandos(graduandosCache.data);
   } catch (e) {
     lista.innerHTML = `<p class="msg err">Erro ao carregar graduandos. ${e.message || ''}</p>`;
+  } finally {
+    graduandosInFlight = false;
   }
 }
-
 function renderGraduandos(graduandos) {
   const el = $('profGraduandosLista');
   if (!graduandos.length) {
