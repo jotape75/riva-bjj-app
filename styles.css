@@ -10,6 +10,7 @@
 
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
+
 body{
   background:var(--bg);
   color:var(--text);
@@ -17,18 +18,36 @@ body{
   -webkit-text-size-adjust:100%;
 }
 
+/* HEADER */
 .hdr{
   position:sticky;top:0;z-index:10;
   background:var(--card);
   border-bottom:2px solid var(--red);
-  padding:10px 16px;
+  padding:14px 16px; /* mais espaço para o logo maior */
 }
-.hdr-inner{
-  max-width:520px;margin:0 auto;
-  display:flex;justify-content:center;
-}
-.logo{height:44px;width:auto;object-fit:contain}
 
+.hdr-inner{
+  max-width:520px;
+  margin:0 auto;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+/* ✅ LOGO REDONDO E MAIOR */
+.logo{
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  background: #fff;                 /* fundo branco para destacar o logo */
+  padding: 12px;                    /* respiro interno */
+  border: 3px solid var(--red);     /* aro vermelho */
+  box-shadow: 0 10px 22px rgba(0,0,0,.45);
+  object-fit: contain;
+  display:block;
+}
+
+/* PAGE */
 .page{
   padding:16px 16px calc(96px + env(safe-area-inset-bottom, 0px));
   max-width:520px;
@@ -44,9 +63,14 @@ body{
 }
 
 .title{font-size:18px;margin-bottom:14px}
+
 .label{
-  display:block;color:var(--muted);font-size:12px;margin-bottom:6px;
-  text-transform:uppercase;letter-spacing:1px
+  display:block;
+  color:var(--muted);
+  font-size:12px;
+  margin-bottom:6px;
+  text-transform:uppercase;
+  letter-spacing:1px;
 }
 
 .input{
@@ -81,8 +105,17 @@ body{
 
 .hidden{display:none}
 
-.row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+/* ALUNO */
+.row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:12px;
+}
+
 .name{font-size:20px;font-weight:900;margin-bottom:6px}
+
 .badge{
   display:inline-block;
   padding:3px 12px;
@@ -98,7 +131,13 @@ body{
   gap:10px 12px;
   padding-top:8px;
 }
-.k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:1px}
+
+.k{
+  color:var(--muted);
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+}
 .v{font-weight:900}
 
 .status{
@@ -110,6 +149,7 @@ body{
   background:#141414;
 }
 
+/* BOTTOM NAV */
 .bnav{
   position:fixed;left:0;right:0;bottom:0;z-index:20;
   display:flex;
@@ -117,6 +157,7 @@ body{
   border-top:1px solid var(--border);
   padding-bottom:env(safe-area-inset-bottom, 0px);
 }
+
 .navbtn{
   flex:1;
   background:transparent;
