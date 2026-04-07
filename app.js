@@ -729,7 +729,8 @@ function renderGraduandos(graduandos) {
 function preencherCard(d) {
   $('aNome').textContent  = d.nome  || '—';
   $('aFaixa').textContent = d.faixa || '—';
-  $('aGrau').textContent  = (d.grau != null) ? d.grau : '—';
+  const g = (d.grau != null && d.grau !== '') ? Number(d.grau) : null;
+  $('aGrau').textContent = (g === 0) ? 'Iniciante' : (g != null ? String(g) : '—');
   $('aAulas').textContent = (d.aulasNoGrau != null) ? `${d.aulasNoGrau} / ${d.metaGrau}` : '—';
   $('aData').textContent  = d.dataGrau || '—';
   $('aStatus').textContent = d.statusExame || d.status || '—';
