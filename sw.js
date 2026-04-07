@@ -1,4 +1,4 @@
-const CACHE = "riva-bjj-v13";
+const CACHE = "riva-bjj-v14";
 const ASSETS = [
   "./",
   "./index.html",
@@ -26,6 +26,15 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+  // Never cache Apps Script API calls (JSONP / action= requests)
+  const url = event.request.url;
+  if (url.includes("script.google.com/macros") ||
+      url.includes("action=") ||
+      url.includes("callback=_rv")) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   event.respondWith((async () => {
     const cache = await caches.open(CACHE);
     const cached = await cache.match(event.request);

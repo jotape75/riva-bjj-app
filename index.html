@@ -28,6 +28,15 @@
 
       <p class="msg err" id="err"></p>
       <p class="msg info" id="info"></p>
+
+      <hr class="divider" />
+
+      <h2 class="title" style="font-size:15px">Acesso do Professor</h2>
+      <label class="label" for="profCpf">CPF do Professor</label>
+      <input id="profCpf" class="input" inputmode="numeric" autocomplete="off"
+             placeholder="CPF do professor" maxlength="14" />
+      <button class="btn secondary" id="btnProfLogin">Entrar como Professor</button>
+      <p class="msg err" id="profErr"></p>
     </section>
 
     <section class="card hidden" id="cardAluno">
@@ -72,43 +81,29 @@
     <!-- ── PROFESSOR ──────────────────────────────────────── -->
     <section class="card hidden" id="cardProf">
 
-      <!-- Login form -->
-      <div id="profLoginBox">
-        <h2 class="title">Acesso do Professor</h2>
-        <label class="label" for="profCpf">CPF</label>
-        <input id="profCpf" class="input" inputmode="numeric" autocomplete="off"
-               placeholder="CPF do professor" maxlength="14" />
-        <button class="btn primary" id="btnProfLogin">Entrar como Professor</button>
-        <p class="msg err" id="profErr"></p>
+      <div class="row">
+        <div>
+          <div class="name" id="pNome">—</div>
+          <div class="badge badge-prof">PROFESSOR</div>
+        </div>
+        <button class="btn ghost" id="btnProfSair">Sair</button>
       </div>
 
-      <!-- Logged-in view -->
-      <div id="profLogadoBox" class="hidden">
-        <div class="row">
-          <div>
-            <div class="name" id="pNome">—</div>
-            <div class="badge badge-prof">PROFESSOR</div>
-          </div>
-          <button class="btn ghost" id="btnProfSair">Sair</button>
-        </div>
+      <div id="profDiasRow" class="dias-row"></div>
 
-        <div id="profDiasRow" class="dias-row"></div>
+      <div id="profSessoesLista" class="sessoes-lista hidden"></div>
 
-        <div id="profSessoesLista" class="sessoes-lista hidden"></div>
-
-        <div id="profPresencaBox" class="hidden">
-          <div class="presenca-titulo mb8" id="profPresencaTitulo"></div>
-          <div id="profPresencaLista"></div>
-        </div>
+      <div id="profPresencaBox" class="hidden">
+        <div class="presenca-titulo mb8" id="profPresencaTitulo"></div>
+        <div id="profPresencaLista"></div>
       </div>
 
     </section>
   </main>
 
-  <nav class="bnav">
+  <nav class="bnav" id="mainNav">
     <button class="navbtn on" id="navHome">Início</button>
     <button class="navbtn" id="navAgendar">Agendar</button>
-    <button class="navbtn" id="navProf">Professor</button>
   </nav>
 
   <script src="./app.js"></script>
