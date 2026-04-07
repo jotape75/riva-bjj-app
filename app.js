@@ -601,6 +601,26 @@ function renderPresencaLista(ctx, lista, sessao) {
 async function fazerCheckin() {
   if (!aSelSessao || !alunoData) return;
   $('btnCheckin').disabled = true;
+
+  // ✅ Atualiza DOM ANTES da chamada (igual ao aprovar)
+  const lista = $('presencaLista');
+  const novoItem = document.createElement('div');
+  novoItem.className = 'presenca-item';
+  const info = document.createElement('div');
+  info.className = 'presenca-info';
+  const spanNome = document.createElement('span');
+  spanNome.className = 'presenca-nome';
+  spanNome.textContent = alunoData.nome;
+  const spanStatus = document.createElement('span');
+  spanStatus.className = 'presenca-status status-pend';
+  spanStatus.textContent = 'PENDENTE ⏳';
+  info.appendChild(spanNome);
+  info.appendChild(spanStatus);
+  novoItem.appendChild(info);
+  if (lista) lista.appendChild(novoItem);
+  hide('btnCheckin');
+  show('btnDeletarCheckin');
+
   try {
     const r = await apiCall({
       action:  'checkin',
@@ -611,31 +631,21 @@ async function fazerCheckin() {
     });
     if (r.ok) {
       invalidatePresenca(aSelSessao.data, aSelSessao.horario);
-      // Atualiza DOM direto, sem nova chamada à API
-      const lista = $('presencaLista');
-      if (lista) {
-        const novoItem = document.createElement('div');
-        novoItem.className = 'presenca-item';
-        const info = document.createElement('div');
-        info.className = 'presenca-info';
-        const spanNome = document.createElement('span');
-        spanNome.className = 'presenca-nome';
-        spanNome.textContent = alunoData.nome;
-        const spanStatus = document.createElement('span');
-        spanStatus.className = 'presenca-status status-pend';
-        spanStatus.textContent = 'PENDENTE ⏳';
-        info.appendChild(spanNome);
-        info.appendChild(spanStatus);
-        novoItem.appendChild(info);
-        lista.appendChild(novoItem);
-      }
-      hide('btnCheckin');
-      show('btnDeletarCheckin');
     } else {
+      // ❌ Reverte se der erro
+      if (lista && novoItem) novoItem.remove();
+      show('btnCheckin');
+      hide('btnDeletarCheckin');
       alert(r.erro || 'Erro ao fazer check-in.');
     }
-  } catch (e) { alert('Erro de conexão.'); }
-  finally { $('btnCheckin').disabled = false; }
+  } catch (e) {
+    if (lista && novoItem) novoItem.remove();
+    show('btnCheckin');
+    hide('btnDeletarCheckin');
+    alert('Erro de conexão.');
+  } finally {
+    $('btnCheckin').disabled = false;
+  }
 }
 
 async function deletarCheckin() {
