@@ -18,11 +18,37 @@
   </header>
 
   <main class="page">
-    <section class="card" id="cardLogin">
+    <!-- ── BIOMETRIA – DESBLOQUEIO / REGISTRO ────────────────────── -->
+    <section class="card hidden" id="cardBioLock">
+      <div class="bio-icon" aria-hidden="true" id="bioIcon">🔒</div>
+      <h2 class="title bio-center" id="bioTitle">Riva BJJ</h2>
+      <p class="bio-subtitle" id="bioSubtitle">Use biometria para desbloquear.</p>
+      <button class="btn primary" id="btnBioAction">🔓 Desbloquear</button>
+      <p class="msg err" id="bioErr"></p>
+      <p class="msg info" id="bioInfo"></p>
+      <button class="btn ghost bio-switch" id="btnBioLogout">Usar outra conta</button>
+    </section>
+
+    <!-- ── SEM SUPORTE A WEBAUTHN ────────────────────────────────── -->
+    <section class="card hidden" id="cardNoSupport">
+      <div class="bio-icon" aria-hidden="true">⚠️</div>
+      <h2 class="title bio-center">Biometria Necessária</h2>
+      <p class="bio-desc">Este app exige biometria (Face ID / Touch ID / impressão digital) para proteger o acesso.</p>
+      <p class="bio-desc">Seu dispositivo ou navegador não suporta essa funcionalidade. Requisitos:</p>
+      <ul class="bio-list">
+        <li>iPhone com iOS 16 ou superior (todos os browsers usam Safari/WebKit no iOS)</li>
+        <li>Android com biometria ativada e Chrome atualizado</li>
+        <li>Acesso via HTTPS (GitHub Pages já usa HTTPS ✓)</li>
+      </ul>
+      <p class="bio-desc bio-muted">Se o seu dispositivo é compatível, tente recarregar a página ou abrir no Safari.</p>
+    </section>
+
+    <!-- ── LOGIN ─────────────────────────────────────────────────── -->
+    <section class="card hidden" id="cardLogin">
       <h1 class="title">Acesso</h1>
 
-      <label class="label" for="cpf">CPF</label>
-      <input id="cpf" class="input" inputmode="numeric" autocomplete="off" placeholder="Digite seu CPF" maxlength="14" />
+      <label class="label" for="email">Email</label>
+      <input id="email" class="input" type="email" inputmode="email" autocomplete="email" placeholder="Digite seu email" />
 
       <button class="btn primary" id="btnLogin">Entrar</button>
 

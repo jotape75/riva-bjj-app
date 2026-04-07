@@ -2,6 +2,16 @@ const API_BASE       = 'https://script.google.com/macros/s/AKfycbyBLlVjEvO35RufI
 const API_TIMEOUT_MS = 15000;
 const SEMANA_TTL     = 30000;  // 30 s
 const PRESENCA_TTL   = 15000;  // 15 s
+const RP_NAME        = 'Riva BJJ';
+
+/* ── localStorage key constants ──────────────────────────────── */
+const LS_EMAIL        = 'rv_email';
+const LS_NOME         = 'rv_nome';
+const LS_PROF_EMAIL   = 'rv_prof_email';
+const LS_PROF_NOME    = 'rv_prof_nome';
+// Biometric keys – intentionally kept on logout so next login skips re-registration
+const LS_CREDENTIAL   = 'rv_credentialId';
+const LS_BIO_ATIVADA  = 'rv_biometria_ativada';
 
 /* ── JSONP helper ─────────────────────────────────────────────── */
 function apiCall(params) {
@@ -23,12 +33,168 @@ const $    = id => document.getElementById(id);
 const show = id => $(id).classList.remove('hidden');
 const hide = id => $(id).classList.add('hidden');
 
-function fmtCpf(v) {
-  const d = v.replace(/\D/g, '').slice(0, 11);
-  if (d.length <= 3) return d;
-  if (d.length <= 6) return d.slice(0, 3) + '.' + d.slice(3);
-  if (d.length <= 9) return d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6);
-  return d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6, 9) + '-' + d.slice(9);
+/* ── WebAuthn / Biometria ──────────────────────────────────────── */
+let bioAction = 'unlock'; // 'unlock' | 'register'
+
+function b64urlEncode(buf) {
+  return btoa(String.fromCharCode(...new Uint8Array(buf)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+function b64urlDecode(s) {
+  s = s.replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  return Uint8Array.from(atob(s), c => c.charCodeAt(0));
+}
+
+function webAuthnAvailable() {
+  return !!(window.PublicKeyCredential &&
+            navigator.credentials &&
+            typeof navigator.credentials.create === 'function' &&
+            typeof navigator.credentials.get   === 'function');
+}
+
+function bioErrorMsg(e) {
+  if (e.name === 'NotAllowedError')
+    return 'Autenticação cancelada ou negada. Toque em "Desbloquear" para tentar novamente.';
+  if (e.name === 'NotSupportedError')
+    return 'Biometria não suportada neste dispositivo ou navegador.';
+  if (e.name === 'SecurityError')
+    return 'Erro de segurança. Verifique se o site está em HTTPS.';
+  if (e.name === 'InvalidStateError')
+    return 'Biometria já registrada neste dispositivo.';
+  return `Erro ao autenticar: ${e.message || 'desconhecido'}.`;
+}
+
+async function bioRegister(email) {
+  const challenge = crypto.getRandomValues(new Uint8Array(32));
+  const userId    = crypto.getRandomValues(new Uint8Array(16));
+  const cred = await navigator.credentials.create({
+    publicKey: {
+      rp: { name: RP_NAME, id: location.hostname },
+      user: { id: userId, name: email, displayName: email },
+      challenge,
+      pubKeyCredParams: [
+        { type: 'public-key', alg: -7   },  // ES256
+        { type: 'public-key', alg: -257 },  // RS256
+      ],
+      authenticatorSelection: {
+        userVerification: 'required',
+        residentKey: 'preferred',
+      },
+      timeout: 60000,
+      attestation: 'none',
+    },
+  });
+  localStorage.setItem(LS_CREDENTIAL,      b64urlEncode(cred.rawId));
+  localStorage.setItem(LS_BIO_ATIVADA, '1');
+}
+
+async function bioAuthenticate() {
+  const challenge  = crypto.getRandomValues(new Uint8Array(32));
+  const credIdStr  = localStorage.getItem(LS_CREDENTIAL);
+  const allowCreds = credIdStr
+    ? [{ type: 'public-key', id: b64urlDecode(credIdStr) }]
+    : [];
+  await navigator.credentials.get({
+    publicKey: {
+      challenge,
+      allowCredentials: allowCreds,
+      userVerification: 'required',
+      timeout: 60000,
+    },
+  });
+}
+
+function showBioLock(mode) {
+  bioAction = mode;
+  ['cardLogin', 'cardAluno', 'cardAgendar', 'cardProf', 'cardBioLock', 'cardNoSupport'].forEach(hide);
+  hide('mainNav');
+  if (mode === 'unlock') {
+    $('bioIcon').textContent     = '🔒';
+    $('bioTitle').textContent    = 'Riva BJJ';
+    $('bioSubtitle').textContent = 'Use biometria para desbloquear o app.';
+    $('btnBioAction').textContent = '🔓 Desbloquear';
+  } else {
+    $('bioIcon').textContent     = '🔐';
+    $('bioTitle').textContent    = 'Ativar Biometria';
+    $('bioSubtitle').textContent = 'Para sua segurança, registre sua biometria neste dispositivo antes de continuar.';
+    $('btnBioAction').textContent = '🔐 Registrar Biometria';
+  }
+  $('bioErr').textContent  = '';
+  $('bioInfo').textContent = '';
+  show('cardBioLock');
+}
+
+async function onBioAction() {
+  $('btnBioAction').disabled = true;
+  $('bioErr').textContent    = '';
+  $('bioInfo').textContent   = 'Aguardando biometria…';
+  const email = localStorage.getItem(LS_EMAIL) || localStorage.getItem(LS_PROF_EMAIL) || '';
+  try {
+    if (bioAction === 'register') {
+      await bioRegister(email);
+    } else {
+      await bioAuthenticate();
+    }
+    $('bioInfo').textContent = '';
+    afterBioSuccess();
+  } catch (e) {
+    $('bioInfo').textContent = '';
+    $('bioErr').textContent  = bioErrorMsg(e);
+  } finally {
+    $('btnBioAction').disabled = false;
+  }
+}
+
+function afterBioSuccess() {
+  const email  = localStorage.getItem(LS_EMAIL);
+  const nome   = localStorage.getItem(LS_NOME);
+  const pEmail = localStorage.getItem(LS_PROF_EMAIL);
+  const pNome  = localStorage.getItem(LS_PROF_NOME);
+
+  if (pEmail && pNome) {
+    profData = { nome: pNome, email: pEmail };
+    showProfPage();
+    apiCall({ action: 'profLoginEmail', email: pEmail })
+      .then(r => { if (r && r.ok) { profData = r.data; $('pNome').textContent = profData.nome || 'Professor'; } })
+      .catch(() => {});
+    return;
+  }
+
+  if (email && nome) {
+    alunoData = { nome };
+    preencherCard(alunoData);
+    apiCall({ action: 'loginEmail', email })
+      .then(r => { if (r && r.ok) { alunoData = r.data; preencherCard(alunoData); } })
+      .catch(() => {});
+    showTab('Home');
+    return;
+  }
+
+  // No session data: show login as fallback
+  showTab('Home');
+}
+
+function onBioSwitchAccount() {
+  alunoData = null;
+  profData  = null;
+  localStorage.removeItem(LS_EMAIL);
+  localStorage.removeItem(LS_NOME);
+  localStorage.removeItem(LS_PROF_EMAIL);
+  localStorage.removeItem(LS_PROF_NOME);
+  hide('cardBioLock');
+  showTab('Home');
+}
+
+function afterLoginSuccess() {
+  const bioOk  = localStorage.getItem(LS_BIO_ATIVADA) === '1';
+  const credId = localStorage.getItem(LS_CREDENTIAL);
+  if (bioOk && credId) {
+    afterBioSuccess();
+  } else {
+    showBioLock('register');
+  }
 }
 
 /* ── State ────────────────────────────────────────────────────── */
@@ -66,7 +232,7 @@ function invalidatePresenca(data, horario) {
 
 /* ── Navigation ───────────────────────────────────────────────── */
 function showTab(tab) {
-  ['cardLogin', 'cardAluno', 'cardAgendar', 'cardProf'].forEach(hide);
+  ['cardLogin', 'cardAluno', 'cardAgendar', 'cardProf', 'cardBioLock', 'cardNoSupport'].forEach(hide);
   ['navHome', 'navAgendar'].forEach(id => $(id).classList.remove('on'));
 
   // Show nav only for logged-in students; professors have no bottom nav (handled in showProfPage)
@@ -272,7 +438,7 @@ async function fazerCheckin() {
   try {
     const r = await apiCall({
       action:  'checkin',
-      cpf:     localStorage.getItem('rv_cpf') || '',
+      email:   localStorage.getItem(LS_EMAIL) || '',
       data:    aSelSessao.data,
       horario: aSelSessao.horario,
       treino:  aSelSessao.nome,
@@ -294,7 +460,7 @@ async function deletarCheckin() {
   try {
     const r = await apiCall({
       action:  'deletarCheckin',
-      cpf:     localStorage.getItem('rv_cpf') || '',
+      email:   localStorage.getItem(LS_EMAIL) || '',
       data:    aSelSessao.data,
       horario: aSelSessao.horario,
     });
@@ -313,8 +479,8 @@ async function profAprovar(linha, sessao, btn) {
   btn.disabled = true;
   try {
     const r = await apiCall({
-      action:   'aprovar',
-      cpfProf:  localStorage.getItem('rv_prof_cpf') || '',
+      action:    'aprovar',
+      emailProf: localStorage.getItem(LS_PROF_EMAIL) || '',
       linha,
     });
     if (r.ok) {
@@ -331,8 +497,8 @@ async function profReprovar(linha, sessao, btn) {
   btn.disabled = true;
   try {
     const r = await apiCall({
-      action:   'reprovar',
-      cpfProf:  localStorage.getItem('rv_prof_cpf') || '',
+      action:    'reprovar',
+      emailProf: localStorage.getItem(LS_PROF_EMAIL) || '',
       linha,
     });
     if (r.ok) {
@@ -357,32 +523,33 @@ function preencherCard(d) {
 
 /* ── Generic login ────────────────────────────────────────────── */
 async function loginGeneric() {
-  const cpf = $('cpf').value.replace(/\D/g, '');
-  if (cpf.length !== 11) { $('err').textContent = 'CPF inválido.'; return; }
+  const email = $('email').value.trim().toLowerCase();
+  if (!email || email.indexOf('@') < 1) { $('err').textContent = 'Email inválido.'; return; }
   $('err').textContent  = '';
   $('info').textContent = 'Buscando…';
   $('btnLogin').disabled = true;
   try {
     // Try professor first
-    const rProf = await apiCall({ action: 'profLogin', cpf });
+    const rProf = await apiCall({ action: 'profLoginEmail', email });
     if (rProf.ok) {
       profData = rProf.data;
-      localStorage.setItem('rv_prof_cpf',  cpf);
-      localStorage.setItem('rv_prof_nome', profData.nome || '');
+      localStorage.setItem(LS_PROF_EMAIL, email);
+      localStorage.setItem(LS_PROF_NOME,  profData.nome || '');
       semanaCache = null;
       pSelDia = null; pSelSessao = null;
       $('info').textContent = '';
-      showProfPage();
+      afterLoginSuccess();
       return;
     }
     // Try student
-    const r = await apiCall({ action: 'loginCpf', cpf });
-    if (!r.ok) { $('err').textContent = r.erro || 'CPF não encontrado.'; $('info').textContent = ''; return; }
+    const r = await apiCall({ action: 'loginEmail', email });
+    if (!r.ok) { $('err').textContent = r.erro || 'Email não encontrado.'; $('info').textContent = ''; return; }
     alunoData = r.data;
-    localStorage.setItem('rv_cpf',  cpf);
-    localStorage.setItem('rv_nome', alunoData.nome || '');
+    localStorage.setItem(LS_EMAIL,  email);
+    localStorage.setItem(LS_NOME, alunoData.nome || '');
     preencherCard(alunoData);
-    showTab('Home');
+    $('info').textContent = '';
+    afterLoginSuccess();
   } catch (e) {
     $('err').textContent = 'Erro de conexão.';
   } finally {
@@ -396,9 +563,10 @@ function logout() {
   semanaCache = null;
   presenceCache = {};
   aSelDia = null; aSelSessao = null;
-  localStorage.removeItem('rv_cpf');
-  localStorage.removeItem('rv_nome');
-  $('cpf').value = '';
+  localStorage.removeItem(LS_EMAIL);
+  localStorage.removeItem(LS_NOME);
+  // Keep rv_credentialId and rv_biometria_ativada so next login skips re-registration
+  $('email').value = '';
   hide('mainNav');
   showTab('Home');
 }
@@ -409,60 +577,70 @@ function profLogout() {
   semanaCache  = null;
   presenceCache = {};
   pSelDia = null; pSelSessao = null;
-  localStorage.removeItem('rv_prof_cpf');
-  localStorage.removeItem('rv_prof_nome');
+  localStorage.removeItem(LS_PROF_EMAIL);
+  localStorage.removeItem(LS_PROF_NOME);
+  // Keep rv_credentialId and rv_biometria_ativada so next login skips re-registration
   hide('cardProf');
   showTab('Home');
 }
 
 /* ── Init ─────────────────────────────────────────────────────── */
 function init() {
-  // Restore student session
-  const cpf  = localStorage.getItem('rv_cpf');
-  const nome = localStorage.getItem('rv_nome');
-  if (cpf && nome) {
-    alunoData = { nome };
-    preencherCard(alunoData);
-    apiCall({ action: 'loginCpf', cpf })
-      .then(r => { if (r && r.ok) { alunoData = r.data; preencherCard(alunoData); } })
-      .catch(() => {});
+  // 1) WebAuthn support check (mandatory)
+  if (!webAuthnAvailable()) {
+    ['cardLogin', 'cardAluno', 'cardAgendar', 'cardProf'].forEach(hide);
+    hide('mainNav');
+    show('cardNoSupport');
+    return;
   }
 
-  // Restore professor session
-  const pCpf  = localStorage.getItem('rv_prof_cpf');
-  const pNome = localStorage.getItem('rv_prof_nome');
-  if (pCpf && pNome) {
-    profData = { nome: pNome, cpf: pCpf };
-  }
+  // 2) Wire up biometric buttons
+  $('btnBioAction').addEventListener('click', onBioAction);
+  $('btnBioLogout').addEventListener('click', onBioSwitchAccount);
 
-  // CPF input formatting
-  $('cpf').addEventListener('input', e => { e.target.value = fmtCpf(e.target.value); });
-  $('cpf').addEventListener('keydown', e => { if (e.key === 'Enter') loginGeneric(); });
-
-  // Student buttons
+  // 3) Wire up student buttons
   $('btnLogin').addEventListener('click', loginGeneric);
+  $('email').addEventListener('keydown', e => { if (e.key === 'Enter') loginGeneric(); });
   $('btnSair').addEventListener('click', logout);
   $('btnAtualizar').addEventListener('click', async () => {
-    const c = localStorage.getItem('rv_cpf');
-    if (!c) return;
-    const r = await apiCall({ action: 'loginCpf', cpf: c }).catch(() => null);
+    const e = localStorage.getItem(LS_EMAIL);
+    if (!e) return;
+    const r = await apiCall({ action: 'loginEmail', email: e }).catch(() => null);
     if (r && r.ok) { alunoData = r.data; preencherCard(alunoData); }
   });
   $('btnCheckin').addEventListener('click', fazerCheckin);
   $('btnDeletarCheckin').addEventListener('click', deletarCheckin);
 
-  // Professor buttons
+  // 4) Wire up professor buttons
   $('btnProfSair').addEventListener('click', profLogout);
 
-  // Bottom nav
+  // 5) Bottom nav
   $('navHome').addEventListener('click',    () => showTab('Home'));
   $('navAgendar').addEventListener('click', () => showTab('Agendar'));
 
-  if (profData) {
-    showProfPage();
-  } else {
-    showTab('Home');
+  // 6) Check for existing session and decide initial screen
+  const email  = localStorage.getItem(LS_EMAIL);
+  const nome   = localStorage.getItem(LS_NOME);
+  const pEmail = localStorage.getItem(LS_PROF_EMAIL);
+  const pNome  = localStorage.getItem(LS_PROF_NOME);
+  const bioOk  = localStorage.getItem(LS_BIO_ATIVADA) === '1';
+  const credId = localStorage.getItem(LS_CREDENTIAL);
+
+  if (email && nome) {
+    alunoData = { nome };
+    preencherCard(alunoData);
+    showBioLock(bioOk && credId ? 'unlock' : 'register');
+    return;
   }
+
+  if (pEmail && pNome) {
+    profData = { nome: pNome, email: pEmail };
+    showBioLock(bioOk && credId ? 'unlock' : 'register');
+    return;
+  }
+
+  // No session → show login
+  showTab('Home');
 }
 
 document.addEventListener('DOMContentLoaded', init);
