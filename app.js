@@ -633,6 +633,9 @@ function renderGraduandos(graduandos) {
     return;
   }
   el.innerHTML = graduandos.map(a => {
+    const grau = (a.grau != null && a.grau !== '')
+      ? `<span class="presenca-status status-ok">Grau ${a.grau}</span>`
+      : '';
     const restantes = (a.restantes != null && a.restantes !== '')
       ? `<div class="prof-grad-restantes"><span class="presenca-status status-pend">${a.restantes} restantes</span></div>`
       : '';
@@ -640,6 +643,7 @@ function renderGraduandos(graduandos) {
       <div class="presenca-info">
         <span class="presenca-nome">${a.nome || ''}</span>
         <span class="presenca-status status-ok">${a.faixa || ''}</span>
+        ${grau}
       </div>${restantes}
     </div>`;
   }).join('');
