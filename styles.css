@@ -167,8 +167,12 @@ body{
   padding:12px 6px;
   font-size:12px;
   cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
-.navbtn.on{color:var(--red);font-weight:900}
+.navbtn.on{color:var(--red)}
+.navbtn svg{display:block}
 
 /* ✅ MOBILE: logo menor + margens menores (fica melhor no celular) */
 @media (max-width: 420px){
