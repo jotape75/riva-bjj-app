@@ -1,7 +1,7 @@
 const API_BASE       = 'https://script.google.com/macros/s/AKfycbyBLlVjEvO35RufIh6pH9XOOTDXuj_BMrNHAJfdw9I-reScWX31dsVdOFJna1ZbJVqX/exec';
 const API_TIMEOUT_MS = 15000;
 const SEMANA_TTL     = 300000; // 5 min
-const PRESENCA_TTL   = 120000;  // 2 min 
+const PRESENCA_TTL   = 140000;  // 2 min 
 const GRADUANDOS_TTL = 21600000; // 6 h
 const RP_NAME        = 'Riva BJJ';
 
