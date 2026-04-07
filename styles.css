@@ -359,3 +359,44 @@ body{
   border-top:1px solid var(--border);
   margin:16px 0;
 }
+
+/* ── BIOMETRIA ───────────────────────────────────────────────────── */
+.bio-icon{
+  font-size:48px;
+  text-align:center;
+  margin-bottom:12px;
+  line-height:1;
+}
+
+.bio-center{text-align:center}
+
+.bio-subtitle{
+  color:var(--muted);
+  font-size:14px;
+  text-align:center;
+  margin-bottom:16px;
+  line-height:1.5;
+}
+
+.bio-switch{
+  margin-top:12px;
+  font-size:13px;
+}
+
+.bio-desc{
+  color:#ccc;
+  font-size:14px;
+  line-height:1.6;
+  margin-bottom:8px;
+}
+
+.bio-muted{color:var(--muted);font-size:13px}
+
+.bio-list{
+  list-style:disc;
+  padding-left:20px;
+  color:#ccc;
+  font-size:14px;
+  line-height:1.9;
+  margin-bottom:8px;
+}
