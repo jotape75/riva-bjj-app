@@ -652,6 +652,25 @@ async function deletarCheckin() {
   if (!aSelSessao || !alunoData) return;
   if (!confirm('Cancelar seu check-in neste treino?')) return;
   $('btnDeletarCheckin').disabled = true;
+
+  // Remove do DOM ANTES da chamada (otimista)
+  const lista = $('presencaLista');
+  let itemRemovido = null;
+  let proximoSibling = null;
+  if (lista) {
+    const items = lista.querySelectorAll('.presenca-item');
+    items.forEach(item => {
+      const nome = item.querySelector('.presenca-nome');
+      if (nome && nome.textContent.trim().toLowerCase() === alunoData.nome.trim().toLowerCase()) {
+        itemRemovido = item;
+        proximoSibling = item.nextSibling;
+      }
+    });
+    if (itemRemovido) itemRemovido.remove();
+  }
+  show('btnCheckin');
+  hide('btnDeletarCheckin');
+
   try {
     const r = await apiCall({
       action:  'deletarCheckin',
@@ -661,24 +680,21 @@ async function deletarCheckin() {
     });
     if (r.ok) {
       invalidatePresenca(aSelSessao.data, aSelSessao.horario);
-      // Remove item do DOM direto, sem nova chamada à API
-      const lista = $('presencaLista');
-      if (lista) {
-        const items = lista.querySelectorAll('.presenca-item');
-        items.forEach(item => {
-          const nome = item.querySelector('.presenca-nome');
-          if (nome && nome.textContent.trim().toLowerCase() === alunoData.nome.trim().toLowerCase()) {
-            item.remove();
-          }
-        });
-      }
-      show('btnCheckin');
-      hide('btnDeletarCheckin');
     } else {
+      // Reverte se der erro
+      if (lista && itemRemovido) lista.insertBefore(itemRemovido, proximoSibling);
+      hide('btnCheckin');
+      show('btnDeletarCheckin');
       alert(r.erro || 'Erro ao cancelar check-in.');
     }
-  } catch (e) { alert('Erro de conexão.'); }
-  finally { $('btnDeletarCheckin').disabled = false; }
+  } catch (e) {
+    if (lista && itemRemovido) lista.insertBefore(itemRemovido, proximoSibling);
+    hide('btnCheckin');
+    show('btnDeletarCheckin');
+    alert('Erro de conexão.');
+  } finally {
+    $('btnDeletarCheckin').disabled = false;
+  }
 }
 
 /* ── Professor approve / reject ───────────────────────────────── */
