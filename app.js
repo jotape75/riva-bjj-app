@@ -297,6 +297,18 @@ function showProfPage() {
 }
 
 /* ── Week schedule ────────────────────────────────────────────── */
+
+// Background fetch of treinosSemana; updates cache and calls onSuccess if data arrives.
+async function revalidateSemana(onSuccess) {
+  if (semanaInFlight) return;
+  semanaInFlight = true;
+  try {
+    const r = await apiCall({ action: 'treinosSemana' });
+    if (r.ok) { semanaCache = { ts: Date.now(), data: r.data }; onSuccess(r.data); }
+  } catch (_) { /* keep stale */ }
+  finally { semanaInFlight = false; }
+}
+
 async function loadSemana(ctx) {
   const rowId  = ctx === 'prof' ? 'profDiasRow' : 'diasRow';
   const cached = getCachedSemana();
@@ -304,14 +316,7 @@ async function loadSemana(ctx) {
   if (cached) {
     renderDias(ctx, cached);
     // Background revalidation – keep data fresh without blocking UI
-    if (!semanaInFlight) {
-      semanaInFlight = true;
-      try {
-        const r = await apiCall({ action: 'treinosSemana' });
-        if (r.ok) { semanaCache = { ts: Date.now(), data: r.data }; renderDias(ctx, r.data); }
-      } catch (_) { /* keep stale */ }
-      finally { semanaInFlight = false; }
-    }
+    revalidateSemana(data => renderDias(ctx, data));
     return;
   }
 
@@ -385,14 +390,7 @@ async function loadSemanaProfessor() {
   if (cached) {
     renderDiasProfessor(buildProfSemana(cached));
     // Background revalidation
-    if (!semanaInFlight) {
-      semanaInFlight = true;
-      try {
-        const r = await apiCall({ action: 'treinosSemana' });
-        if (r.ok) { semanaCache = { ts: Date.now(), data: r.data }; renderDiasProfessor(buildProfSemana(r.data)); }
-      } catch (_) { /* keep stale */ }
-      finally { semanaInFlight = false; }
-    }
+    revalidateSemana(data => renderDiasProfessor(buildProfSemana(data)));
     return;
   }
 
@@ -502,11 +500,13 @@ async function loadPresenca(ctx, sessao) {
   $(tituloId).textContent = `${sessao.data.slice(0, 5)} · ${sessao.horario} · ${sessao.nome}`;
   show(boxId);
 
+  // Set in-flight early so concurrent calls are rejected even in the cached branch
+  presencaInFlight[k] = true;
+
   // Serve from cache immediately, then revalidate in background
   const cached = getCachedPresenca(sessao.data, sessao.horario);
   if (cached) {
     renderPresencaLista(ctx, cached, sessao);
-    presencaInFlight[k] = true;
     try {
       const r = await apiCall({ action: 'listaPresenca', data: sessao.data, horario: sessao.horario });
       if (r.ok) {
@@ -518,7 +518,6 @@ async function loadPresenca(ctx, sessao) {
     return;
   }
 
-  presencaInFlight[k] = true;
   const cancel = delayedLoader($(listaId));
   if (ctx !== 'prof') { hide('btnCheckin'); hide('btnDeletarCheckin'); }
 
