@@ -182,17 +182,6 @@ function afterBioSuccess() {
   showTab('Home');
 }
 
-function onBioSwitchAccount() {
-  alunoData = null;
-  profData  = null;
-  localStorage.removeItem(LS_EMAIL);
-  localStorage.removeItem(LS_NOME);
-  localStorage.removeItem(LS_PROF_EMAIL);
-  localStorage.removeItem(LS_PROF_NOME);
-  hide('cardBioLock');
-  showTab('Home');
-}
-
 function afterLoginSuccess() {
   const bioOk  = localStorage.getItem(LS_BIO_ATIVADA) === '1';
   const credId = localStorage.getItem(LS_CREDENTIAL);
@@ -1011,18 +1000,11 @@ function init() {
 
   // 2) Wire up biometric buttons
   $('btnBioAction').addEventListener('click', onBioAction);
-  $('btnBioLogout').addEventListener('click', onBioSwitchAccount);
 
   // 3) Wire up student buttons
   $('btnLogin').addEventListener('click', loginGeneric);
   $('email').addEventListener('keydown', e => { if (e.key === 'Enter') loginGeneric(); });
   $('btnSair').addEventListener('click', logout);
-  $('btnAtualizar').addEventListener('click', async () => {
-    const e = localStorage.getItem(LS_EMAIL);
-    if (!e) return;
-    const r = await apiCall({ action: 'loginEmail', email: e }).catch(() => null);
-    if (r && r.ok) { alunoData = r.data; preencherCard(alunoData); }
-  });
   $('btnCheckin').addEventListener('click', fazerCheckin);
   $('btnDeletarCheckin').addEventListener('click', deletarCheckin);
   $('btnBell').addEventListener('click', loadNotificacoes);
