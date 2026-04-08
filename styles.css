@@ -242,7 +242,7 @@ body{
   color:#fff;
 }
 .dia-nome{font-size:15px;font-weight:900}
-.dia-data{font-size:13px;color:var(--muted)}
+.dia-data{font-size:13px;color:#fff}
 .dia-btn.active .dia-data{color:#e88}
 
 /* ── SESSION CARDS ─────────────────────────────────────────────── */
@@ -379,8 +379,8 @@ body{
 .bio-center{text-align:center}
 
 .bio-subtitle{
-  color:var(--muted);
-  font-size:14px;
+  color:#fff;
+  font-size:16px;
   text-align:center;
   margin-bottom:16px;
   line-height:1.5;
@@ -449,19 +449,9 @@ body{
   gap:8px;
 }
 
-/* ── WhatsApp button ─────────────────────────────────────────── */
-.btn-whatsapp{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  width:42px;
-  height:42px;
-  border-radius:50%;
-  background:#25D366;
-  text-decoration:none;
-  flex-shrink:0;
-}
-.btn-whatsapp:active{opacity:.75}
+/* ── WhatsApp nav button ─────────────────────────────────────── */
+#navWhatsApp{color:#25D366}
+#navWhatsApp:active{opacity:.75}
 
 .btn-bell{
   position:relative;
