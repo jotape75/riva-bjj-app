@@ -4,6 +4,7 @@ const SEMANA_TTL     = 300000; // 5 min
 const PRESENCA_TTL   = 300000;  // 5 min
 const GRADUANDOS_TTL = 21600000; // 6 h
 const NOTIF_TTL      = 600000;   // 10 min
+const BIO_GRACE_MS   = 1800000;  // 30 min
 const RP_NAME        = 'Riva BJJ';
 
 /* ── localStorage key constants ──────────────────────────────── */
@@ -15,6 +16,7 @@ const LS_PROF_NOME    = 'rv_prof_nome';
 const LS_CREDENTIAL   = 'rv_credentialId';
 const LS_BIO_ATIVADA  = 'rv_biometria_ativada';
 const LS_NOTIF_VISTO  = 'rv_notif_visto';
+const LS_BIO_TS       = 'rv_bio_ts';
 
 /* ── JSONP helper ─────────────────────────────────────────────── */
 function apiCall(params) {
@@ -150,7 +152,8 @@ async function onBioAction() {
   }
 }
 
-function afterBioSuccess() {
+function afterBioSuccess(updateTs = true) {
+  if (updateTs) localStorage.setItem(LS_BIO_TS, String(Date.now()));
   hide('cardBioLock');
   const email  = localStorage.getItem(LS_EMAIL);
   const nome   = localStorage.getItem(LS_NOME);
@@ -968,6 +971,7 @@ function logout() {
   aSelDia = null; aSelSessao = null;
   localStorage.removeItem(LS_EMAIL);
   localStorage.removeItem(LS_NOME);
+  localStorage.removeItem(LS_BIO_TS);
   // Keep rv_credentialId and rv_biometria_ativada so next login skips re-registration
   $('email').value = '';
   hide('mainNav');
@@ -982,6 +986,7 @@ function profLogout() {
   pSelDia = null; pSelSessao = null;
   localStorage.removeItem(LS_PROF_EMAIL);
   localStorage.removeItem(LS_PROF_NOME);
+  localStorage.removeItem(LS_BIO_TS);
   // Keep rv_credentialId and rv_biometria_ativada so next login skips re-registration
   hide('profGraduandosBox');
   hide('cardProf');
@@ -1033,16 +1038,20 @@ function init() {
   const pNome  = localStorage.getItem(LS_PROF_NOME);
   const bioOk  = localStorage.getItem(LS_BIO_ATIVADA) === '1';
   const credId = localStorage.getItem(LS_CREDENTIAL);
+  const bioTs    = parseInt(localStorage.getItem(LS_BIO_TS) || '0', 10);
+  const bioGrace = Date.now() - bioTs < BIO_GRACE_MS; // 30 minutes
 
   if (email && nome) {
     alunoData = { nome };
     preencherCard(alunoData);
+    if (bioOk && credId && bioGrace) { afterBioSuccess(false); return; }
     showBioLock(bioOk && credId ? 'unlock' : 'register');
     return;
   }
 
   if (pEmail && pNome) {
     profData = { nome: pNome, email: pEmail };
+    if (bioOk && credId && bioGrace) { afterBioSuccess(false); return; }
     showBioLock(bioOk && credId ? 'unlock' : 'register');
     return;
   }

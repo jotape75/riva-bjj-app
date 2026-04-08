@@ -299,8 +299,9 @@ body{
 
 .btn-sm{
   width:auto;
-  padding:9px 16px;
-  font-size:14px;
+  padding:12px 22px;
+  font-size:16px;
+  font-weight:800;
 }
 
 .btn-cancel{
@@ -342,6 +343,8 @@ body{
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
+  font-size:18px;
+  font-weight:700;
 }
 
 .grad-badges{
@@ -352,9 +355,9 @@ body{
 }
 
 .presenca-status{
-  font-size:13px;
+  font-size:14px;
   font-weight:900;
-  padding:4px 12px;
+  padding:5px 14px;
   border-radius:999px;
 }
 .status-ok  {background:#1a3a26;color:#4cd88a}
