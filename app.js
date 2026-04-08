@@ -14,7 +14,7 @@ const LS_PROF_NOME    = 'rv_prof_nome';
 // Biometric keys – intentionally kept on logout so next login skips re-registration
 const LS_CREDENTIAL   = 'rv_credentialId';
 const LS_BIO_ATIVADA  = 'rv_biometria_ativada';
-const LS_NOTIF_READ   = 'rv_notif_read';
+const LS_NOTIF_VISTO  = 'rv_notif_visto';
 
 /* ── JSONP helper ─────────────────────────────────────────────── */
 function apiCall(params) {
@@ -826,14 +826,23 @@ function renderGraduandos(graduandos) {
 }
 
 /* ── Notifications ────────────────────────────────────────────── */
+function notifAprovTs(n) {
+  // n.dataAprovacao = "07/04/2026 • 14:37"
+  try {
+    const [datePart, timePart] = n.dataAprovacao.split(' • ');
+    const [d, m, y] = datePart.split('/');
+    const [hh, mm] = timePart.split(':');
+    return new Date(+y, +m - 1, +d, +hh, +mm).getTime();
+  } catch (_) { return 0; }
+}
+
 function checkBellBadge() {
   const email = localStorage.getItem(LS_EMAIL);
   if (!email) return;
-  const readRaw = localStorage.getItem(LS_NOTIF_READ);
-  const readSet = readRaw ? new Set(JSON.parse(readRaw)) : new Set();
 
   function evaluate(notifs) {
-    const hasUnread = notifs.some(n => !readSet.has(n.id));
+    const visto = parseInt(localStorage.getItem(LS_NOTIF_VISTO) || '0', 10);
+    const hasUnread = notifs.some(n => notifAprovTs(n) > visto);
     hasUnread ? show('bellBadge') : hide('bellBadge');
   }
 
@@ -859,17 +868,14 @@ async function loadNotificacoes() {
   const email = localStorage.getItem(LS_EMAIL);
   if (!email) return;
 
-  // Show screen immediately
   ['cardAluno', 'cardAgendar'].forEach(hide);
   show('cardNotificacoes');
 
-  // Mark all currently cached notifications as read (merge with existing read set)
+  // Marca como visto agora
+  localStorage.setItem(LS_NOTIF_VISTO, String(Date.now()));
+  hide('bellBadge');
+
   if (notifCache) {
-    const readRaw = localStorage.getItem(LS_NOTIF_READ);
-    const readSet = readRaw ? new Set(JSON.parse(readRaw)) : new Set();
-    notifCache.data.forEach(n => readSet.add(n.id));
-    localStorage.setItem(LS_NOTIF_READ, JSON.stringify([...readSet]));
-    hide('bellBadge');
     renderNotificacoes(notifCache.data);
     if (Date.now() - notifCache.ts < NOTIF_TTL) return;
   }
@@ -882,11 +888,6 @@ async function loadNotificacoes() {
     cancel();
     if (!r.ok) { $('notifLista').innerHTML = `<p class="msg err">${r.erro || 'Erro'}</p>`; return; }
     notifCache = { ts: Date.now(), data: r.data || [] };
-    const readRaw2 = localStorage.getItem(LS_NOTIF_READ);
-    const readSet2 = readRaw2 ? new Set(JSON.parse(readRaw2)) : new Set();
-    notifCache.data.forEach(n => readSet2.add(n.id));
-    localStorage.setItem(LS_NOTIF_READ, JSON.stringify([...readSet2]));
-    hide('bellBadge');
     renderNotificacoes(notifCache.data);
   } catch (e) {
     cancel();
@@ -903,7 +904,7 @@ function renderNotificacoes(notifs) {
     return;
   }
   el.innerHTML = notifs.map(n => {
-    const isOk  = n.status === 'VALIDADO';
+    const isOk  = n.status.startsWith('VALIDADO');
     const emoji = isOk ? '✅' : '❌';
     const cls   = isOk ? 'ok' : 'err';
     const label = isOk ? 'Presença Aprovada!' : 'Presença Reprovada!';
@@ -972,7 +973,7 @@ function logout() {
   semanaCache = null;
   presenceCache = {};
   notifCache = null;
-  localStorage.removeItem(LS_NOTIF_READ);
+  localStorage.removeItem(LS_NOTIF_VISTO);
   aSelDia = null; aSelSessao = null;
   localStorage.removeItem(LS_EMAIL);
   localStorage.removeItem(LS_NOME);
