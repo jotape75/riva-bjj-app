@@ -519,7 +519,7 @@ body{
   border:1px solid var(--border);
   color:#fff;
   border-radius:10px;
-  font-size:16px;
+  padding:8px 12px;
   cursor:pointer;
   flex-shrink:0;
 }
