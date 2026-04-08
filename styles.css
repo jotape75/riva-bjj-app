@@ -63,7 +63,7 @@ body{
   margin-bottom:12px;
 }
 
-.title{font-size:18px;margin-bottom:14px}
+.title{font-size:22px;font-weight:900;margin-bottom:14px}
 
 .title-lg {
   font-size: 24px;
@@ -147,11 +147,11 @@ body{
 
 .k{
   color:#fff;
-  font-size:14px;
+  font-size:16px;
   text-transform:uppercase;
   letter-spacing:1px;
 }
-.v{font-weight:900}
+.v{font-size:18px;font-weight:900}
 
 .status{
   margin-top:14px;
@@ -326,7 +326,7 @@ body{
   flex-wrap:nowrap;
 }
 
-.presenca-nome{font-size:17px;font-weight:700;color:#fff}
+.presenca-nome{font-size:18px;font-weight:700;color:#fff}
 
 .grad-info{
   display:flex;
@@ -352,9 +352,9 @@ body{
 }
 
 .presenca-status{
-  font-size:11px;
+  font-size:13px;
   font-weight:900;
-  padding:3px 10px;
+  padding:4px 12px;
   border-radius:999px;
 }
 .status-ok  {background:#1a3a26;color:#4cd88a}
@@ -398,7 +398,7 @@ body{
 
 /* ── BIOMETRIA ───────────────────────────────────────────────────── */
 .bio-icon{
-  font-size:48px;
+  font-size:56px;
   text-align:center;
   margin-bottom:12px;
   line-height:1;
@@ -408,7 +408,8 @@ body{
 
 .bio-subtitle{
   color:#fff;
-  font-size:16px;
+  font-size:20px;
+  font-weight:700;
   text-align:center;
   margin-bottom:16px;
   line-height:1.5;
@@ -540,7 +541,7 @@ body{
 .notif-item:last-child{border-bottom:none}
 
 .notif-status{
-  font-size:17px;
+  font-size:20px;
   font-weight:900;
   margin-bottom:6px;
 }
@@ -548,14 +549,14 @@ body{
 .notif-status.err{color:#e86464}
 
 .notif-detalhe{
-  font-size:16px;
+  font-size:18px;
   font-weight:700;
   color:#fff;
   margin-bottom:4px;
 }
 
 .notif-data{
-  font-size:15px;
+  font-size:17px;
   font-weight:700;
   color:#fff;
 }
