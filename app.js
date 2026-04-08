@@ -3,6 +3,7 @@ const API_TIMEOUT_MS = 15000;
 const SEMANA_TTL     = 300000; // 5 min
 const PRESENCA_TTL   = 300000;  // 5 min
 const GRADUANDOS_TTL = 21600000; // 6 h
+const NOTIF_TTL      = 600000;   // 10 min
 const RP_NAME        = 'Riva BJJ';
 
 /* ── localStorage key constants ──────────────────────────────── */
@@ -13,6 +14,7 @@ const LS_PROF_NOME    = 'rv_prof_nome';
 // Biometric keys – intentionally kept on logout so next login skips re-registration
 const LS_CREDENTIAL   = 'rv_credentialId';
 const LS_BIO_ATIVADA  = 'rv_biometria_ativada';
+const LS_NOTIF_READ   = 'rv_notif_read';
 
 /* ── JSONP helper ─────────────────────────────────────────────── */
 function apiCall(params) {
@@ -109,7 +111,7 @@ async function bioAuthenticate() {
 
 function showBioLock(mode) {
   bioAction = mode;
-  ['cardLogin', 'cardAluno', 'cardAgendar', 'cardProf', 'cardBioLock', 'cardNoSupport'].forEach(hide);
+  ['cardLogin', 'cardAluno', 'cardAgendar', 'cardProf', 'cardBioLock', 'cardNoSupport', 'cardNotificacoes'].forEach(hide);
   hide('mainNav');
   if (mode === 'unlock') {
     $('bioIcon').textContent     = '🔒';
@@ -172,6 +174,7 @@ function afterBioSuccess() {
       .then(r => { if (r && r.ok) { alunoData = r.data; preencherCard(alunoData); } })
       .catch(() => {});
     showTab('Home');
+    checkBellBadge();
     return;
   }
 
@@ -213,6 +216,8 @@ let pSelDia      = null;
 let pSelSessao   = null;
 let graduandosCache    = null;  // { ts, data }
 let graduandosInFlight = false;
+let notifCache         = null;  // { ts, data }
+let notifInFlight      = false;
 
 /* ── Professor week helpers ───────────────────────────────────── */
 const NOMES_DIA_PT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
@@ -278,7 +283,7 @@ function delayedLoader(el, delay = 250) {
 
 /* ── Navigation ───────────────────────────────────────────────── */
 function showTab(tab) {
-  ['cardLogin', 'cardAluno', 'cardAgendar', 'cardProf', 'cardBioLock', 'cardNoSupport'].forEach(hide);
+  ['cardLogin', 'cardAluno', 'cardAgendar', 'cardProf', 'cardBioLock', 'cardNoSupport', 'cardNotificacoes'].forEach(hide);
   ['navHome', 'navAgendar'].forEach(id => $(id).classList.remove('on'));
 
   // Show nav only for logged-in students; professors have no bottom nav (handled in showProfPage)
@@ -820,6 +825,96 @@ function renderGraduandos(graduandos) {
   }).join('');
 }
 
+/* ── Notifications ────────────────────────────────────────────── */
+function checkBellBadge() {
+  const email = localStorage.getItem(LS_EMAIL);
+  if (!email) return;
+  const readRaw = localStorage.getItem(LS_NOTIF_READ);
+  const readSet = readRaw ? new Set(JSON.parse(readRaw)) : new Set();
+
+  function evaluate(notifs) {
+    const hasUnread = notifs.some(n => !readSet.has(n.id));
+    hasUnread ? show('bellBadge') : hide('bellBadge');
+  }
+
+  if (notifCache && Date.now() - notifCache.ts < NOTIF_TTL) {
+    evaluate(notifCache.data);
+    return;
+  }
+
+  if (notifInFlight) return;
+  notifInFlight = true;
+  apiCall({ action: 'notificacoes', email })
+    .then(r => {
+      if (r && r.ok) {
+        notifCache = { ts: Date.now(), data: r.data || [] };
+        evaluate(notifCache.data);
+      }
+    })
+    .catch(() => {})
+    .finally(() => { notifInFlight = false; });
+}
+
+async function loadNotificacoes() {
+  const email = localStorage.getItem(LS_EMAIL);
+  if (!email) return;
+
+  // Show screen immediately
+  ['cardAluno', 'cardAgendar'].forEach(hide);
+  show('cardNotificacoes');
+
+  // Mark all currently cached notifications as read (merge with existing read set)
+  if (notifCache) {
+    const readRaw = localStorage.getItem(LS_NOTIF_READ);
+    const readSet = readRaw ? new Set(JSON.parse(readRaw)) : new Set();
+    notifCache.data.forEach(n => readSet.add(n.id));
+    localStorage.setItem(LS_NOTIF_READ, JSON.stringify([...readSet]));
+    hide('bellBadge');
+    renderNotificacoes(notifCache.data);
+    if (Date.now() - notifCache.ts < NOTIF_TTL) return;
+  }
+
+  if (notifInFlight) return;
+  notifInFlight = true;
+  const cancel = delayedLoader($('notifLista'));
+  try {
+    const r = await apiCall({ action: 'notificacoes', email });
+    cancel();
+    if (!r.ok) { $('notifLista').innerHTML = `<p class="msg err">${r.erro || 'Erro'}</p>`; return; }
+    notifCache = { ts: Date.now(), data: r.data || [] };
+    const readRaw2 = localStorage.getItem(LS_NOTIF_READ);
+    const readSet2 = readRaw2 ? new Set(JSON.parse(readRaw2)) : new Set();
+    notifCache.data.forEach(n => readSet2.add(n.id));
+    localStorage.setItem(LS_NOTIF_READ, JSON.stringify([...readSet2]));
+    hide('bellBadge');
+    renderNotificacoes(notifCache.data);
+  } catch (e) {
+    cancel();
+    $('notifLista').innerHTML = '<p class="msg err">Erro de conexão.</p>';
+  } finally {
+    notifInFlight = false;
+  }
+}
+
+function renderNotificacoes(notifs) {
+  const el = $('notifLista');
+  if (!notifs.length) {
+    el.innerHTML = '<p class="presenca-vazia">Nenhuma notificação nos últimos 30 dias.</p>';
+    return;
+  }
+  el.innerHTML = notifs.map(n => {
+    const isOk  = n.status === 'VALIDADO';
+    const emoji = isOk ? '✅' : '❌';
+    const cls   = isOk ? 'ok' : 'err';
+    const label = isOk ? 'Presença Aprovada!' : 'Presença Reprovada!';
+    return `<div class="notif-item">
+      <div class="notif-status ${cls}">${emoji} ${label}</div>
+      <div class="notif-detalhe">Treino de ${n.horario} • ${n.dataTreino}</div>
+      <div class="notif-data">Aprovação: ${n.dataAprovacao}</div>
+    </div>`;
+  }).join('');
+}
+
 /* ── Student card ─────────────────────────────────────────────── */
 function preencherCard(d) {
   $('aNome').textContent  = d.nome  || '—';
@@ -876,6 +971,8 @@ function logout() {
   alunoData   = null;
   semanaCache = null;
   presenceCache = {};
+  notifCache = null;
+  localStorage.removeItem(LS_NOTIF_READ);
   aSelDia = null; aSelSessao = null;
   localStorage.removeItem(LS_EMAIL);
   localStorage.removeItem(LS_NOME);
@@ -925,6 +1022,8 @@ function init() {
   });
   $('btnCheckin').addEventListener('click', fazerCheckin);
   $('btnDeletarCheckin').addEventListener('click', deletarCheckin);
+  $('btnBell').addEventListener('click', loadNotificacoes);
+  $('btnNotifBack').addEventListener('click', () => showTab('Home'));
 
   // 4) Wire up professor buttons
   $('btnProfSair').addEventListener('click', profLogout);
