@@ -816,11 +816,14 @@ function renderGraduandos(graduandos) {
       ? `<div class="prof-grad-restantes"><span class="presenca-status status-pend">${a.restantes} restantes</span></div>`
       : '';
     return `<div class="presenca-item">
-      <div class="presenca-info">
-        <span class="presenca-nome">${a.nome || ''}</span>
-        <span class="presenca-status status-ok">${a.faixa || ''}</span>
-        ${grau}
-      </div>${restantes}
+      <div class="presenca-info grad-info">
+        <span class="presenca-nome grad-nome">${a.nome || ''}</span>
+        <div class="grad-badges">
+          <span class="presenca-status status-ok">${a.faixa || ''}</span>
+          ${grau}
+        </div>
+      </div>
+      ${restantes}
     </div>`;
   }).join('');
 }
