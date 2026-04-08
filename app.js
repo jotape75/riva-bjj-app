@@ -973,7 +973,6 @@ function logout() {
   semanaCache = null;
   presenceCache = {};
   notifCache = null;
-  localStorage.removeItem(LS_NOTIF_VISTO);
   aSelDia = null; aSelSessao = null;
   localStorage.removeItem(LS_EMAIL);
   localStorage.removeItem(LS_NOME);
