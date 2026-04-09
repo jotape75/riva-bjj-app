@@ -312,7 +312,7 @@ function showAlunoSkeleton() {
 }
 
 function showSessoesSkeleton(listaId) {
-  const lista = document.getElementById(listaId || 'sessoesLista');
+  const lista = document.getElementById(listaId);
   lista.innerHTML = [1,2,3].map(() =>
     `<div class="sk-card skeleton"></div>`
   ).join('');
