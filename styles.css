@@ -299,9 +299,9 @@ body{
 
 .btn-sm{
   width:auto;
-  padding:12px 22px;
-  font-size:16px;
-  font-weight:800;
+  padding:14px 28px;
+  font-size:18px;
+  font-weight:900;
 }
 
 .btn-cancel{
@@ -309,7 +309,8 @@ body{
   border:1px solid #fff;
   color:#fff;
   margin-top:10px;
-  font-size:14px;
+  font-size:17px;
+  font-weight:800;
 }
 
 /* ── PRESENCE LIST ───────────────────────────────────────────────── */
@@ -355,9 +356,9 @@ body{
 }
 
 .presenca-status{
-  font-size:14px;
+  font-size:16px;
   font-weight:900;
-  padding:5px 14px;
+  padding:6px 16px;
   border-radius:999px;
 }
 .status-ok  {background:#1a3a26;color:#4cd88a}
@@ -366,6 +367,13 @@ body{
 
 .presenca-vazia{color:#fff;font-size:13px;padding:8px 0}
 .loading{color:#fff;font-size:13px;padding:8px 0}
+
+.prof-grad-restantes{
+  margin-top:6px;
+}
+.prof-grad-restantes .presenca-status{
+  font-size:15px;
+}
 
 /* ── PROFESSOR ACTIONS ───────────────────────────────────────────── */
 .prof-actions{
@@ -376,10 +384,10 @@ body{
 
 .btn-ap{
   flex:1;
-  padding:8px 10px;
+  padding:14px 10px;
   border:none;
   border-radius:10px;
-  font-size:13px;
+  font-size:17px;
   font-weight:900;
   cursor:pointer;
 }
@@ -407,7 +415,7 @@ body{
   line-height:1;
 }
 
-.bio-center{text-align:center}
+.bio-center{text-align:center;font-size:26px;font-weight:900}
 
 .bio-subtitle{
   color:#fff;
