@@ -304,6 +304,8 @@ function getCachedGraduandos() {
   return null;
 }
 
+function presencaCacheKey(data, horario) { return data + '|' + horario; }
+
 function getCachedPresenca(data, horario) {
   const c = presenceCache[presencaCacheKey(data, horario)];
   if (c && Date.now() - c.ts < PRESENCA_TTL) return c.data;
