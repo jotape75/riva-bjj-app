@@ -17,7 +17,8 @@ const LS_CREDENTIAL   = 'rv_credentialId';
 const LS_BIO_ATIVADA  = 'rv_biometria_ativada';
 const LS_NOTIF_VISTO  = 'rv_notif_visto';
 const LS_BIO_TS       = 'rv_bio_ts';
-const LS_SEMANA_CACHE = 'rv_semana_cache';
+const LS_SEMANA_CACHE      = 'rv_semana_cache';
+const LS_GRADUANDOS_CACHE  = 'rv_graduandos_cache';
 
 /* ── JSONP helper ─────────────────────────────────────────────── */
 function apiCall(params, retries = 1) {
@@ -271,7 +272,28 @@ function getCachedSemana() {
   return null;
 }
 
-function presencaCacheKey(data, horario) { return data + '|' + horario; }
+function saveGraduandosCache(data) {
+  try {
+    localStorage.setItem(LS_GRADUANDOS_CACHE, JSON.stringify({ ts: Date.now(), data }));
+  } catch (_) {}
+}
+
+function loadGraduandosCache() {
+  try {
+    const raw = localStorage.getItem(LS_GRADUANDOS_CACHE);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Date.now() - parsed.ts < GRADUANDOS_TTL) return parsed;
+    return null;
+  } catch (_) { return null; }
+}
+
+function getCachedGraduandos() {
+  if (graduandosCache && Date.now() - graduandosCache.ts < GRADUANDOS_TTL) return graduandosCache.data;
+  const persisted = loadGraduandosCache();
+  if (persisted) { graduandosCache = persisted; return persisted.data; }
+  return null;
+}
 
 function getCachedPresenca(data, horario) {
   const c = presenceCache[presencaCacheKey(data, horario)];
@@ -285,11 +307,6 @@ function setCachedPresenca(data, horario, lista) {
 
 function invalidatePresenca(data, horario) {
   delete presenceCache[presencaCacheKey(data, horario)];
-}
-
-function getCachedGraduandos() {
-  if (graduandosCache && Date.now() - graduandosCache.ts < GRADUANDOS_TTL) return graduandosCache.data;
-  return null;
 }
 
 /* ── UI helpers ───────────────────────────────────────────────── */
@@ -851,6 +868,7 @@ async function carregarGraduandos(force = false) {
     const r = await apiCall({ action: 'graduandos' });
     if (!r || !r.ok) throw new Error((r && r.erro) ? r.erro : 'Falha ao carregar.');
     graduandosCache = { ts: Date.now(), data: r.data || [] };
+    saveGraduandosCache(r.data || []);
     renderGraduandos(graduandosCache.data);
   } catch (e) {
     lista.innerHTML = `<p class="msg err">Erro ao carregar graduandos. ${e.message || ''}</p>`;
