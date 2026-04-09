@@ -578,3 +578,25 @@ body{
   font-weight:700;
   color:#fff;
 }
+
+/* ── SKELETON LOADING ─────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.sk-line   { height: 16px; margin-bottom: 8px; width: 100%; }
+.sk-line-sm{ height: 13px; margin-bottom: 6px; width: 60%;  }
+.sk-title  { height: 26px; margin-bottom: 14px; width: 70%; }
+.sk-badge  { height: 20px; width: 60px; border-radius: 999px; }
+.sk-num    { height: 38px; width: 60px; margin: 0 auto 6px; border-radius: 8px; }
+.sk-block  { height: 48px; width: 100%; border-radius: 12px; margin-bottom: 8px; }
+.sk-card   { height: 80px; width: 100%; border-radius: 12px; margin-bottom: 8px; }
