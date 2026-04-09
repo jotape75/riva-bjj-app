@@ -1,9 +1,9 @@
 const API_BASE       = 'https://script.google.com/macros/s/AKfycbyBLlVjEvO35RufIh6pH9XOOTDXuj_BMrNHAJfdw9I-reScWX31dsVdOFJna1ZbJVqX/exec';
-const API_TIMEOUT_MS = 15000;
-const SEMANA_TTL     = 300000; // 5 min
-const PRESENCA_TTL   = 300000;  // 5 min
-const GRADUANDOS_TTL = 21600000; // 6 h
-const NOTIF_TTL      = 600000;   // 10 min
+const API_TIMEOUT_MS = 25000;
+const SEMANA_TTL     = 600000;   // 10 min
+const PRESENCA_TTL   = 600000;   // 10 min
+const GRADUANDOS_TTL = 43200000; // 12 h
+const NOTIF_TTL      = 900000;   // 15 min
 const BIO_GRACE_MS   = 1800000;  // 30 min
 const RP_NAME        = 'Riva BJJ';
 
@@ -17,9 +17,17 @@ const LS_CREDENTIAL   = 'rv_credentialId';
 const LS_BIO_ATIVADA  = 'rv_biometria_ativada';
 const LS_NOTIF_VISTO  = 'rv_notif_visto';
 const LS_BIO_TS       = 'rv_bio_ts';
+const LS_SEMANA_CACHE = 'rv_semana_cache';
 
 /* ── JSONP helper ─────────────────────────────────────────────── */
-function apiCall(params) {
+function apiCall(params, retries = 1) {
+  return apiCallOnce(params).catch(err => {
+    if (retries > 0) return apiCall(params, retries - 1);
+    throw err;
+  });
+}
+
+function apiCallOnce(params) {
   return new Promise((resolve, reject) => {
     const cb = '_rv' + Date.now() + Math.floor(Math.random() * 9999);
     const s  = document.createElement('script');
@@ -239,8 +247,26 @@ function formatDate(d) {
 }
 
 /* ── Cache helpers ────────────────────────────────────────────── */
+function saveSemanaCache(data) {
+  try {
+    localStorage.setItem(LS_SEMANA_CACHE, JSON.stringify({ ts: Date.now(), data }));
+  } catch (_) {}
+}
+
+function loadSemanaCache() {
+  try {
+    const raw = localStorage.getItem(LS_SEMANA_CACHE);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Date.now() - parsed.ts < SEMANA_TTL) return parsed;
+    return null;
+  } catch (_) { return null; }
+}
+
 function getCachedSemana() {
   if (semanaCache && Date.now() - semanaCache.ts < SEMANA_TTL) return semanaCache.data;
+  const persisted = loadSemanaCache();
+  if (persisted) { semanaCache = persisted; return persisted.data; }
   return null;
 }
 
@@ -309,7 +335,7 @@ async function revalidateSemana(onSuccess) {
   semanaInFlight = true;
   try {
     const r = await apiCall({ action: 'treinosSemana' });
-    if (r.ok) { semanaCache = { ts: Date.now(), data: r.data }; onSuccess(r.data); }
+    if (r.ok) { semanaCache = { ts: Date.now(), data: r.data }; saveSemanaCache(r.data); onSuccess(r.data); }
   } catch (_) { /* keep stale */ }
   finally { semanaInFlight = false; }
 }
@@ -333,13 +359,14 @@ async function loadSemana(ctx) {
     cancel();
     if (r.ok) {
       semanaCache = { ts: Date.now(), data: r.data };
+      saveSemanaCache(r.data);
       renderDias(ctx, r.data);
     } else {
       $(rowId).innerHTML = '<p class="msg err">Erro ao carregar treinos.</p>';
     }
   } catch (e) {
     cancel();
-    $(rowId).innerHTML = '<p class="msg err">Erro de conexão.</p>';
+    $(rowId).innerHTML = '<p class="msg err">Falha na conexão. Tente novamente.</p>';
   } finally {
     semanaInFlight = false;
   }
@@ -410,10 +437,11 @@ async function loadSemanaProfessor() {
       return;
     }
     semanaCache = { ts: Date.now(), data: r.data };
+    saveSemanaCache(r.data);
     renderDiasProfessor(buildProfSemana(r.data));
   } catch (e) {
     cancel();
-    $(rowId).innerHTML = '<p class="msg err">Erro de conexão.</p>';
+    $(rowId).innerHTML = '<p class="msg err">Falha na conexão. Tente novamente.</p>';
   } finally {
     semanaInFlight = false;
   }
@@ -639,7 +667,7 @@ async function fazerCheckin() {
     if (lista && novoItem) novoItem.remove();
     show('btnCheckin');
     hide('btnDeletarCheckin');
-    alert('Erro de conexão.');
+    alert('Falha na conexão. Tente novamente.');
   } finally {
     $('btnCheckin').disabled = false;
   }
@@ -688,7 +716,7 @@ async function deletarCheckin() {
     if (lista && itemRemovido) lista.insertBefore(itemRemovido, proximoSibling);
     hide('btnCheckin');
     show('btnDeletarCheckin');
-    alert('Erro de conexão.');
+    alert('Falha na conexão. Tente novamente.');
   } finally {
     $('btnDeletarCheckin').disabled = false;
   }
