@@ -95,11 +95,11 @@ body{
 
 .btn{
   width:100%;
-  padding:14px 14px;
+  padding:16px 14px;
   border:none;
   border-radius:12px;
   font-weight:800;
-  font-size:16px;
+  font-size:19px;
   cursor:pointer;
 }
 .btn.primary{background:var(--red);color:#fff}
@@ -147,11 +147,11 @@ body{
 
 .k{
   color:#fff;
-  font-size:16px;
+  font-size:14px;
   text-transform:uppercase;
   letter-spacing:1px;
 }
-.v{font-size:18px;font-weight:900}
+.v{font-size:16px;font-weight:900}
 
 .status{
   margin-top:14px;
@@ -207,8 +207,8 @@ body{
   }
 
   .btn{
-    padding:13px 14px;
-    font-size:15px;
+    padding:15px 14px;
+    font-size:18px;
   }
 
   .input{
@@ -328,7 +328,7 @@ body{
   flex-wrap:nowrap;
 }
 
-.presenca-nome{font-size:18px;font-weight:700;color:#fff}
+.presenca-nome{font-size:14px;font-weight:700;color:#fff}
 
 .grad-info{
   display:flex;
@@ -356,9 +356,9 @@ body{
 }
 
 .presenca-status{
-  font-size:16px;
+  font-size:12px;
   font-weight:900;
-  padding:6px 16px;
+  padding:4px 10px;
   border-radius:999px;
 }
 .status-ok  {background:#1a3a26;color:#4cd88a}
@@ -372,7 +372,14 @@ body{
   margin-top:6px;
 }
 .prof-grad-restantes .presenca-status{
+  font-size:14px;
+  font-weight:900;
+  padding:5px 12px;
+}
+.grad-badges .presenca-status{
   font-size:15px;
+  font-weight:900;
+  padding:5px 14px;
 }
 
 /* ── PROFESSOR ACTIONS ───────────────────────────────────────────── */
