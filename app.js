@@ -260,6 +260,15 @@ function loadSemanaCache() {
     const raw = localStorage.getItem(LS_SEMANA_CACHE);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
+
+    // Invalida se passou da meia-noite (datas mudaram)
+    const salvoEm = new Date(parsed.ts);
+    const agora   = new Date();
+    const mesmoDia = salvoEm.getDate()     === agora.getDate()  &&
+                     salvoEm.getMonth()    === agora.getMonth() &&
+                     salvoEm.getFullYear() === agora.getFullYear();
+    if (!mesmoDia) return null;
+
     if (Date.now() - parsed.ts < SEMANA_TTL) return parsed;
     return null;
   } catch (_) { return null; }
