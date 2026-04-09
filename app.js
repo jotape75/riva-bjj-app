@@ -554,11 +554,11 @@ function renderSessoes(ctx, dia) {
   const listaId = ctx === 'prof' ? 'profSessoesLista' : 'sessoesLista';
   const lista   = $(listaId);
   lista.innerHTML = '';
+  show(listaId);
 
   if (!dia.treinos.length) {
     lista.innerHTML = '<p class="presenca-vazia">Sem treinos neste dia.</p>';
     if (ctx === 'prof') pSelSessao = null; else aSelSessao = null;
-    show(listaId);
     return;
   }
 
@@ -577,7 +577,6 @@ function renderSessoes(ctx, dia) {
     });
     lista.appendChild(card);
   });
-  show(listaId);
 
   // Auto-select first session (highlight only, no presence prefetch)
   if (dia.treinos.length > 0) {
