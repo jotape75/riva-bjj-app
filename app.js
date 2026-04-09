@@ -181,6 +181,7 @@ function afterBioSuccess(updateTs = true) {
   if (email && nome) {
     alunoData = { nome };
     preencherCard(alunoData);
+    showAlunoSkeleton();
     apiCall({ action: 'loginEmail', email })
       .then(r => { if (r && r.ok) { alunoData = r.data; preencherCard(alunoData); } })
       .catch(() => {});
@@ -299,6 +300,39 @@ function delayedLoader(el, delay = 250) {
   return () => clearTimeout(t);
 }
 
+/* ── Skeleton helpers ─────────────────────────────────────────── */
+function showAlunoSkeleton() {
+  document.getElementById('aNome').innerHTML        = '<span class="skeleton sk-title"></span>';
+  document.getElementById('aFaixa').innerHTML       = '<span class="skeleton sk-line-sm"></span>';
+  document.getElementById('aGrau').innerHTML        = '<span class="skeleton sk-line-sm"></span>';
+  document.getElementById('aData').innerHTML        = '<span class="skeleton sk-line-sm"></span>';
+  document.getElementById('statAulasNum').innerHTML = '<span class="skeleton sk-num"></span>';
+  document.getElementById('statRestantesNum').innerHTML = '<span class="skeleton sk-num"></span>';
+  document.getElementById('aStatus').innerHTML      = '<span class="skeleton sk-line"></span>';
+}
+
+function showSessoesSkeleton(listaId) {
+  const lista = document.getElementById(listaId);
+  lista.innerHTML = [1,2,3].map(() =>
+    `<div class="sk-card skeleton"></div>`
+  ).join('');
+  lista.classList.remove('hidden');
+}
+
+function showPresencaSkeleton() {
+  document.getElementById('presencaLista').innerHTML =
+    [1,2,3].map(() =>
+      `<div class="presenca-item"><span class="skeleton sk-line"></span></div>`
+    ).join('');
+}
+
+function showGraduandosSkeleton() {
+  document.getElementById('profGraduandosLista').innerHTML =
+    [1,2,3,4].map(() =>
+      `<div class="presenca-item"><span class="skeleton sk-line"></span></div>`
+    ).join('');
+}
+
 /* ── Navigation ───────────────────────────────────────────────── */
 function showTab(tab) {
   ['cardLogin', 'cardAluno', 'cardAgendar', 'cardProf', 'cardBioLock', 'cardNoSupport', 'cardNotificacoes'].forEach(hide);
@@ -353,6 +387,7 @@ async function loadSemana(ctx) {
 
   if (semanaInFlight) return;
   semanaInFlight = true;
+  showSessoesSkeleton(ctx === 'prof' ? 'profSessoesLista' : 'sessoesLista');
   const cancel = delayedLoader($(rowId));
   try {
     const r = await apiCall({ action: 'treinosSemana' });
@@ -428,6 +463,7 @@ async function loadSemanaProfessor() {
 
   if (semanaInFlight) return;
   semanaInFlight = true;
+  showSessoesSkeleton('profSessoesLista');
   const cancel = delayedLoader($(rowId));
   try {
     const r = await apiCall({ action: 'treinosSemana' });
@@ -555,7 +591,7 @@ async function loadPresenca(ctx, sessao) {
   }
 
   const cancel = delayedLoader($(listaId));
-  if (ctx !== 'prof') { hide('btnCheckin'); hide('btnDeletarCheckin'); }
+  if (ctx !== 'prof') { showPresencaSkeleton(); hide('btnCheckin'); hide('btnDeletarCheckin'); }
 
   try {
     const r = await apiCall({ action: 'listaPresenca', data: sessao.data, horario: sessao.horario });
@@ -810,7 +846,7 @@ async function carregarGraduandos(force = false) {
   if (graduandosInFlight) return;
   graduandosInFlight = true;
 
-  lista.innerHTML = '<p class="loading">Carregando…</p>';
+  showGraduandosSkeleton();
   try {
     const r = await apiCall({ action: 'graduandos' });
     if (!r || !r.ok) throw new Error((r && r.erro) ? r.erro : 'Falha ao carregar.');
