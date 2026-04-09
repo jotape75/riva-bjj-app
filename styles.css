@@ -291,7 +291,7 @@ body{
 }
 
 .presenca-titulo{
-  font-size:15px;
+  font-size:17px;
   color:#fff;
   font-weight:900;
   letter-spacing:.5px;
@@ -356,9 +356,9 @@ body{
 }
 
 .presenca-status{
-  font-size:12px;
+  font-size:15px;
   font-weight:900;
-  padding:4px 10px;
+  padding:6px 14px;
   border-radius:999px;
 }
 .status-ok  {background:#1a3a26;color:#4cd88a}
