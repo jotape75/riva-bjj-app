@@ -21,7 +21,8 @@ const LS_SEMANA_CACHE      = 'rv_semana_cache';
 const LS_GRADUANDOS_CACHE  = 'rv_graduandos_cache';
 
 /* ── sessionStorage key constants ─────────────────────────────── */
-const SS_PAGE = 'rv_page'; // sessionStorage key para página atual
+const SS_PAGE  = 'rv_page';   // sessionStorage key para página atual
+const SS_SESSAO = 'rv_sessao'; // sessionStorage key para sessão selecionada
 
 /* ── JSONP helper ─────────────────────────────────────────────── */
 function apiCall(params, retries = 1) {
@@ -184,7 +185,7 @@ function afterBioSuccess(updateTs = true) {
   const pEmail = localStorage.getItem(LS_PROF_EMAIL);
   const pNome  = localStorage.getItem(LS_PROF_NOME);
   const savedPage = sessionStorage.getItem(SS_PAGE);
-  const savedSessao = (() => { try { return JSON.parse(sessionStorage.getItem('rv_sessao')); } catch(_) { return null; } })();
+  const savedSessao = (() => { try { return JSON.parse(sessionStorage.getItem(SS_SESSAO)); } catch(e) { return null; } })();
 
   if (pEmail && pNome) {
     profData = { nome: pNome, email: pEmail };
@@ -392,7 +393,7 @@ function showGraduandosSkeleton() {
 /* ── Navigation ───────────────────────────────────────────────── */
 function showTab(tab) {
   sessionStorage.setItem(SS_PAGE, tab);
-  sessionStorage.removeItem('rv_sessao');
+  sessionStorage.removeItem(SS_SESSAO);
   ['cardLogin', 'cardAluno', 'cardAgendar', 'cardProf', 'cardBioLock', 'cardNoSupport', 'cardNotificacoes', 'cardSessao', 'cardProfSessao'].forEach(hide);
   ['navHome', 'navAgendar'].forEach(id => $(id).classList.remove('on'));
 
@@ -621,7 +622,7 @@ function renderSessoes(ctx, dia) {
 function showSessaoAluno(sessao) {
   aSelSessao = sessao;
   sessionStorage.setItem(SS_PAGE, 'sessaoAluno');
-  sessionStorage.setItem('rv_sessao', JSON.stringify(sessao));
+  sessionStorage.setItem(SS_SESSAO, JSON.stringify(sessao));
   hide('cardAgendar');
   hide('mainNav');
   show('cardSessao');
@@ -631,7 +632,7 @@ function showSessaoAluno(sessao) {
 function showSessaoProf(sessao) {
   pSelSessao = sessao;
   sessionStorage.setItem(SS_PAGE, 'sessaoProf');
-  sessionStorage.setItem('rv_sessao', JSON.stringify(sessao));
+  sessionStorage.setItem(SS_SESSAO, JSON.stringify(sessao));
   hide('cardProf');
   show('cardProfSessao');
   loadPresencaSessao('prof', sessao);
@@ -1170,7 +1171,7 @@ function logout() {
   localStorage.removeItem(LS_NOME);
   localStorage.removeItem(LS_BIO_TS);
   sessionStorage.removeItem(SS_PAGE);
-  sessionStorage.removeItem('rv_sessao');
+  sessionStorage.removeItem(SS_SESSAO);
   // Keep rv_credentialId and rv_biometria_ativada so next login skips re-registration
   $('email').value = '';
   hide('mainNav');
@@ -1187,7 +1188,7 @@ function profLogout() {
   localStorage.removeItem(LS_PROF_NOME);
   localStorage.removeItem(LS_BIO_TS);
   sessionStorage.removeItem(SS_PAGE);
-  sessionStorage.removeItem('rv_sessao');
+  sessionStorage.removeItem(SS_SESSAO);
   // Keep rv_credentialId and rv_biometria_ativada so next login skips re-registration
   hide('profGraduandosBox');
   hide('cardProf');
