@@ -389,7 +389,6 @@ body{
   cursor:pointer;
   white-space:nowrap;
   flex-shrink:0;
-  max-width:140px;
   text-align:center;
 }
 
@@ -673,6 +672,7 @@ body{
   cursor:pointer;
   flex-shrink:0;
   line-height:1;
+  font-size:20px;
 }
 .btn-back:active{opacity:.75}
 
