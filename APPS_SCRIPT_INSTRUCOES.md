@@ -54,8 +54,14 @@ function cadastrarAluno(params) {
     const aba = ss.getSheetByName('Alunos');
     if (!aba) return { ok: false, erro: 'Aba "Alunos" não encontrada.' };
 
-    const ultimaLinha = aba.getLastRow();
-    const novoId      = ultimaLinha; // linha 1 = cabeçalho, então o id = lastRow
+    // Calcula o próximo id como max(ids existentes) + 1
+    const dados = aba.getDataRange().getValues();
+    let maxId = 0;
+    for (let i = 1; i < dados.length; i++) {
+      const idAtual = Number(dados[i][0]);
+      if (!isNaN(idAtual) && idAtual > maxId) maxId = idAtual;
+    }
+    const novoId = maxId + 1;
 
     const faixa       = params.faixa      || 'Branca';
     const grau_atual  = Number(params.grau_atual) || 0;

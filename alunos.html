@@ -224,21 +224,22 @@
         return;
       }
       container.innerHTML = alunos.map(a => `
-        <div class="aluno-card" id="card-${a.id}">
+        <div class="aluno-card" id="card-${esc(String(a.id))}">
           <div class="aluno-header">
             <div>
               <div class="aluno-nome">${esc(a.nome_aluno)}</div>
               <div class="aluno-email">${esc(a.email || '—')}</div>
             </div>
             <button class="btn-toggle"
-              onclick="toggleStatus('${esc(a.id)}', '${esc(a.status)}')"
-              id="btn-${a.id}">
+              data-id="${esc(String(a.id))}"
+              data-status="${esc(a.status)}"
+              id="btn-${esc(String(a.id))}">
               ${a.status === 'ATIVO' ? 'Desativar' : 'Ativar'}
             </button>
           </div>
           <div class="aluno-meta">
             <span class="aluno-faixa">${esc(a.faixa || '—')} G${esc(String(a.grau_atual ?? '—'))}</span>
-            <span class="${a.status === 'ATIVO' ? 'badge-ativo' : 'badge-inativo'}" id="badge-${a.id}">
+            <span class="${a.status === 'ATIVO' ? 'badge-ativo' : 'badge-inativo'}" id="badge-${esc(String(a.id))}">
               ${esc(a.status || '—')}
             </span>
           </div>
@@ -255,6 +256,15 @@
       ));
     });
 
+    // ── Event delegation para botões de toggle ─────────────────
+    document.getElementById('listaAlunos').addEventListener('click', (e) => {
+      const btn = e.target.closest('.btn-toggle');
+      if (!btn) return;
+      const id     = btn.dataset.id;
+      const status = btn.dataset.status;
+      if (id && status) toggleStatus(id, status);
+    });
+
     // ── Toggle status (otimista) ────────────────────────────────
     async function toggleStatus(id, statusAtual) {
       const novoStatus = statusAtual === 'ATIVO' ? 'INATIVO' : 'ATIVO';
@@ -264,26 +274,30 @@
       // Optimistic UI update
       const aluno = todosAlunos.find(a => String(a.id) === String(id));
       if (aluno) aluno.status = novoStatus;
-      if (btn)   { btn.textContent = novoStatus === 'ATIVO' ? 'Desativar' : 'Ativar'; btn.disabled = true; }
+      if (btn) {
+        btn.textContent    = novoStatus === 'ATIVO' ? 'Desativar' : 'Ativar';
+        btn.dataset.status = novoStatus;
+        btn.disabled       = true;
+      }
       if (badge) {
         badge.textContent = novoStatus;
         badge.className   = novoStatus === 'ATIVO' ? 'badge-ativo' : 'badge-inativo';
       }
-      // Update onclick with new status
-      if (btn) btn.setAttribute('onclick', `toggleStatus('${id}', '${novoStatus}')`);
 
       try {
         const r = await apiCall({
-          action:    'alterarStatusAluno',
-          token:     sessionStorage.getItem(TOKEN_KEY) || '',
+          action: 'alterarStatusAluno',
+          token:  sessionStorage.getItem(TOKEN_KEY) || '',
           id,
-          status:    novoStatus,
+          status: novoStatus,
         });
         if (!r || !r.ok) {
           // Revert on failure
           if (aluno) aluno.status = statusAtual;
-          if (btn)   { btn.textContent = statusAtual === 'ATIVO' ? 'Desativar' : 'Ativar'; }
-          if (btn)   btn.setAttribute('onclick', `toggleStatus('${id}', '${statusAtual}')`);
+          if (btn) {
+            btn.textContent    = statusAtual === 'ATIVO' ? 'Desativar' : 'Ativar';
+            btn.dataset.status = statusAtual;
+          }
           if (badge) {
             badge.textContent = statusAtual;
             badge.className   = statusAtual === 'ATIVO' ? 'badge-ativo' : 'badge-inativo';
@@ -293,8 +307,10 @@
       } catch (e) {
         // Revert on error
         if (aluno) aluno.status = statusAtual;
-        if (btn)   { btn.textContent = statusAtual === 'ATIVO' ? 'Desativar' : 'Ativar'; }
-        if (btn)   btn.setAttribute('onclick', `toggleStatus('${id}', '${statusAtual}')`);
+        if (btn) {
+          btn.textContent    = statusAtual === 'ATIVO' ? 'Desativar' : 'Ativar';
+          btn.dataset.status = statusAtual;
+        }
         if (badge) {
           badge.textContent = statusAtual;
           badge.className   = statusAtual === 'ATIVO' ? 'badge-ativo' : 'badge-inativo';
