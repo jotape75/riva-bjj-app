@@ -63,6 +63,29 @@ function diasDiferenca(dataStr) {
   return Math.round((hoje - dt) / (1000 * 60 * 60 * 24));
 }
 
+/* ── Drag-to-scroll ───────────────────────────────────────────── */
+function enableDragScroll(el) {
+  let isDown = false, startX, scrollLeft, moved = false;
+  el.addEventListener('mousedown', e => {
+    isDown = true; moved = false;
+    startX = e.pageX - el.offsetLeft;
+    scrollLeft = el.scrollLeft;
+    el.style.cursor = 'grabbing';
+    el.style.userSelect = 'none';
+  });
+  el.addEventListener('mouseleave', () => { isDown = false; el.style.cursor = 'grab'; el.style.userSelect = ''; });
+  el.addEventListener('mouseup',    () => { isDown = false; el.style.cursor = 'grab'; el.style.userSelect = ''; });
+  el.addEventListener('mousemove', e => {
+    if (!isDown) return;
+    e.preventDefault();
+    const walk = e.pageX - el.offsetLeft - startX;
+    if (Math.abs(walk) > 5) moved = true;
+    el.scrollLeft = scrollLeft - walk;
+  });
+  el.addEventListener('click', e => { if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+  el.style.cursor = 'grab';
+}
+
 /* ── WebAuthn / Biometria ──────────────────────────────────────── */
 let bioAction = 'unlock'; // 'unlock' | 'register'
 
@@ -1241,6 +1264,10 @@ function init() {
   // 5) Bottom nav
   $('navHome').addEventListener('click',    () => showTab('Home'));
   $('navAgendar').addEventListener('click', () => showTab('Agendar'));
+
+  // 6a) Enable mouse drag-to-scroll on days-of-week rows
+  enableDragScroll($('diasRow'));
+  enableDragScroll($('profDiasRow'));
 
   // 6) Check for existing session and decide initial screen
   const email  = localStorage.getItem(LS_EMAIL);
