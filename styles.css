@@ -63,9 +63,9 @@ body{
   margin-bottom:12px;
 }
 
-title{font-size:22px;font-weight:900;margin-bottom:14px}
+.title{font-size:22px;font-weight:900;margin-bottom:14px}
 
-title-lg {
+.title-lg {
   font-size: 24px;
   font-weight: 900;
 }
@@ -231,16 +231,16 @@ title-lg {
   letter-spacing:1px;
 }
 
-dias-row{
+.dias-row{
   display:flex;
   gap:8px;
   overflow-x:auto;
   padding:4px 0 8px;
   scrollbar-width:none;
 }
-dias-row::-webkit-scrollbar{display:none}
+.dias-row::-webkit-scrollbar{display:none}
 
-dia-btn{
+.dia-btn{
   flex-shrink:0;
   display:flex;
   flex-direction:column;
@@ -254,19 +254,19 @@ dia-btn{
   cursor:pointer;
   min-width:58px;
 }
-dia-btn.active{
+.dia-btn.active{
   border-color:var(--red);
   background:#2a1010;
   color:#fff;
 }
-dia-btn.disabled{
+.dia-btn.disabled{
   opacity:.35;
   cursor:default;
   pointer-events:none;
 }
-dia-nome{font-size:15px;font-weight:900}
-dia-data{font-size:13px;color:#fff}
-dia-btn.active .dia-data{color:#e88}
+.dia-nome{font-size:15px;font-weight:900}
+.dia-data{font-size:13px;color:#fff}
+.dia-btn.active .dia-data{color:#e88}
 
 /* ── SESSAO ALUNO – tela full-height com footer fixo ─────────── */
 #cardSessao{
