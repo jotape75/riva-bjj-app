@@ -16,18 +16,8 @@
 
   <main class="page">
 
-    <!-- ── SENHA ──────────────────────────────────────────────── -->
-    <section class="card" id="cardSenha">
-      <h1 class="title">Acesso Restrito</h1>
-      <label class="label" for="senha">Senha do Professor</label>
-      <input id="senha" class="input" type="password" placeholder="Digite a senha" autocomplete="current-password" />
-      <button class="btn primary" id="btnEntrar">Entrar</button>
-      <p class="msg err" id="senhaErr"></p>
-      <p class="msg info" id="senhaInfo"></p>
-    </section>
-
     <!-- ── FORMULÁRIO ─────────────────────────────────────────── -->
-    <section class="card hidden" id="cardForm">
+    <section class="card" id="cardForm">
       <h1 class="title">Cadastrar Aluno</h1>
 
       <label class="label" for="fNome">Nome *</label>
@@ -61,7 +51,7 @@
       <p class="msg info" id="formInfo"></p>
 
       <button class="btn secondary" onclick="location.href='./alunos.html'">Ver Lista de Alunos</button>
-      <button class="btn secondary" onclick="location.href='./index.html'">← Voltar ao Início</button>
+      <button class="btn secondary" onclick="location.href='./professor.html'">← Voltar ao Portal</button>
     </section>
 
   </main>
@@ -70,6 +60,7 @@
     const API_BASE       = 'https://script.google.com/macros/s/AKfycbyBLlVjEvO35RufIh6pH9XOOTDXuj_BMrNHAJfdw9I-reScWX31dsVdOFJna1ZbJVqX/exec';
     const API_TIMEOUT_MS = 25000;
     const TOKEN_KEY      = 'rv_prof_token';
+    const TOKEN_VAL      = 'rv_prof_ok';
 
     function apiCall(params) {
       return new Promise((resolve, reject) => {
@@ -85,49 +76,16 @@
       });
     }
 
-    function show(id)  { document.getElementById(id).classList.remove('hidden'); }
-    function hide(id)  { document.getElementById(id).classList.add('hidden'); }
     function setErr(id, msg)  { document.getElementById(id).textContent = msg; }
     function setInfo(id, msg) { document.getElementById(id).textContent = msg; }
 
     // ── Init ───────────────────────────────────────────────────
     function init() {
       const token = sessionStorage.getItem(TOKEN_KEY);
-      if (token) {
-        hide('cardSenha');
-        show('cardForm');
+      if (token !== TOKEN_VAL) {
+        location.replace('./professor.html');
       }
     }
-
-    // ── Verificar senha ────────────────────────────────────────
-    document.getElementById('btnEntrar').addEventListener('click', async () => {
-      const senha = document.getElementById('senha').value.trim();
-      if (!senha) { setErr('senhaErr', 'Digite a senha.'); return; }
-      setErr('senhaErr', '');
-      setInfo('senhaInfo', 'Verificando…');
-      document.getElementById('btnEntrar').disabled = true;
-      try {
-        const r = await apiCall({ action: 'verificarSenha', senha });
-        if (r && r.ok) {
-          sessionStorage.setItem(TOKEN_KEY, r.token || '1');
-          setInfo('senhaInfo', '');
-          hide('cardSenha');
-          show('cardForm');
-        } else {
-          setErr('senhaErr', r && r.erro ? r.erro : 'Senha incorreta.');
-          setInfo('senhaInfo', '');
-        }
-      } catch (e) {
-        setErr('senhaErr', 'Erro de conexão. Tente novamente.');
-        setInfo('senhaInfo', '');
-      } finally {
-        document.getElementById('btnEntrar').disabled = false;
-      }
-    });
-
-    document.getElementById('senha').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') document.getElementById('btnEntrar').click();
-    });
 
     // ── Cadastrar aluno ────────────────────────────────────────
     document.getElementById('btnCadastrar').addEventListener('click', async () => {
