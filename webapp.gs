@@ -1,3 +1,36 @@
+// ── loginProfessor: valida email na aba Professores + senha compartilhada
+// Adicionar no doGet router:
+// } else if (action === "loginProfessor") {
+//   result = loginProfessor_(e.parameter);
+// }
+
+function loginProfessor_(params) {
+  try {
+    var email = (params.email || "").toString().trim().toLowerCase();
+    var senha = (params.senha || "").toString().trim();
+
+    if (senha !== SENHA_PROFESSOR) {
+      return { ok: false, erro: "Senha incorreta" };
+    }
+
+    var planilha = SpreadsheetApp.openById(PLANILHA_ID);
+    var aba = planilha.getSheetByName("Professores");
+    if (!aba) return { ok: false, erro: "Aba Professores não encontrada" };
+
+    var dados = aba.getDataRange().getValues();
+    for (var i = 1; i < dados.length; i++) {
+      var emailPlanilha = (dados[i][1] || "").toString().trim().toLowerCase();
+      if (emailPlanilha === email) {
+        return { ok: true, token: "rv_prof_ok", nome: dados[i][0] };
+      }
+    }
+
+    return { ok: false, erro: "Email não cadastrado" };
+  } catch(err) {
+    return { ok: false, erro: err.message };
+  }
+}
+
 // ── Adicionar esta action no routeAction_, antes do return { ok:false, erro:"Ação desconhecida" }
 
 /*
