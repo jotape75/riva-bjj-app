@@ -569,9 +569,6 @@ function renderSessoes(ctx, dia) {
   // Auto-select first session (highlight only, no presence prefetch)
   if (dia.treinos.length > 0) {
     lista.children[0].classList.add('active');
-    const t = dia.treinos[0];
-    const sessao = { data: dia.data, horario: t.horario, nome: t.nome };
-    if (ctx === 'prof') pSelSessao = sessao; else aSelSessao = sessao;
   }
 }
 
@@ -617,7 +614,7 @@ async function loadPresencaSessao(ctx, sessao) {
   }
 
   const cancel = delayedLoader($(listaId));
-  if (ctx !== 'prof') { showPresencaSkeleton(); hide('btnSessaoCheckin'); hide('btnSessaoDeletarCheckin'); }
+  if (ctx !== 'prof') { hide('btnSessaoCheckin'); hide('btnSessaoDeletarCheckin'); }
 
   try {
     const r = await apiCall({ action: 'listaPresenca', data: sessao.data, horario: sessao.horario });
