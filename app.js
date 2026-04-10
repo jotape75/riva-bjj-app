@@ -555,8 +555,10 @@ function renderSessoes(ctx, dia) {
     card.className = 'sessao-card';
     const btnLabel = ctx === 'prof' ? 'Aprovar Check-ins' : 'Agendar';
     card.innerHTML =
-      `<span class="sessao-hor">${t.horario}</span>` +
-      `<span class="sessao-nome">${t.nome}</span>` +
+      `<div class="sessao-info">` +
+        `<span class="sessao-hor">${t.horario}</span>` +
+        `<span class="sessao-nome">${t.nome}</span>` +
+      `</div>` +
       `<button class="btn-sessao-action">${btnLabel}</button>`;
     const setActive = () => {
       lista.querySelectorAll('.sessao-card').forEach(c => c.classList.remove('active'));
