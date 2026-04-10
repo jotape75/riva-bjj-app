@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#c0392b" />
+  <title>Cadastrar Aluno – Riva BJJ</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="hdr">
+    <div class="hdr-inner">
+      <img class="logo" src="./logo.png" alt="Riva BJJ" />
+    </div>
+  </header>
+
+  <main class="page">
+
+    <!-- ── SENHA ──────────────────────────────────────────────── -->
+    <section class="card" id="cardSenha">
+      <h1 class="title">Acesso Restrito</h1>
+      <label class="label" for="senha">Senha do Professor</label>
+      <input id="senha" class="input" type="password" placeholder="Digite a senha" autocomplete="current-password" />
+      <button class="btn primary" id="btnEntrar">Entrar</button>
+      <p class="msg err" id="senhaErr"></p>
+      <p class="msg info" id="senhaInfo"></p>
+    </section>
+
+    <!-- ── FORMULÁRIO ─────────────────────────────────────────── -->
+    <section class="card hidden" id="cardForm">
+      <h1 class="title">Cadastrar Aluno</h1>
+
+      <label class="label" for="fNome">Nome *</label>
+      <input id="fNome" class="input" type="text" placeholder="Nome completo" required />
+
+      <label class="label" for="fEmail">Email *</label>
+      <input id="fEmail" class="input" type="email" inputmode="email" placeholder="email@exemplo.com" required />
+
+      <label class="label" for="fFaixa">Faixa</label>
+      <select id="fFaixa" class="input">
+        <option value="Branca">Branca</option>
+        <option value="Azul">Azul</option>
+        <option value="Roxa">Roxa</option>
+        <option value="Marrom">Marrom</option>
+      </select>
+
+      <label class="label" for="fGrau">Grau Atual</label>
+      <select id="fGrau" class="input">
+        <option value="0">0</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+      </select>
+
+      <label class="label" for="fData">Data do Último Grau (opcional)</label>
+      <input id="fData" class="input" type="date" />
+
+      <button class="btn primary" id="btnCadastrar">Cadastrar Aluno</button>
+      <p class="msg err" id="formErr"></p>
+      <p class="msg info" id="formInfo"></p>
+
+      <button class="btn secondary" onclick="location.href='./alunos.html'">Ver Lista de Alunos</button>
+      <button class="btn secondary" onclick="location.href='./index.html'">← Voltar ao Início</button>
+    </section>
+
+  </main>
+
+  <script>
+    const API_BASE       = 'https://script.google.com/macros/s/AKfycbyBLlVjEvO35RufIh6pH9XOOTDXuj_BMrNHAJfdw9I-reScWX31dsVdOFJna1ZbJVqX/exec';
+    const API_TIMEOUT_MS = 25000;
+    const TOKEN_KEY      = 'rv_prof_token';
+
+    function apiCall(params) {
+      return new Promise((resolve, reject) => {
+        const cb = '_rv' + Date.now() + Math.floor(Math.random() * 9999);
+        const s  = document.createElement('script');
+        const t  = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, API_TIMEOUT_MS);
+        function cleanup() { clearTimeout(t); delete window[cb]; s.remove(); }
+        window[cb] = (d) => { cleanup(); resolve(d); };
+        s.onerror  = () => { cleanup(); reject(new Error('net')); };
+        const qs = Object.entries(params).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&');
+        s.src = `${API_BASE}?${qs}&callback=${cb}`;
+        document.head.appendChild(s);
+      });
+    }
+
+    function show(id)  { document.getElementById(id).classList.remove('hidden'); }
+    function hide(id)  { document.getElementById(id).classList.add('hidden'); }
+    function setErr(id, msg)  { document.getElementById(id).textContent = msg; }
+    function setInfo(id, msg) { document.getElementById(id).textContent = msg; }
+
+    // ── Init ───────────────────────────────────────────────────
+    function init() {
+      const token = sessionStorage.getItem(TOKEN_KEY);
+      if (token) {
+        hide('cardSenha');
+        show('cardForm');
+      }
+    }
+
+    // ── Verificar senha ────────────────────────────────────────
+    document.getElementById('btnEntrar').addEventListener('click', async () => {
+      const senha = document.getElementById('senha').value.trim();
+      if (!senha) { setErr('senhaErr', 'Digite a senha.'); return; }
+      setErr('senhaErr', '');
+      setInfo('senhaInfo', 'Verificando…');
+      document.getElementById('btnEntrar').disabled = true;
+      try {
+        const r = await apiCall({ action: 'verificarSenha', senha });
+        if (r && r.ok) {
+          sessionStorage.setItem(TOKEN_KEY, r.token || '1');
+          setInfo('senhaInfo', '');
+          hide('cardSenha');
+          show('cardForm');
+        } else {
+          setErr('senhaErr', r && r.erro ? r.erro : 'Senha incorreta.');
+          setInfo('senhaInfo', '');
+        }
+      } catch (e) {
+        setErr('senhaErr', 'Erro de conexão. Tente novamente.');
+        setInfo('senhaInfo', '');
+      } finally {
+        document.getElementById('btnEntrar').disabled = false;
+      }
+    });
+
+    document.getElementById('senha').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('btnEntrar').click();
+    });
+
+    // ── Cadastrar aluno ────────────────────────────────────────
+    document.getElementById('btnCadastrar').addEventListener('click', async () => {
+      const nome  = document.getElementById('fNome').value.trim();
+      const email = document.getElementById('fEmail').value.trim().toLowerCase();
+      const faixa = document.getElementById('fFaixa').value;
+      const grau  = document.getElementById('fGrau').value;
+      const data  = document.getElementById('fData').value;
+
+      if (!nome)  { setErr('formErr', 'Nome é obrigatório.'); return; }
+      if (!email || email.indexOf('@') < 1) { setErr('formErr', 'Email inválido.'); return; }
+
+      setErr('formErr', '');
+      setInfo('formInfo', 'Cadastrando…');
+      document.getElementById('btnCadastrar').disabled = true;
+
+      try {
+        const r = await apiCall({
+          action:          'cadastrarAluno',
+          token:           sessionStorage.getItem(TOKEN_KEY) || '',
+          nome,
+          email,
+          faixa,
+          grau_atual:      grau,
+          data_ultimo_grau: data,
+        });
+        if (r && r.ok) {
+          setInfo('formInfo', '✅ Aluno cadastrado com sucesso!');
+          document.getElementById('fNome').value  = '';
+          document.getElementById('fEmail').value = '';
+          document.getElementById('fFaixa').value = 'Branca';
+          document.getElementById('fGrau').value  = '0';
+          document.getElementById('fData').value  = '';
+        } else {
+          setErr('formErr', r && r.erro ? r.erro : 'Erro ao cadastrar.');
+          setInfo('formInfo', '');
+        }
+      } catch (e) {
+        setErr('formErr', 'Erro de conexão. Tente novamente.');
+        setInfo('formInfo', '');
+      } finally {
+        document.getElementById('btnCadastrar').disabled = false;
+      }
+    });
+
+    init();
+  </script>
+</body>
+</html>
