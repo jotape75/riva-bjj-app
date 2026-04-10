@@ -221,25 +221,23 @@ let graduandosInFlight = false;
 let notifCache         = null;  // { ts, data }
 let notifInFlight      = false;
 
-/* ── Professor week helpers ───────────────────────────────────── */
+/* ── Month / day helpers ──────────────────────────────────────── */
 const NOMES_DIA_PT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const MESES_PT     = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
-function getProfWeekDays() {
-  // Returns 6 Date objects (Mon–Sat) for the current week.
-  // If today is Sunday, returns next week's Mon–Sat.
+function getMonthDays() {
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const dow = today.getDay(); // 0=Sun, 1=Mon, …, 6=Sat
-  const daysToMon = dow === 0 ? 1 : -(dow - 1);
-  const monday = new Date(today);
-  monday.setDate(today.getDate() + daysToMon);
-  const days = [];
-  for (let i = 0; i < 6; i++) {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    days.push(d);
-  }
+  const year  = today.getFullYear();
+  const month = today.getMonth();
+  const last  = new Date(year, month + 1, 0).getDate();
+  const days  = [];
+  for (let i = 1; i <= last; i++) days.push(new Date(year, month, i));
   return days;
+}
+
+function getMesAno() {
+  const today = new Date();
+  return `${MESES_PT[today.getMonth()]} ${today.getFullYear()}`;
 }
 
 function formatDate(d) {
@@ -436,46 +434,69 @@ async function loadSemana(ctx) {
 }
 
 function renderDias(ctx, semana) {
-  const rowId = ctx === 'prof' ? 'profDiasRow' : 'diasRow';
-  const row   = $(rowId);
+  const rowId   = ctx === 'prof' ? 'profDiasRow'      : 'diasRow';
+  const labelId = ctx === 'prof' ? 'profDiasMesLabel' : 'diasMesLabel';
+  const row     = $(rowId);
   row.innerHTML = '';
-  const dias = semana.filter(d => d.treinos && d.treinos.length);
-  dias.forEach(dia => {
-    const btn = document.createElement('button');
-    btn.className = 'dia-btn';
-    btn.innerHTML =
-      `<span class="dia-nome">${dia.nomeDia}</span>` +
-      `<span class="dia-data">${dia.data.slice(0, 5)}</span>`;
-    btn.addEventListener('click', () => {
-      row.querySelectorAll('.dia-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      selectDia(ctx, dia);
-    });
-    row.appendChild(btn);
-  });
 
-  // Prefetch: auto-select first available day
-  if (dias.length > 0) {
-    row.children[0].classList.add('active');
-    if (ctx === 'prof') { pSelDia = dias[0]; pSelSessao = null; hide('profPresencaBox'); }
-    else                { aSelDia = dias[0]; aSelSessao = null; hide('presencaBox'); }
-    renderSessoes(ctx, dias[0]);
-  } else {
-    if (ctx === 'prof') { hide('profSessoesLista'); hide('profPresencaBox'); }
-    else                { hide('sessoesLista');     hide('presencaBox'); }
-  }
-}
+  // Update month header
+  $(labelId).textContent = getMesAno();
 
-/* ── Professor week loader (Mon–Sat of current week) ─────────── */
-function buildProfSemana(semanaData) {
+  // Map treinos by day of week from API data
   const treinosByDow = {};
-  semanaData.forEach(d => { treinosByDow[d.diaSemana] = d.treinos || []; });
-  return getProfWeekDays().map(date => ({
+  semana.forEach(d => { treinosByDow[d.diaSemana] = d.treinos || []; });
+
+  // Build all days of current month
+  const monthDays = getMonthDays().map(date => ({
     data:      formatDate(date),
     diaSemana: date.getDay(),
     nomeDia:   NOMES_DIA_PT[date.getDay()],
     treinos:   treinosByDow[date.getDay()] || [],
   }));
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayStr = formatDate(today);
+
+  // Auto-select: today (if has treinos) → next day with treinos → first day with treinos
+  let defaultIdx = monthDays.findIndex(d => d.data === todayStr && d.treinos.length > 0);
+  if (defaultIdx < 0) {
+    defaultIdx = monthDays.findIndex(d => {
+      const [dd, mm, yyyy] = d.data.split('/');
+      return new Date(+yyyy, +mm - 1, +dd) > today && d.treinos.length > 0;
+    });
+  }
+  if (defaultIdx < 0) defaultIdx = monthDays.findIndex(d => d.treinos.length > 0);
+
+  monthDays.forEach((dia) => {
+    const hasTreinos = dia.treinos.length > 0;
+    const btn = document.createElement('button');
+    btn.className = hasTreinos ? 'dia-btn' : 'dia-btn disabled';
+    btn.innerHTML =
+      `<span class="dia-nome">${dia.nomeDia}</span>` +
+      `<span class="dia-data">${dia.data.slice(0, 5)}</span>`;
+    if (hasTreinos) {
+      btn.addEventListener('click', () => {
+        row.querySelectorAll('.dia-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectDia(ctx, dia);
+      });
+    }
+    row.appendChild(btn);
+  });
+
+  if (defaultIdx >= 0) {
+    const defaultBtn = row.children[defaultIdx];
+    defaultBtn.classList.add('active');
+    requestAnimationFrame(() => defaultBtn.scrollIntoView({ block: 'nearest', inline: 'center' }));
+    const defaultDia = monthDays[defaultIdx];
+    if (ctx === 'prof') { pSelDia = defaultDia; pSelSessao = null; hide('profPresencaBox'); }
+    else                { aSelDia = defaultDia; aSelSessao = null; hide('presencaBox'); }
+    renderSessoes(ctx, defaultDia);
+  } else {
+    if (ctx === 'prof') { hide('profSessoesLista'); hide('profPresencaBox'); }
+    else                { hide('sessoesLista');     hide('presencaBox'); }
+  }
 }
 
 async function loadSemanaProfessor() {
@@ -483,9 +504,9 @@ async function loadSemanaProfessor() {
   const cached = getCachedSemana();
 
   if (cached) {
-    renderDiasProfessor(buildProfSemana(cached));
+    renderDias('prof', cached);
     // Background revalidation
-    revalidateSemana(data => renderDiasProfessor(buildProfSemana(data)));
+    revalidateSemana(data => renderDias('prof', data));
     return;
   }
 
@@ -502,45 +523,12 @@ async function loadSemanaProfessor() {
     }
     semanaCache = { ts: Date.now(), data: r.data };
     saveSemanaCache(r.data);
-    renderDiasProfessor(buildProfSemana(r.data));
+    renderDias('prof', r.data);
   } catch (e) {
     cancel();
     $(rowId).innerHTML = '<p class="msg err">Falha na conexão. Tente novamente.</p>';
   } finally {
     semanaInFlight = false;
-  }
-}
-
-function renderDiasProfessor(profSemana) {
-  const row = $('profDiasRow');
-  row.innerHTML = '';
-
-  const today    = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayStr = formatDate(today);
-
-  let defaultIdx = 0; // fallback: Monday (first button)
-  profSemana.forEach((dia, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'dia-btn';
-    btn.innerHTML =
-      `<span class="dia-nome">${dia.nomeDia}</span>` +
-      `<span class="dia-data">${dia.data.slice(0, 5)}</span>`;
-    btn.addEventListener('click', () => {
-      row.querySelectorAll('.dia-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      selectDia('prof', dia);
-    });
-    row.appendChild(btn);
-    if (dia.data === todayStr) defaultIdx = i;
-  });
-
-  if (row.children.length > 0) {
-    row.children[defaultIdx].classList.add('active');
-    pSelDia    = profSemana[defaultIdx];
-    pSelSessao = null;
-    hide('profPresencaBox');
-    renderSessoes('prof', profSemana[defaultIdx]);
   }
 }
 

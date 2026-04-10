@@ -218,6 +218,19 @@ body{
 }
 
 /* ── CALENDAR / WEEK DAYS ─────────────────────────────────────── */
+.mes-header{
+  font-size:15px;
+  font-weight:900;
+  color:#fff;
+  background:var(--red);
+  border-radius:8px;
+  padding:6px 12px;
+  margin-bottom:6px;
+  display:inline-block;
+  text-transform:uppercase;
+  letter-spacing:1px;
+}
+
 .dias-row{
   display:flex;
   gap:8px;
@@ -245,6 +258,11 @@ body{
   border-color:var(--red);
   background:#2a1010;
   color:#fff;
+}
+.dia-btn.disabled{
+  opacity:.35;
+  cursor:default;
+  pointer-events:none;
 }
 .dia-nome{font-size:15px;font-weight:900}
 .dia-data{font-size:13px;color:#fff}
