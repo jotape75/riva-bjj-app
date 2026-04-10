@@ -553,12 +553,19 @@ function renderSessoes(ctx, dia) {
   dia.treinos.forEach(t => {
     const card = document.createElement('div');
     card.className = 'sessao-card';
+    const btnLabel = ctx === 'prof' ? 'Aprovar Check-ins' : 'Agendar';
     card.innerHTML =
       `<span class="sessao-hor">${t.horario}</span>` +
-      `<span class="sessao-nome">${t.nome}</span>`;
-    card.addEventListener('click', () => {
+      `<span class="sessao-nome">${t.nome}</span>` +
+      `<button class="btn-sessao-action">${btnLabel}</button>`;
+    const setActive = () => {
       lista.querySelectorAll('.sessao-card').forEach(c => c.classList.remove('active'));
       card.classList.add('active');
+    };
+    card.addEventListener('click', setActive);
+    card.querySelector('.btn-sessao-action').addEventListener('click', e => {
+      e.stopPropagation();
+      setActive();
       const sessao = { data: dia.data, horario: t.horario, nome: t.nome };
       if (ctx === 'prof') showSessaoProf(sessao);
       else showSessaoAluno(sessao);
