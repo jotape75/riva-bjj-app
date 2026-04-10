@@ -65,7 +65,7 @@ body{
 
 .title{font-size:22px;font-weight:900;margin-bottom:14px}
 
-title-lg {
+.title-lg {
   font-size: 24px;
   font-weight: 900;
 }
@@ -231,7 +231,7 @@ title-lg {
   letter-spacing:1px;
 }
 
-dias-row{
+.dias-row{
   display:flex;
   gap:8px;
   overflow-x:auto;
@@ -521,7 +521,7 @@ dias-row{
 /* ── UTILITIES ───────────────────────────────────────────────────── */
 .mb8{margin-bottom:8px}
 
-divider{
+.divider{
   border:none;
   border-top:1px solid var(--border);
   margin:16px 0;
