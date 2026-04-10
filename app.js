@@ -47,6 +47,18 @@ const $    = id => document.getElementById(id);
 const show = id => $(id).classList.remove('hidden');
 const hide = id => $(id).classList.add('hidden');
 
+// Retorna quantos dias atrás é dataStr (formato DD/MM/YYYY). Valor positivo = passado.
+function diasDiferenca(dataStr) {
+  if (!dataStr || typeof dataStr !== 'string') return 0;
+  var p  = dataStr.split('/');
+  if (p.length !== 3) return 0;
+  var dt = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
+  if (isNaN(dt.getTime())) return 0;
+  var hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+  dt.setHours(0, 0, 0, 0);
+  return Math.round((hoje - dt) / (1000 * 60 * 60 * 24));
+}
+
 /* ── WebAuthn / Biometria ──────────────────────────────────────── */
 let bioAction = 'unlock'; // 'unlock' | 'register'
 
@@ -550,10 +562,11 @@ function renderSessoes(ctx, dia) {
     return;
   }
 
+  const diaDiff = ctx !== 'prof' ? diasDiferenca(dia.data) : 0;
   dia.treinos.forEach(t => {
     const card = document.createElement('div');
     card.className = 'sessao-card';
-    const btnLabel = ctx === 'prof' ? 'Aprovar Check-ins' : 'Agendar';
+    const btnLabel = ctx === 'prof' ? 'Aprovar Check-ins' : (diaDiff > 0 ? 'Ver treino' : 'Agendar');
     card.innerHTML =
       `<div class="sessao-info">` +
         `<span class="sessao-hor">${t.horario}</span>` +
@@ -606,13 +619,19 @@ async function loadPresencaSessao(ctx, sessao) {
 
   $(tituloId).textContent = `${sessao.data.slice(0, 5)} · ${sessao.horario} · ${sessao.nome}`;
 
+  // Determina se é dia passado e se já foi arquivado (>2 dias)
+  const daysAgo        = diasDiferenca(sessao.data);
+  sessao.isPast    = ctx !== 'prof' && daysAgo > 0;
+  sessao.isArquivo = ctx !== 'prof' && daysAgo > 2;
+  const actionPresenca = sessao.isArquivo ? 'listaPresencaArquivo' : 'listaPresenca';
+
   presencaInFlight[k] = true;
 
   const cached = getCachedPresenca(sessao.data, sessao.horario);
   if (cached) {
     renderPresencaLista(ctx, cached, sessao);
     try {
-      const r = await apiCall({ action: 'listaPresenca', data: sessao.data, horario: sessao.horario });
+      const r = await apiCall({ action: actionPresenca, data: sessao.data, horario: sessao.horario });
       if (r.ok) {
         setCachedPresenca(sessao.data, sessao.horario, r.data || []);
         renderPresencaLista(ctx, r.data || [], sessao);
@@ -626,7 +645,7 @@ async function loadPresencaSessao(ctx, sessao) {
   if (ctx !== 'prof') { hide('btnSessaoCheckin'); hide('btnSessaoDeletarCheckin'); }
 
   try {
-    const r = await apiCall({ action: 'listaPresenca', data: sessao.data, horario: sessao.horario });
+    const r = await apiCall({ action: actionPresenca, data: sessao.data, horario: sessao.horario });
     cancel();
     if (!r.ok) { $(listaId).innerHTML = `<p class="msg err">${r.erro || 'Erro'}</p>`; return; }
     setCachedPresenca(sessao.data, sessao.horario, r.data || []);
@@ -697,7 +716,7 @@ function renderPresencaLista(ctx, lista, sessao) {
   const el      = $(listaId);
 
   if (!lista.length) {
-    el.innerHTML = '<p class="presenca-vazia">Nenhum check-in ainda.</p>';
+    el.innerHTML = `<p class="presenca-vazia">${sessao.isArquivo ? 'Nenhum check-in registrado.' : 'Nenhum check-in ainda.'}</p>`;
   } else {
     el.innerHTML = lista.map(item => {
       const sc      = statusCls(item.status);
@@ -725,14 +744,20 @@ function renderPresencaLista(ctx, lista, sessao) {
   }
 
   if (ctx !== 'prof' && alunoData) {
-    const meu = lista.find(i =>
-      i.nome.trim().toLowerCase() === (alunoData.nome || '').trim().toLowerCase());
-    if (meu) {
+    if (sessao.isPast) {
+      // Dia passado: esconde botões de ação (check-in e cancelar)
       hide('btnSessaoCheckin');
-      meu.status.includes('PENDENTE') ? show('btnSessaoDeletarCheckin') : hide('btnSessaoDeletarCheckin');
-    } else {
-      show('btnSessaoCheckin');
       hide('btnSessaoDeletarCheckin');
+    } else {
+      const meu = lista.find(i =>
+        i.nome.trim().toLowerCase() === (alunoData.nome || '').trim().toLowerCase());
+      if (meu) {
+        hide('btnSessaoCheckin');
+        meu.status.includes('PENDENTE') ? show('btnSessaoDeletarCheckin') : hide('btnSessaoDeletarCheckin');
+      } else {
+        show('btnSessaoCheckin');
+        hide('btnSessaoDeletarCheckin');
+      }
     }
   }
 }

@@ -61,3 +61,52 @@
     return { ok: true, data: notifs };
   }
 */
+
+// ── Adicionar esta action no routeAction_, antes do return { ok:false, erro:"Ação desconhecida" }
+/*
+  if (action === "listaPresencaArquivo") {
+    return { ok: true, data: getListaPresencaArquivo(normStr(p.data), normStr(p.horario)) };
+  }
+*/
+
+function getListaPresencaArquivo(dataTreino, horarioTreino) {
+  var planilha = SpreadsheetApp.openById(PLANILHA_ID);
+  var aba      = planilha.getSheetByName("Checkins_Arquivo");
+  if (!aba || aba.getLastRow() < 2) return [];
+
+  var dados    = aba.getDataRange().getValues();
+  var dataNorm = normStr(dataTreino);
+  var horNorm  = normStr(horarioTreino);
+
+  var lista = [];
+  for (var i = 1; i < dados.length; i++) {
+    if (normData(dados[i][4]) === dataNorm && normStr(dados[i][2]) === horNorm) {
+      lista.push({
+        linha:  i + 1,
+        nome:   normStr(dados[i][1]),
+        status: normStr(dados[i][6]) || "PENDENTE ⏳"
+      });
+    }
+  }
+  return lista;
+}
+
+// ── Trigger mensal: configurar manualmente no Apps Script
+// Time-driven → Month timer → Day 1
+// A verificação de data abaixo é uma salvaguarda para execuções manuais acidentais.
+function limparArquivo() {
+  var hoje = new Date();
+  if (hoje.getDate() !== 1) return;
+
+  var planilha = SpreadsheetApp.openById(PLANILHA_ID);
+  var aba      = planilha.getSheetByName("Checkins_Arquivo");
+  if (!aba || aba.getLastRow() < 2) return;
+
+  // Mantém só o header (linha 1)
+  var header = aba.getRange(1, 1, 1, aba.getLastColumn()).getValues();
+  aba.clearContents();
+  aba.getRange(1, 1, 1, header[0].length).setValues(header);
+
+  SpreadsheetApp.flush();
+  Logger.log("✅ Checkins_Arquivo limpo para o novo mês.");
+}
