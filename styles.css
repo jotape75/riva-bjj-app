@@ -268,6 +268,15 @@ body{
 .dia-data{font-size:13px;color:#fff}
 .dia-btn.active .dia-data{color:#e88}
 
+/* ── SESSION HEADER (new screen) ────────────────────────────────── */
+.sessao-header{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:14px;
+}
+.sessao-header .presenca-titulo{flex:1}
+
 /* ── SESSION CARDS ─────────────────────────────────────────────── */
 .sessoes-lista{
   display:flex;

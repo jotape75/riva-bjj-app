@@ -122,7 +122,7 @@ async function bioAuthenticate() {
 
 function showBioLock(mode) {
   bioAction = mode;
-  ['cardLogin', 'cardAluno', 'cardAgendar', 'cardProf', 'cardBioLock', 'cardNoSupport', 'cardNotificacoes'].forEach(hide);
+  ['cardLogin', 'cardAluno', 'cardAgendar', 'cardProf', 'cardBioLock', 'cardNoSupport', 'cardNotificacoes', 'cardSessao', 'cardProfSessao'].forEach(hide);
   hide('mainNav');
   if (mode === 'unlock') {
     $('bioIcon').textContent     = '🔒';
@@ -346,7 +346,7 @@ function showSessoesSkeleton(listaId) {
 }
 
 function showPresencaSkeleton() {
-  document.getElementById('presencaLista').innerHTML =
+  document.getElementById('sessaoPresencaLista').innerHTML =
     [1,2,3].map(() =>
       `<div class="presenca-item"><span class="skeleton sk-line"></span></div>`
     ).join('');
@@ -361,7 +361,7 @@ function showGraduandosSkeleton() {
 
 /* ── Navigation ───────────────────────────────────────────────── */
 function showTab(tab) {
-  ['cardLogin', 'cardAluno', 'cardAgendar', 'cardProf', 'cardBioLock', 'cardNoSupport', 'cardNotificacoes'].forEach(hide);
+  ['cardLogin', 'cardAluno', 'cardAgendar', 'cardProf', 'cardBioLock', 'cardNoSupport', 'cardNotificacoes', 'cardSessao', 'cardProfSessao'].forEach(hide);
   ['navHome', 'navAgendar'].forEach(id => $(id).classList.remove('on'));
 
   // Show nav only for logged-in students; professors have no bottom nav (handled in showProfPage)
@@ -560,8 +560,8 @@ function renderSessoes(ctx, dia) {
       lista.querySelectorAll('.sessao-card').forEach(c => c.classList.remove('active'));
       card.classList.add('active');
       const sessao = { data: dia.data, horario: t.horario, nome: t.nome };
-      if (ctx === 'prof') pSelSessao = sessao; else aSelSessao = sessao;
-      loadPresenca(ctx, sessao);
+      if (ctx === 'prof') showSessaoProf(sessao);
+      else showSessaoAluno(sessao);
     });
     lista.appendChild(card);
   });
@@ -569,9 +569,64 @@ function renderSessoes(ctx, dia) {
   // Auto-select first session (highlight only, no presence prefetch)
   if (dia.treinos.length > 0) {
     lista.children[0].classList.add('active');
-    const t = dia.treinos[0];
-    const sessao = { data: dia.data, horario: t.horario, nome: t.nome };
-    if (ctx === 'prof') pSelSessao = sessao; else aSelSessao = sessao;
+  }
+}
+
+/* ── Session screens (new flow) ───────────────────────────────── */
+function showSessaoAluno(sessao) {
+  aSelSessao = sessao;
+  hide('cardAgendar');
+  hide('mainNav');
+  show('cardSessao');
+  loadPresencaSessao('aluno', sessao);
+}
+
+function showSessaoProf(sessao) {
+  pSelSessao = sessao;
+  hide('cardProf');
+  show('cardProfSessao');
+  loadPresencaSessao('prof', sessao);
+}
+
+async function loadPresencaSessao(ctx, sessao) {
+  const k = presencaCacheKey(sessao.data, sessao.horario);
+  if (presencaInFlight[k]) return;
+
+  const listaId  = ctx === 'prof' ? 'profSessaoPresencaLista' : 'sessaoPresencaLista';
+  const tituloId = ctx === 'prof' ? 'profSessaoTitulo'        : 'sessaoTitulo';
+
+  $(tituloId).textContent = `${sessao.data.slice(0, 5)} · ${sessao.horario} · ${sessao.nome}`;
+
+  presencaInFlight[k] = true;
+
+  const cached = getCachedPresenca(sessao.data, sessao.horario);
+  if (cached) {
+    renderPresencaLista(ctx, cached, sessao);
+    try {
+      const r = await apiCall({ action: 'listaPresenca', data: sessao.data, horario: sessao.horario });
+      if (r.ok) {
+        setCachedPresenca(sessao.data, sessao.horario, r.data || []);
+        renderPresencaLista(ctx, r.data || [], sessao);
+      }
+    } catch (_) { /* keep stale */ }
+    finally { delete presencaInFlight[k]; }
+    return;
+  }
+
+  const cancel = delayedLoader($(listaId));
+  if (ctx !== 'prof') { hide('btnSessaoCheckin'); hide('btnSessaoDeletarCheckin'); }
+
+  try {
+    const r = await apiCall({ action: 'listaPresenca', data: sessao.data, horario: sessao.horario });
+    cancel();
+    if (!r.ok) { $(listaId).innerHTML = `<p class="msg err">${r.erro || 'Erro'}</p>`; return; }
+    setCachedPresenca(sessao.data, sessao.horario, r.data || []);
+    renderPresencaLista(ctx, r.data || [], sessao);
+  } catch (e) {
+    cancel();
+    $(listaId).innerHTML = '<p class="msg err">Erro de conexão.</p>';
+  } finally {
+    delete presencaInFlight[k];
   }
 }
 
@@ -629,7 +684,7 @@ function statusCls(s) {
 }
 
 function renderPresencaLista(ctx, lista, sessao) {
-  const listaId = ctx === 'prof' ? 'profPresencaLista' : 'presencaLista';
+  const listaId = ctx === 'prof' ? 'profSessaoPresencaLista' : 'sessaoPresencaLista';
   const el      = $(listaId);
 
   if (!lista.length) {
@@ -664,11 +719,11 @@ function renderPresencaLista(ctx, lista, sessao) {
     const meu = lista.find(i =>
       i.nome.trim().toLowerCase() === (alunoData.nome || '').trim().toLowerCase());
     if (meu) {
-      hide('btnCheckin');
-      meu.status.includes('PENDENTE') ? show('btnDeletarCheckin') : hide('btnDeletarCheckin');
+      hide('btnSessaoCheckin');
+      meu.status.includes('PENDENTE') ? show('btnSessaoDeletarCheckin') : hide('btnSessaoDeletarCheckin');
     } else {
-      show('btnCheckin');
-      hide('btnDeletarCheckin');
+      show('btnSessaoCheckin');
+      hide('btnSessaoDeletarCheckin');
     }
   }
 }
@@ -676,10 +731,10 @@ function renderPresencaLista(ctx, lista, sessao) {
 /* ── Student check-in / cancel ────────────────────────────────── */
 async function fazerCheckin() {
   if (!aSelSessao || !alunoData) return;
-  $('btnCheckin').disabled = true;
+  $('btnSessaoCheckin').disabled = true;
 
   // ✅ Atualiza DOM ANTES da chamada (igual ao aprovar)
-  const lista = $('presencaLista');
+  const lista = $('sessaoPresencaLista');
   const novoItem = document.createElement('div');
   novoItem.className = 'presenca-item';
   const info = document.createElement('div');
@@ -694,8 +749,8 @@ async function fazerCheckin() {
   info.appendChild(spanStatus);
   novoItem.appendChild(info);
   if (lista) lista.appendChild(novoItem);
-  hide('btnCheckin');
-  show('btnDeletarCheckin');
+  hide('btnSessaoCheckin');
+  show('btnSessaoDeletarCheckin');
 
   try {
     const r = await apiCall({
@@ -710,27 +765,27 @@ async function fazerCheckin() {
     } else {
       // ❌ Reverte se der erro
       if (lista && novoItem) novoItem.remove();
-      show('btnCheckin');
-      hide('btnDeletarCheckin');
+      show('btnSessaoCheckin');
+      hide('btnSessaoDeletarCheckin');
       alert(r.erro || 'Erro ao fazer check-in.');
     }
   } catch (e) {
     if (lista && novoItem) novoItem.remove();
-    show('btnCheckin');
-    hide('btnDeletarCheckin');
+    show('btnSessaoCheckin');
+    hide('btnSessaoDeletarCheckin');
     alert('Falha na conexão. Tente novamente.');
   } finally {
-    $('btnCheckin').disabled = false;
+    $('btnSessaoCheckin').disabled = false;
   }
 }
 
 async function deletarCheckin() {
   if (!aSelSessao || !alunoData) return;
   if (!confirm('Cancelar seu check-in neste treino?')) return;
-  $('btnDeletarCheckin').disabled = true;
+  $('btnSessaoDeletarCheckin').disabled = true;
 
   // Remove do DOM ANTES da chamada (otimista)
-  const lista = $('presencaLista');
+  const lista = $('sessaoPresencaLista');
   let itemRemovido = null;
   let proximoSibling = null;
   if (lista) {
@@ -744,8 +799,8 @@ async function deletarCheckin() {
     });
     if (itemRemovido) itemRemovido.remove();
   }
-  show('btnCheckin');
-  hide('btnDeletarCheckin');
+  show('btnSessaoCheckin');
+  hide('btnSessaoDeletarCheckin');
 
   try {
     const r = await apiCall({
@@ -759,17 +814,17 @@ async function deletarCheckin() {
     } else {
       // Reverte se der erro
       if (lista && itemRemovido) lista.insertBefore(itemRemovido, proximoSibling);
-      hide('btnCheckin');
-      show('btnDeletarCheckin');
+      hide('btnSessaoCheckin');
+      show('btnSessaoDeletarCheckin');
       alert(r.erro || 'Erro ao cancelar check-in.');
     }
   } catch (e) {
     if (lista && itemRemovido) lista.insertBefore(itemRemovido, proximoSibling);
-    hide('btnCheckin');
-    show('btnDeletarCheckin');
+    hide('btnSessaoCheckin');
+    show('btnSessaoDeletarCheckin');
     alert('Falha na conexão. Tente novamente.');
   } finally {
-    $('btnDeletarCheckin').disabled = false;
+    $('btnSessaoDeletarCheckin').disabled = false;
   }
 }
 
@@ -1090,13 +1145,22 @@ function init() {
   $('btnLogin').addEventListener('click', loginGeneric);
   $('email').addEventListener('keydown', e => { if (e.key === 'Enter') loginGeneric(); });
   $('btnSair').addEventListener('click', logout);
-  $('btnCheckin').addEventListener('click', fazerCheckin);
-  $('btnDeletarCheckin').addEventListener('click', deletarCheckin);
+  $('btnSessaoCheckin').addEventListener('click', fazerCheckin);
+  $('btnSessaoDeletarCheckin').addEventListener('click', deletarCheckin);
+  $('btnSessaoBack').addEventListener('click', () => {
+    hide('cardSessao');
+    show('cardAgendar');
+    show('mainNav');
+  });
   $('btnBell').addEventListener('click', loadNotificacoes);
   $('btnNotifBack').addEventListener('click', () => showTab('Home'));
 
   // 4) Wire up professor buttons
   $('btnProfSair').addEventListener('click', profLogout);
+  $('btnProfSessaoBack').addEventListener('click', () => {
+    hide('cardProfSessao');
+    show('cardProf');
+  });
   $('btnGraduandos').addEventListener('click', async () => {
     const box = $('profGraduandosBox');
     if (box.classList.contains('hidden')) {
