@@ -842,7 +842,7 @@ async function profAprovar(linha, sessao, btn) {
   const actionsEl = item ? item.querySelector('.prof-actions') : null;
 
   if (statusEl) {
-    statusEl.textContent = 'VALIDADO';
+    statusEl.textContent = 'VALIDADO ✓';
     statusEl.className   = 'presenca-status status-ok';
   }
   if (actionsEl) actionsEl.remove();
@@ -879,7 +879,7 @@ async function profReprovar(linha, sessao, btn) {
   const actionsEl = item ? item.querySelector('.prof-actions') : null;
 
   if (statusEl) {
-    statusEl.textContent = 'REPROVADO';
+    statusEl.textContent = 'REPROVADO ✗';
     statusEl.className   = 'presenca-status status-err';
   }
   if (actionsEl) actionsEl.remove();
