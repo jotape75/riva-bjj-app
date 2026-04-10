@@ -20,6 +20,10 @@ const LS_BIO_TS       = 'rv_bio_ts';
 const LS_SEMANA_CACHE      = 'rv_semana_cache';
 const LS_GRADUANDOS_CACHE  = 'rv_graduandos_cache';
 
+/* ── sessionStorage key constants ─────────────────────────────── */
+const SS_PAGE  = 'rv_page';   // sessionStorage key para página atual
+const SS_SESSAO = 'rv_sessao'; // sessionStorage key para sessão selecionada
+
 /* ── JSONP helper ─────────────────────────────────────────────── */
 function apiCall(params, retries = 1) {
   return apiCallOnce(params).catch(err => {
@@ -180,7 +184,8 @@ function afterBioSuccess(updateTs = true) {
   const nome   = localStorage.getItem(LS_NOME);
   const pEmail = localStorage.getItem(LS_PROF_EMAIL);
   const pNome  = localStorage.getItem(LS_PROF_NOME);
-  
+  const savedPage = sessionStorage.getItem(SS_PAGE);
+  const savedSessao = (() => { try { return JSON.parse(sessionStorage.getItem(SS_SESSAO)); } catch(e) { return null; } })();
 
   if (pEmail && pNome) {
     profData = { nome: pNome, email: pEmail };
@@ -188,6 +193,9 @@ function afterBioSuccess(updateTs = true) {
     apiCall({ action: 'profLoginEmail', email: pEmail })
       .then(r => { if (r && r.ok) { profData = r.data; $('pNome').textContent = profData.nome || 'Professor'; } })
       .catch(() => {});
+    if (savedPage === 'sessaoProf' && savedSessao) {
+      showSessaoProf(savedSessao);
+    }
     return;
   }
 
@@ -198,7 +206,18 @@ function afterBioSuccess(updateTs = true) {
     apiCall({ action: 'loginEmail', email })
       .then(r => { if (r && r.ok) { alunoData = r.data; preencherCard(alunoData); } })
       .catch(() => {});
-    showTab('Home');
+    if (savedPage === 'sessaoAluno' && savedSessao) {
+      aSelSessao = savedSessao;
+      showTab('Agendar');
+      showSessaoAluno(savedSessao);
+    } else if (savedPage === 'Agendar') {
+      showTab('Agendar');
+    } else if (savedPage === 'notificacoes') {
+      showTab('Home');
+      loadNotificacoes();
+    } else {
+      showTab('Home');
+    }
     checkBellBadge();
     return;
   }
@@ -373,6 +392,8 @@ function showGraduandosSkeleton() {
 
 /* ── Navigation ───────────────────────────────────────────────── */
 function showTab(tab) {
+  sessionStorage.setItem(SS_PAGE, tab);
+  sessionStorage.removeItem(SS_SESSAO);
   ['cardLogin', 'cardAluno', 'cardAgendar', 'cardProf', 'cardBioLock', 'cardNoSupport', 'cardNotificacoes', 'cardSessao', 'cardProfSessao'].forEach(hide);
   ['navHome', 'navAgendar'].forEach(id => $(id).classList.remove('on'));
 
@@ -577,13 +598,16 @@ function renderSessoes(ctx, dia) {
       lista.querySelectorAll('.sessao-card').forEach(c => c.classList.remove('active'));
       card.classList.add('active');
     };
-    card.addEventListener('click', setActive);
-    card.querySelector('.btn-sessao-action').addEventListener('click', e => {
-      e.stopPropagation();
+    const navegarSessao = () => {
       setActive();
       const sessao = { data: dia.data, horario: t.horario, nome: t.nome };
       if (ctx === 'prof') showSessaoProf(sessao);
       else showSessaoAluno(sessao);
+    };
+    card.addEventListener('click', navegarSessao);
+    card.querySelector('.btn-sessao-action').addEventListener('click', e => {
+      e.stopPropagation();
+      navegarSessao();
     });
     lista.appendChild(card);
   });
@@ -597,6 +621,8 @@ function renderSessoes(ctx, dia) {
 /* ── Session screens (new flow) ───────────────────────────────── */
 function showSessaoAluno(sessao) {
   aSelSessao = sessao;
+  sessionStorage.setItem(SS_PAGE, 'sessaoAluno');
+  sessionStorage.setItem(SS_SESSAO, JSON.stringify(sessao));
   hide('cardAgendar');
   hide('mainNav');
   show('cardSessao');
@@ -605,6 +631,8 @@ function showSessaoAluno(sessao) {
 
 function showSessaoProf(sessao) {
   pSelSessao = sessao;
+  sessionStorage.setItem(SS_PAGE, 'sessaoProf');
+  sessionStorage.setItem(SS_SESSAO, JSON.stringify(sessao));
   hide('cardProf');
   show('cardProfSessao');
   loadPresencaSessao('prof', sessao);
@@ -1032,6 +1060,7 @@ async function loadNotificacoes() {
   const email = localStorage.getItem(LS_EMAIL);
   if (!email) return;
 
+  sessionStorage.setItem(SS_PAGE, 'notificacoes');
   ['cardAluno', 'cardAgendar'].forEach(hide);
   show('cardNotificacoes');
 
@@ -1141,6 +1170,8 @@ function logout() {
   localStorage.removeItem(LS_EMAIL);
   localStorage.removeItem(LS_NOME);
   localStorage.removeItem(LS_BIO_TS);
+  sessionStorage.removeItem(SS_PAGE);
+  sessionStorage.removeItem(SS_SESSAO);
   // Keep rv_credentialId and rv_biometria_ativada so next login skips re-registration
   $('email').value = '';
   hide('mainNav');
@@ -1156,6 +1187,8 @@ function profLogout() {
   localStorage.removeItem(LS_PROF_EMAIL);
   localStorage.removeItem(LS_PROF_NOME);
   localStorage.removeItem(LS_BIO_TS);
+  sessionStorage.removeItem(SS_PAGE);
+  sessionStorage.removeItem(SS_SESSAO);
   // Keep rv_credentialId and rv_biometria_ativada so next login skips re-registration
   hide('profGraduandosBox');
   hide('cardProf');
