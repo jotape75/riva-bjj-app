@@ -139,6 +139,25 @@
       <label class="label" for="fTelefone">Telefone</label>
       <input id="fTelefone" class="input" type="tel" placeholder="(00) 00000-0000" />
 
+      <!-- ── Financeiro ─────────────────────────────────────────── -->
+      <div style="border-top: 1px solid var(--border); margin: 16px 0 8px; padding-top: 12px;">
+        <div style="font-size:15px;font-weight:900;color:#fff;margin-bottom:12px;">💰 Financeiro</div>
+
+        <label class="label" for="fPlano">Plano</label>
+        <select id="fPlano" class="input">
+          <option value="">Não definido</option>
+          <option value="Recorrente">Recorrente – R$ 200,00</option>
+          <option value="Semestral">Semestral – R$ 220,00</option>
+          <option value="Mensal">Mensal – R$ 240,00</option>
+        </select>
+
+        <label class="label" for="fGrupoFamiliar">Grupo Familiar (opcional)</label>
+        <input id="fGrupoFamiliar" class="input" type="text" placeholder="Ex: Família Silva" />
+
+        <label class="label" for="fDataContrato">Data de Início do Contrato</label>
+        <input id="fDataContrato" class="input" type="date" />
+      </div>
+
       <button class="btn primary" id="btnCadastrar">Cadastrar Aluno</button>
       <p class="msg err" id="formErr"></p>
       <p class="msg info" id="formInfo"></p>
@@ -209,6 +228,9 @@
           data_nasc:       document.getElementById('fDataNasc').value,
           data_inicio:     document.getElementById('fDataInicio').value,
           telefone:        document.getElementById('fTelefone').value.trim(),
+          plano:           document.getElementById('fPlano').value,
+          grupo_familiar:  document.getElementById('fGrupoFamiliar').value.trim(),
+          data_contrato:   document.getElementById('fDataContrato').value,
         });
         if (r && r.ok) {
           setInfo('formInfo', '✅ Aluno cadastrado com sucesso!');
@@ -223,6 +245,11 @@
           document.getElementById('fDataNasc').value  = '';
           document.getElementById('fDataInicio').value = '';
           document.getElementById('fTelefone').value  = '';
+          document.getElementById('fPlano').value          = '';
+          document.getElementById('fGrupoFamiliar').value  = '';
+          document.getElementById('fDataContrato').value   = '';
+          // Invalidar cache de alunos
+          localStorage.removeItem('rv_alunos_cache');
         } else {
           setErr('formErr', r && r.erro ? r.erro : 'Erro ao cadastrar.');
           setInfo('formInfo', '');

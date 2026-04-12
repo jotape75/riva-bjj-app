@@ -59,6 +59,11 @@
       padding: 12px 14px;
     }
 
+    .portal-card .btn[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
     @media (max-width: 360px) {
       .portal-cards {
         flex-direction: column;
@@ -191,6 +196,13 @@
           <div class="portal-card-title">Aniversariantes</div>
           <div class="portal-card-subtitle">Ver aniversariantes da semana</div>
           <button class="btn primary" onclick="location.href='./aniversariantes.html'">Ver Aniversariantes</button>
+        </div>
+
+        <div class="portal-card">
+          <div class="portal-card-icon">💰</div>
+          <div class="portal-card-title">Financeiro</div>
+          <div class="portal-card-subtitle">Controle de mensalidades e pagamentos</div>
+          <button class="btn primary" id="btnFinanceiro" disabled>Em breve</button>
         </div>
       </div>
     </section>
