@@ -7,6 +7,52 @@
   <title>Alunos – Riva BJJ</title>
   <link rel="stylesheet" href="./styles.css" />
   <style>
+    /* ── Header desktop compacto ── */
+    .admin-hdr-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .admin-hdr-titulo { display: none; }
+    .admin-hdr-sair { display: none; }
+    .btn-logout {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: #fff;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .btn-logout:active { opacity: .75; }
+    @media (min-width: 769px) {
+      .admin-hdr-inner {
+        max-width: 1100px;
+        justify-content: space-between;
+        padding: 0 24px;
+      }
+      .admin-logo {
+        width: 48px !important;
+        height: 48px !important;
+        margin-top: 0 !important;
+      }
+      .admin-hdr-titulo {
+        display: inline;
+        font-size: 20px;
+        font-weight: 900;
+        color: #fff;
+        letter-spacing: 0.5px;
+      }
+      .admin-hdr-sair { display: inline-block; }
+      .admin-page { max-width: 1100px; padding: 32px 32px 64px; }
+    }
+    @media (max-width: 768px) {
+      .admin-hdr-inner { justify-content: center; }
+    }
+
     .aluno-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -172,13 +218,17 @@
   </style>
 </head>
 <body>
-  <header class="hdr">
-    <div class="hdr-inner">
-      <img class="logo" src="./logo.png" alt="Riva BJJ" />
+  <header class="hdr admin-hdr">
+    <div class="hdr-inner admin-hdr-inner">
+      <div class="admin-hdr-left">
+        <img class="logo admin-logo" src="./logo.png" alt="Riva BJJ" />
+        <span class="admin-hdr-titulo">Portal Administrativo</span>
+      </div>
+      <button class="btn-logout admin-hdr-sair" id="btnHdrSair">Sair</button>
     </div>
   </header>
 
-  <main class="page">
+  <main class="page admin-page">
 
     <!-- ── LISTA ──────────────────────────────────────────────── -->
     <section class="hidden" id="sectionAlunos">
@@ -192,7 +242,7 @@
 
       <div class="card">
         <button class="btn secondary" onclick="location.href='./cadastroaluno.html'">+ Cadastrar Aluno</button>
-        <button class="btn secondary" onclick="location.href='./professor.html'">← Voltar ao Portal</button>
+        <button class="btn secondary" onclick="location.href='./administrativo.html'">← Voltar ao Portal</button>
       </div>
     </section>
 
@@ -231,7 +281,7 @@
         show('sectionAlunos');
         carregarAlunos();
       } else {
-        location.href = './professor.html';
+        location.href = './administrativo.html';
       }
     }
 
@@ -484,6 +534,11 @@
     }
 
     init();
+
+    document.getElementById('btnHdrSair').addEventListener('click', () => {
+      sessionStorage.removeItem(TOKEN_KEY);
+      location.href = './administrativo.html';
+    });
   </script>
 </body>
 </html>
