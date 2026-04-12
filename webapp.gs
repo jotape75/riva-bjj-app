@@ -160,19 +160,21 @@ function cadastrarAluno_(params) {
     var novoId   = ultimoId + 1;
     var faixa    = params.faixa || "Branca";
     var grau     = Number(params.grau_atual) || 0;
-    var metaGrau = (faixa === "Branca") ? 36 : 56;
-    var dataGrau = params.data_ultimo_grau || "";
+    var metaGrau    = (faixa === "Branca") ? 36 : 56;
+    var dataGrau    = params.data_ultimo_grau || "";
+    var aulasNoGrau = Number(params.aulas_no_grau) || 0;
+    var restantes   = Math.max(metaGrau - aulasNoGrau, 0);
     aba.appendRow([
       novoId,
       params.nome  || "",
       "ATIVO",
       faixa,
       grau,
-      0,
-      metaGrau,
+      aulasNoGrau,
+      restantes,
       metaGrau,
       dataGrau,
-      gerarStatus(faixa, grau, metaGrau),
+      gerarStatus(faixa, grau, restantes),
       params.email || "",
       params.telefone || "",        // L
       params.cpf || "",             // M

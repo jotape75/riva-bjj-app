@@ -113,6 +113,9 @@
         <option value="4">4</option>
       </select>
 
+      <label class="label" for="fAulasNoGrau">Aulas no Grau (opcional)</label>
+      <input id="fAulasNoGrau" class="input" type="number" min="0" placeholder="0" value="0" />
+
       <label class="label" for="fData">Data do Último Grau (opcional)</label>
       <input id="fData" class="input" type="date" />
 
@@ -200,6 +203,7 @@
           faixa,
           grau_atual:      grau,
           data_ultimo_grau: data,
+          aulas_no_grau:   parseInt(document.getElementById('fAulasNoGrau').value) || 0,
           categoria:       document.getElementById('fCategoria').value,
           cpf:             document.getElementById('fCpf').value.trim(),
           data_nasc:       document.getElementById('fDataNasc').value,
@@ -212,6 +216,7 @@
           document.getElementById('fEmail').value     = '';
           document.getElementById('fFaixa').value     = 'Branca';
           document.getElementById('fGrau').value      = '0';
+          document.getElementById('fAulasNoGrau').value = '0';
           document.getElementById('fData').value      = '';
           document.getElementById('fCategoria').value = 'Adulto';
           document.getElementById('fCpf').value       = '';
