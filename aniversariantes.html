@@ -7,6 +7,28 @@
   <title>Aniversariantes – Riva BJJ</title>
   <link rel="stylesheet" href="./styles.css" />
   <style>
+    /* ── Header desktop compacto ── */
+    .admin-hdr-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .admin-hdr-titulo { display: none; }
+    .admin-hdr-sair { display: none; }
+    .btn-logout {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: #fff;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .btn-logout:active { opacity: .75; }
+
     .dias-row {
       display: flex;
       gap: 10px;
@@ -80,16 +102,74 @@
       color: #aaa;
       margin-bottom: 20px;
     }
+    @media (min-width: 769px) {
+      .admin-hdr-inner {
+        max-width: 1100px;
+        justify-content: space-between;
+        padding: 0 24px;
+      }
+      .admin-logo {
+        width: 48px !important;
+        height: 48px !important;
+        margin-top: 0 !important;
+      }
+      .admin-hdr-titulo {
+        display: inline;
+        font-size: 20px;
+        font-weight: 900;
+        color: #fff;
+        letter-spacing: 0.5px;
+      }
+      .admin-hdr-sair { display: inline-block; }
+      .admin-page { max-width: 1100px; padding: 32px 32px 64px; }
+      .dias-row {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        overflow-x: visible;
+      }
+      .dia-col {
+        flex: none;
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 16px;
+        min-height: auto;
+        padding: 14px 20px;
+      }
+      .dia-info {
+        min-width: 80px;
+        display: flex;
+        flex-direction: column;
+      }
+      .dia-anivs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        flex: 1;
+      }
+      .aniversariante-card {
+        min-width: 180px;
+      }
+    }
+    @media (max-width: 768px) {
+      .admin-hdr-inner { justify-content: center; }
+    }
   </style>
 </head>
 <body>
-  <header class="hdr">
-    <div class="hdr-inner">
-      <img class="logo" src="./logo.png" alt="Riva BJJ" />
+  <header class="hdr admin-hdr">
+    <div class="hdr-inner admin-hdr-inner">
+      <div class="admin-hdr-left">
+        <img class="logo admin-logo" src="./logo.png" alt="Riva BJJ" />
+        <span class="admin-hdr-titulo">Portal Administrativo</span>
+      </div>
+      <button class="btn-logout admin-hdr-sair" id="btnHdrSair">Sair</button>
     </div>
   </header>
 
-  <main class="page">
+  <main class="page admin-page">
 
     <section class="card" id="sectionAniversariantes">
       <div class="page-title">Aniversariantes 🎂</div>
@@ -99,7 +179,7 @@
 
       <p class="msg info" id="pageInfo"></p>
 
-      <button class="btn secondary" onclick="location.href='./professor.html'">← Voltar ao Portal</button>
+      <button class="btn secondary" onclick="location.href='./administrativo.html'">← Voltar ao Portal</button>
     </section>
 
   </main>
@@ -108,6 +188,8 @@
     const API_BASE       = 'https://script.google.com/macros/s/AKfycbyBLlVjEvO35RufIh6pH9XOOTDXuj_BMrNHAJfdw9I-reScWX31dsVdOFJna1ZbJVqX/exec';
     const API_TIMEOUT_MS = 25000;
     const TOKEN_KEY      = 'rv_prof_token';
+    const CACHE_KEY      = 'rv_anivs_cache';
+    const CACHE_TTL      = 7 * 24 * 60 * 60 * 1000; // 1 semana
 
     function apiCall(params) {
       return new Promise((resolve, reject) => {
@@ -132,11 +214,23 @@
         .replace(/'/g, '&#39;');
     }
 
+    function salvarCache(alunos) {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), alunos }));
+    }
+
+    function lerCache() {
+      try {
+        const c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+        if (c && Date.now() - c.ts < CACHE_TTL) return c.alunos;
+      } catch(e) {}
+      return null;
+    }
+
     // ── Init ───────────────────────────────────────────────────
     function init() {
       const token = sessionStorage.getItem(TOKEN_KEY);
       if (token !== 'rv_prof_ok') {
-        location.href = './professor.html';
+        location.href = './administrativo.html';
         return;
       }
       carregarAniversariantes();
@@ -176,6 +270,8 @@
 
     // ── Carregar aniversariantes ────────────────────────────────
     async function carregarAniversariantes() {
+      const cached = lerCache();
+      if (cached) { renderSemana(cached); return; }
       document.getElementById('pageInfo').textContent = 'Carregando…';
       try {
         const r = await apiCall({
@@ -183,6 +279,7 @@
           token:  sessionStorage.getItem(TOKEN_KEY) || '',
         });
         if (r && r.ok && Array.isArray(r.alunos)) {
+          salvarCache(r.alunos);
           renderSemana(r.alunos);
         } else {
           document.getElementById('pageInfo').textContent =
@@ -238,9 +335,13 @@
 
         return `
           <div class="dia-col${d.ehHoje ? ' hoje' : ''}">
-            <div class="dia-nome">${esc(d.nomeDia)}</div>
-            <div class="dia-numero">${d.dia}</div>
-            ${cards}
+            <div class="dia-info">
+              <div class="dia-nome">${esc(d.nomeDia)}</div>
+              <div class="dia-numero">${d.dia}</div>
+            </div>
+            <div class="dia-anivs">
+              ${cards}
+            </div>
           </div>
         `;
       }).join('');
@@ -248,22 +349,9 @@
 
     init();
 
-    const diasRow = document.getElementById('diasRow');
-    let isDown = false, startX, scrollLeft;
-    diasRow.addEventListener('mousedown', e => {
-      isDown = true;
-      diasRow.style.cursor = 'grabbing';
-      startX = e.pageX - diasRow.offsetLeft;
-      scrollLeft = diasRow.scrollLeft;
-    });
-    diasRow.addEventListener('mouseleave', () => { isDown = false; diasRow.style.cursor = 'grab'; });
-    diasRow.addEventListener('mouseup',    () => { isDown = false; diasRow.style.cursor = 'grab'; });
-    diasRow.addEventListener('mousemove',  e => {
-      if (!isDown) return;
-      e.preventDefault();
-      const x    = e.pageX - diasRow.offsetLeft;
-      const walk = (x - startX) * 1.5;
-      diasRow.scrollLeft = scrollLeft - walk;
+    document.getElementById('btnHdrSair').addEventListener('click', () => {
+      sessionStorage.removeItem(TOKEN_KEY);
+      location.href = './administrativo.html';
     });
   </script>
 </body>
