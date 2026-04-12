@@ -46,6 +46,26 @@
       <label class="label" for="fData">Data do Último Grau (opcional)</label>
       <input id="fData" class="input" type="date" />
 
+      <label class="label" for="fCategoria">Categoria</label>
+      <select id="fCategoria" class="input">
+        <option value="Adulto">Adulto</option>
+        <option value="Kids">Kids</option>
+        <option value="Infantil">Infantil</option>
+        <option value="Juvenil">Juvenil</option>
+      </select>
+
+      <label class="label" for="fCpf">CPF</label>
+      <input id="fCpf" class="input" type="text" placeholder="000.000.000-00" />
+
+      <label class="label" for="fDataNasc">Data de Nascimento</label>
+      <input id="fDataNasc" class="input" type="date" />
+
+      <label class="label" for="fDataInicio">Data de Início</label>
+      <input id="fDataInicio" class="input" type="date" />
+
+      <label class="label" for="fTelefone">Telefone</label>
+      <input id="fTelefone" class="input" type="tel" placeholder="(00) 00000-0000" />
+
       <button class="btn primary" id="btnCadastrar">Cadastrar Aluno</button>
       <p class="msg err" id="formErr"></p>
       <p class="msg info" id="formInfo"></p>
@@ -110,14 +130,24 @@
           faixa,
           grau_atual:      grau,
           data_ultimo_grau: data,
+          categoria:       document.getElementById('fCategoria').value,
+          cpf:             document.getElementById('fCpf').value.trim(),
+          data_nasc:       document.getElementById('fDataNasc').value,
+          data_inicio:     document.getElementById('fDataInicio').value,
+          telefone:        document.getElementById('fTelefone').value.trim(),
         });
         if (r && r.ok) {
           setInfo('formInfo', '✅ Aluno cadastrado com sucesso!');
-          document.getElementById('fNome').value  = '';
-          document.getElementById('fEmail').value = '';
-          document.getElementById('fFaixa').value = 'Branca';
-          document.getElementById('fGrau').value  = '0';
-          document.getElementById('fData').value  = '';
+          document.getElementById('fNome').value      = '';
+          document.getElementById('fEmail').value     = '';
+          document.getElementById('fFaixa').value     = 'Branca';
+          document.getElementById('fGrau').value      = '0';
+          document.getElementById('fData').value      = '';
+          document.getElementById('fCategoria').value = 'Adulto';
+          document.getElementById('fCpf').value       = '';
+          document.getElementById('fDataNasc').value  = '';
+          document.getElementById('fDataInicio').value = '';
+          document.getElementById('fTelefone').value  = '';
         } else {
           setErr('formErr', r && r.erro ? r.erro : 'Erro ao cadastrar.');
           setInfo('formInfo', '');

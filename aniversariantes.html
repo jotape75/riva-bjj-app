@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#c0392b" />
+  <title>Aniversariantes – Riva BJJ</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    .dias-row {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 16px;
+    }
+    .dia-col {
+      flex: 0 0 120px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 10px;
+      min-height: 100px;
+    }
+    .dia-col.hoje {
+      border-color: var(--red);
+      background: rgba(192, 57, 43, 0.12);
+    }
+    .dia-nome {
+      font-size: 12px;
+      font-weight: 900;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .dia-col.hoje .dia-nome {
+      color: var(--red);
+    }
+    .dia-numero {
+      font-size: 26px;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.1;
+      margin-bottom: 10px;
+    }
+    .dia-col.hoje .dia-numero {
+      color: var(--red);
+    }
+    .aniversariante-card {
+      background: #2a2a2a;
+      border-radius: 10px;
+      padding: 8px 10px;
+      margin-top: 6px;
+    }
+    .aniv-nome {
+      font-size: 13px;
+      font-weight: 800;
+      color: #fff;
+      word-break: break-word;
+    }
+    .aniv-categoria {
+      font-size: 11px;
+      color: #aaa;
+      margin-top: 2px;
+    }
+    .page-title {
+      font-size: 24px;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+    .page-subtitle {
+      font-size: 14px;
+      color: #aaa;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <header class="hdr">
+    <div class="hdr-inner">
+      <img class="logo" src="./logo.png" alt="Riva BJJ" />
+    </div>
+  </header>
+
+  <main class="page">
+
+    <section class="card" id="sectionAniversariantes">
+      <div class="page-title">Aniversariantes 🎂</div>
+      <div class="page-subtitle" id="subtitleSemana">Carregando…</div>
+
+      <div class="dias-row" id="diasRow"></div>
+
+      <p class="msg info" id="pageInfo"></p>
+
+      <button class="btn secondary" onclick="location.href='./professor.html'">← Voltar ao Portal</button>
+    </section>
+
+  </main>
+
+  <script>
+    const API_BASE       = 'https://script.google.com/macros/s/AKfycbyBLlVjEvO35RufIh6pH9XOOTDXuj_BMrNHAJfdw9I-reScWX31dsVdOFJna1ZbJVqX/exec';
+    const API_TIMEOUT_MS = 25000;
+    const TOKEN_KEY      = 'rv_prof_token';
+
+    function apiCall(params) {
+      return new Promise((resolve, reject) => {
+        const cb = '_rv' + Date.now() + Math.floor(Math.random() * 9999);
+        const s  = document.createElement('script');
+        const t  = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, API_TIMEOUT_MS);
+        function cleanup() { clearTimeout(t); delete window[cb]; s.remove(); }
+        window[cb] = (d) => { cleanup(); resolve(d); };
+        s.onerror  = () => { cleanup(); reject(new Error('net')); };
+        const qs = Object.entries(params).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&');
+        s.src = `${API_BASE}?${qs}&callback=${cb}`;
+        document.head.appendChild(s);
+      });
+    }
+
+    function esc(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // ── Init ───────────────────────────────────────────────────
+    function init() {
+      const token = sessionStorage.getItem(TOKEN_KEY);
+      if (token !== 'rv_prof_ok') {
+        location.href = './professor.html';
+        return;
+      }
+      carregarAniversariantes();
+    }
+
+    // ── Semana atual (seg a dom) ────────────────────────────────
+    function getSemanaAtual() {
+      const hoje = new Date();
+      const diaSemana = hoje.getDay(); // 0=dom, 1=seg, ...6=sab
+      // Segunda-feira da semana atual
+      const diffSeg = (diaSemana === 0) ? -6 : 1 - diaSemana;
+      const seg = new Date(hoje);
+      seg.setDate(hoje.getDate() + diffSeg);
+      seg.setHours(0, 0, 0, 0);
+
+      const dias = [];
+      const nomes = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+      for (var i = 0; i < 7; i++) {
+        const d = new Date(seg);
+        d.setDate(seg.getDate() + i);
+        dias.push({
+          data:    d,
+          nomeDia: nomes[i],
+          dia:     d.getDate(),
+          mes:     d.getMonth() + 1,
+          ehHoje:  (d.toDateString() === hoje.toDateString())
+        });
+      }
+      return dias;
+    }
+
+    // ── Formatar data da semana ────────────────────────────────
+    function formatarDataBr(d) {
+      return String(d.getDate()).padStart(2, '0') + '/' +
+             String(d.getMonth() + 1).padStart(2, '0');
+    }
+
+    // ── Carregar aniversariantes ────────────────────────────────
+    async function carregarAniversariantes() {
+      document.getElementById('pageInfo').textContent = 'Carregando…';
+      try {
+        const r = await apiCall({
+          action: 'listarAlunos',
+          token:  sessionStorage.getItem(TOKEN_KEY) || '',
+        });
+        if (r && r.ok && Array.isArray(r.alunos)) {
+          renderSemana(r.alunos);
+        } else {
+          document.getElementById('pageInfo').textContent =
+            r && r.erro ? r.erro : 'Erro ao carregar alunos.';
+        }
+      } catch (e) {
+        document.getElementById('pageInfo').textContent = 'Erro de conexão. Tente novamente.';
+      }
+    }
+
+    // ── Renderizar semana ──────────────────────────────────────
+    function renderSemana(alunos) {
+      const dias    = getSemanaAtual();
+      const container = document.getElementById('diasRow');
+
+      // Atualiza subtítulo com o intervalo da semana
+      const primeiro = dias[0].data;
+      const ultimo   = dias[6].data;
+      document.getElementById('subtitleSemana').textContent =
+        formatarDataBr(primeiro) + ' a ' + formatarDataBr(ultimo);
+
+      document.getElementById('pageInfo').textContent = '';
+
+      container.innerHTML = dias.map(d => {
+        // Filtrar alunos que fazem aniversário neste dia/mês
+        const anivs = alunos.filter(a => {
+          if (!a.data_nasc) return false;
+          var raw = String(a.data_nasc);
+          // Suporta formatos YYYY-MM-DD e DD/MM/YYYY
+          var partes;
+          var diaNumero, mesNumero;
+          if (raw.indexOf('-') !== -1) {
+            partes    = raw.split('-');
+            // partes[0]=ano, partes[1]=mes, partes[2]=dia (pode ter hora)
+            diaNumero = parseInt(partes[2], 10);
+            mesNumero = parseInt(partes[1], 10);
+          } else if (raw.indexOf('/') !== -1) {
+            partes    = raw.split('/');
+            diaNumero = parseInt(partes[0], 10);
+            mesNumero = parseInt(partes[1], 10);
+          } else {
+            return false;
+          }
+          return diaNumero === d.dia && mesNumero === d.mes;
+        });
+
+        const cards = anivs.map(a => `
+          <div class="aniversariante-card">
+            <div class="aniv-nome">🎂 ${esc(a.nome_aluno || '—')}</div>
+            <div class="aniv-categoria">${esc(a.categoria || '—')}</div>
+          </div>
+        `).join('');
+
+        return `
+          <div class="dia-col${d.ehHoje ? ' hoje' : ''}">
+            <div class="dia-nome">${esc(d.nomeDia)}</div>
+            <div class="dia-numero">${d.dia}</div>
+            ${cards}
+          </div>
+        `;
+      }).join('');
+    }
+
+    init();
+  </script>
+</body>
+</html>

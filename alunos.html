@@ -80,6 +80,60 @@
       flex-shrink: 0;
     }
     .btn-toggle:active { opacity: .75; }
+    .btn-faixa {
+      background: #1a1a2e;
+      border: 1px solid #444;
+      color: #fff;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .btn-faixa:active { opacity: .75; }
+    .trocar-faixa-inline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .trocar-faixa-inline select {
+      background: #222;
+      border: 1px solid #555;
+      color: #fff;
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 13px;
+      flex: 1;
+      min-width: 100px;
+    }
+    .btn-confirmar-faixa {
+      background: var(--red);
+      border: none;
+      color: #fff;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-confirmar-faixa:active { opacity: .75; }
+    .btn-cancelar-faixa {
+      background: #333;
+      border: 1px solid #555;
+      color: #aaa;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-cancelar-faixa:active { opacity: .75; }
     #searchBox {
       margin-bottom: 14px;
     }
@@ -190,18 +244,35 @@
               <div class="aluno-nome">${esc(a.nome_aluno)}</div>
               <div class="aluno-email">${esc(a.email || '—')}</div>
             </div>
-            <button class="btn-toggle"
-              data-id="${esc(String(a.id))}"
-              data-status="${esc(a.status)}"
-              id="btn-${esc(String(a.id))}">
-              ${a.status === 'ATIVO' ? 'Desativar' : 'Ativar'}
-            </button>
+            <div style="display:flex;gap:6px;flex-shrink:0;">
+              <button class="btn-faixa"
+                data-id="${esc(String(a.id))}"
+                id="btnFaixa-${esc(String(a.id))}">
+                Trocar Faixa
+              </button>
+              <button class="btn-toggle"
+                data-id="${esc(String(a.id))}"
+                data-status="${esc(a.status)}"
+                id="btn-${esc(String(a.id))}">
+                ${a.status === 'ATIVO' ? 'Desativar' : 'Ativar'}
+              </button>
+            </div>
           </div>
           <div class="aluno-meta">
-            <span class="aluno-faixa">${esc(a.faixa || '—')} G${esc(String(a.grau_atual ?? '—'))}</span>
+            <span class="aluno-faixa" id="faixaLabel-${esc(String(a.id))}">${esc(a.faixa || '—')} G${esc(String(a.grau_atual ?? '—'))}</span>
             <span class="${a.status === 'ATIVO' ? 'badge-ativo' : 'badge-inativo'}" id="badge-${esc(String(a.id))}">
               ${esc(a.status || '—')}
             </span>
+          </div>
+          <div class="trocar-faixa-inline" id="trocaFaixaArea-${esc(String(a.id))}" style="display:none;">
+            <select id="selectFaixa-${esc(String(a.id))}">
+              <option value="Branca">Branca</option>
+              <option value="Azul">Azul</option>
+              <option value="Roxa">Roxa</option>
+              <option value="Marrom">Marrom</option>
+            </select>
+            <button class="btn-confirmar-faixa" data-id="${esc(String(a.id))}">Confirmar</button>
+            <button class="btn-cancelar-faixa" data-id="${esc(String(a.id))}">Cancelar</button>
           </div>
         </div>
       `).join('');
@@ -218,11 +289,37 @@
 
     // ── Event delegation para botões de toggle ─────────────────
     document.getElementById('listaAlunos').addEventListener('click', (e) => {
-      const btn = e.target.closest('.btn-toggle');
-      if (!btn) return;
-      const id     = btn.dataset.id;
-      const status = btn.dataset.status;
-      if (id && status) toggleStatus(id, status);
+      const btnToggle = e.target.closest('.btn-toggle');
+      if (btnToggle) {
+        const id     = btnToggle.dataset.id;
+        const status = btnToggle.dataset.status;
+        if (id && status) toggleStatus(id, status);
+        return;
+      }
+
+      const btnFaixa = e.target.closest('.btn-faixa');
+      if (btnFaixa) {
+        const id   = btnFaixa.dataset.id;
+        const area = document.getElementById('trocaFaixaArea-' + id);
+        if (area) area.style.display = area.style.display === 'none' ? 'flex' : 'none';
+        return;
+      }
+
+      const btnConfirmar = e.target.closest('.btn-confirmar-faixa');
+      if (btnConfirmar) {
+        const id        = btnConfirmar.dataset.id;
+        const novaFaixa = document.getElementById('selectFaixa-' + id).value;
+        trocarFaixa(id, novaFaixa);
+        return;
+      }
+
+      const btnCancelar = e.target.closest('.btn-cancelar-faixa');
+      if (btnCancelar) {
+        const id   = btnCancelar.dataset.id;
+        const area = document.getElementById('trocaFaixaArea-' + id);
+        if (area) area.style.display = 'none';
+        return;
+      }
     });
 
     // ── Toggle status (otimista) ────────────────────────────────
@@ -278,6 +375,38 @@
         alert('Erro de conexão.');
       } finally {
         if (btn) btn.disabled = false;
+      }
+    }
+
+    // ── Trocar faixa ────────────────────────────────────────────
+    async function trocarFaixa(id, novaFaixa) {
+      const btnF  = document.getElementById('btnFaixa-' + id);
+      const area  = document.getElementById('trocaFaixaArea-' + id);
+      const label = document.getElementById('faixaLabel-' + id);
+      if (btnF) btnF.disabled = true;
+
+      try {
+        const r = await apiCall({
+          action:    'trocarFaixa',
+          token:     sessionStorage.getItem(TOKEN_KEY) || '',
+          id,
+          novaFaixa,
+        });
+        if (r && r.ok) {
+          const aluno = todosAlunos.find(a => String(a.id) === String(id));
+          if (aluno) {
+            aluno.faixa      = novaFaixa;
+            aluno.grau_atual = 0;
+          }
+          if (label) label.textContent = novaFaixa + ' G0';
+          if (area) area.style.display = 'none';
+        } else {
+          alert(r && r.erro ? r.erro : 'Erro ao trocar faixa.');
+        }
+      } catch (e) {
+        alert('Erro de conexão.');
+      } finally {
+        if (btnF) btnF.disabled = false;
       }
     }
 
