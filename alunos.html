@@ -134,6 +134,32 @@
       white-space: nowrap;
     }
     .btn-cancelar-faixa:active { opacity: .75; }
+    .aluno-detalhes {
+      margin-top: 10px;
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .detalhe-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .detalhe-label {
+      font-size: 12px;
+      color: #aaa;
+      white-space: nowrap;
+    }
+    .detalhe-valor {
+      font-size: 12px;
+      color: #fff;
+      font-weight: 600;
+      text-align: right;
+      word-break: break-word;
+    }
     #searchBox {
       margin-bottom: 14px;
     }
@@ -264,12 +290,38 @@
               ${esc(a.status || '—')}
             </span>
           </div>
+          <div class="aluno-detalhes" id="detalhes-${esc(String(a.id))}">
+            <div class="detalhe-row"><span class="detalhe-label">Categoria</span><span class="detalhe-valor">${esc(a.categoria || '—')}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Aulas no Grau</span><span class="detalhe-valor">${esc(String(a.aulas_no_grau ?? '—'))}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Aulas Restantes</span><span class="detalhe-valor">${esc(String(a.aulas_restantes ?? '—'))}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Último Grau</span><span class="detalhe-valor">${esc(formatarData(a.data_ultimo_grau))}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Telefone</span><span class="detalhe-valor">${esc(a.telefone || '—')}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">CPF</span><span class="detalhe-valor">${esc(a.cpf || '—')}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Nascimento</span><span class="detalhe-valor">${esc(formatarData(a.data_nasc))}</span></div>
+          </div>
           <div class="trocar-faixa-inline" id="trocaFaixaArea-${esc(String(a.id))}" style="display:none;">
             <select id="selectFaixa-${esc(String(a.id))}">
-              <option value="Branca">Branca</option>
-              <option value="Azul">Azul</option>
-              <option value="Roxa">Roxa</option>
-              <option value="Marrom">Marrom</option>
+              <optgroup label="── Adulto ──">
+                <option value="Branca">Branca</option>
+                <option value="Azul">Azul</option>
+                <option value="Roxa">Roxa</option>
+                <option value="Marrom">Marrom</option>
+                <option value="Preta">Preta</option>
+              </optgroup>
+              <optgroup label="── Kids / Infantil / Juvenil ──">
+                <option value="Cinza e Branca">Cinza e Branca</option>
+                <option value="Cinza">Cinza</option>
+                <option value="Cinza e Preta">Cinza e Preta</option>
+                <option value="Amarela e Branca">Amarela e Branca</option>
+                <option value="Amarela">Amarela</option>
+                <option value="Amarela e Preta">Amarela e Preta</option>
+                <option value="Laranja e Branca">Laranja e Branca</option>
+                <option value="Laranja">Laranja</option>
+                <option value="Laranja e Preta">Laranja e Preta</option>
+                <option value="Verde e Branca">Verde e Branca</option>
+                <option value="Verde">Verde</option>
+                <option value="Verde e Preta">Verde e Preta</option>
+              </optgroup>
             </select>
             <button class="btn-confirmar-faixa" data-id="${esc(String(a.id))}">Confirmar</button>
             <button class="btn-cancelar-faixa" data-id="${esc(String(a.id))}">Cancelar</button>
@@ -418,6 +470,17 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+    }
+
+    // ── Formatar data YYYY-MM-DD → DD/MM/YYYY ─────────────────
+    function formatarData(val) {
+      if (!val || String(val).trim() === '' || String(val).trim() === 'undefined') return '—';
+      var s = String(val).trim();
+      if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+        var parts = s.substring(0, 10).split('-');
+        return parts[2] + '/' + parts[1] + '/' + parts[0];
+      }
+      return s;
     }
 
     init();
