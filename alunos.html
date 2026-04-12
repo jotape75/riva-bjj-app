@@ -184,18 +184,20 @@
       margin-top: 10px;
       border-top: 1px solid var(--border);
       padding-top: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 16px;
     }
     .detalhe-row {
       display: flex;
       flex-direction: column;
       gap: 2px;
-      margin-bottom: 6px;
+    }
+    .detalhe-row.full-width {
+      grid-column: 1 / -1;
     }
     .detalhe-label {
-      font-size: 13px;
+      font-size: 12px;
       color: #aaa;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -207,13 +209,78 @@
       word-break: break-word;
     }
     #searchBox {
-      margin-bottom: 14px;
+      margin-bottom: 8px;
     }
     .lista-vazia {
       color: #aaa;
       text-align: center;
       padding: 24px 0;
       font-size: 15px;
+    }
+    .aluno-financeiro {
+      margin-top: 12px;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+    .fin-header {
+      font-size: 15px;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    .fin-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 16px;
+      margin-bottom: 12px;
+    }
+    .fin-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .fin-label {
+      font-size: 12px;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .fin-valor {
+      font-size: 15px;
+      color: #fff;
+      font-weight: 700;
+    }
+    .fin-status-pago   { color: #2ecc71; }
+    .fin-status-aberto { color: #f39c12; }
+    .fin-status-vencido { color: #e74c3c; }
+    .fin-acoes {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn-fin {
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      border: none;
+    }
+    .btn-fin.primary {
+      background: var(--red);
+      color: #fff;
+    }
+    .btn-fin.secondary {
+      background: #2a2a2a;
+      border: 1px solid #444;
+      color: #fff;
+    }
+    .btn-fin:active { opacity: .75; }
+    .fin-msg {
+      font-size: 13px;
+      margin-top: 8px;
+      min-height: 18px;
     }
   </style>
 </head>
@@ -234,7 +301,11 @@
     <section class="hidden" id="sectionAlunos">
       <div class="card">
         <h1 class="title">Alunos</h1>
-        <input id="searchBox" class="input" type="search" placeholder="Buscar por nome…" />
+        <input id="searchBox" class="input" type="search" placeholder="Buscar por nome ou CPF…" />
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button class="btn secondary" id="btnVerTodos" style="flex:1;">Ver todos</button>
+          <button class="btn secondary" id="btnAtualizar" style="flex-shrink:0;">🔄 Atualizar</button>
+        </div>
         <p class="msg info" id="listInfo"></p>
       </div>
 
@@ -253,7 +324,29 @@
     const API_TIMEOUT_MS = 25000;
     const TOKEN_KEY      = 'rv_prof_token';
 
+    const CACHE_KEY_ALUNOS = 'rv_alunos_cache';
+    const CACHE_TTL_ALUNOS = 60 * 60 * 1000; // 1 hora
+
+    function salvarCacheAlunos(alunos) {
+      try {
+        localStorage.setItem(CACHE_KEY_ALUNOS, JSON.stringify({ ts: Date.now(), alunos }));
+      } catch(e) {}
+    }
+
+    function lerCacheAlunos() {
+      try {
+        const c = JSON.parse(localStorage.getItem(CACHE_KEY_ALUNOS) || 'null');
+        if (c && Date.now() - c.ts < CACHE_TTL_ALUNOS) return c.alunos;
+      } catch(e) {}
+      return null;
+    }
+
+    function invalidarCacheAlunos() {
+      localStorage.removeItem(CACHE_KEY_ALUNOS);
+    }
+
     let todosAlunos = [];
+    let listaCarregada = false;
 
     function apiCall(params) {
       return new Promise((resolve, reject) => {
@@ -279,14 +372,22 @@
       const token = sessionStorage.getItem(TOKEN_KEY);
       if (token === 'rv_prof_ok') {
         show('sectionAlunos');
-        carregarAlunos();
       } else {
         location.href = './administrativo.html';
       }
     }
 
     // ── Carregar alunos ────────────────────────────────────────
-    async function carregarAlunos() {
+    async function carregarAlunos(forcar = false) {
+      if (!forcar) {
+        const cached = lerCacheAlunos();
+        if (cached) {
+          todosAlunos = cached;
+          setInfo('listInfo', '');
+          renderListaFiltrada();
+          return;
+        }
+      }
       setInfo('listInfo', 'Carregando alunos…');
       document.getElementById('listaAlunos').innerHTML = '';
       try {
@@ -296,13 +397,27 @@
         });
         if (r && r.ok && Array.isArray(r.alunos)) {
           todosAlunos = r.alunos;
+          salvarCacheAlunos(todosAlunos);
           setInfo('listInfo', '');
-          renderLista(todosAlunos);
+          renderListaFiltrada();
         } else {
           setInfo('listInfo', r && r.erro ? r.erro : 'Erro ao carregar alunos.');
         }
       } catch (e) {
         setInfo('listInfo', 'Erro de conexão. Tente novamente.');
+      }
+    }
+
+    // ── Renderizar lista filtrada ──────────────────────────────
+    function renderListaFiltrada() {
+      const q = document.getElementById('searchBox').value.trim().toLowerCase();
+      if (!q) {
+        renderLista(todosAlunos);
+      } else {
+        renderLista(todosAlunos.filter(a =>
+          (a.nome_aluno || '').toLowerCase().includes(q) ||
+          (a.cpf || '').includes(q)
+        ));
       }
     }
 
@@ -313,8 +428,17 @@
         container.innerHTML = '<p class="lista-vazia">Nenhum aluno encontrado.</p>';
         return;
       }
-      container.innerHTML = alunos.map(a => `
-        <div class="aluno-card" id="card-${esc(String(a.id))}">
+      container.innerHTML = alunos.map(a => {
+        const id        = esc(String(a.id));
+        const cat       = esc(a.categoria || '—');
+        const aulas     = esc(String(a.aulas_no_grau ?? '—'));
+        const restantes = esc(String(a.aulas_restantes ?? '—'));
+        const dataGrau  = esc(formatarData(a.data_ultimo_grau));
+        const tel       = esc(a.telefone || '—');
+        const cpf       = esc(a.cpf || '—');
+        const nasc      = esc(formatarData(a.data_nasc));
+        return `
+        <div class="aluno-card" id="card-${id}">
           <div class="aluno-header">
             <div>
               <div class="aluno-nome">${esc(a.nome_aluno)}</div>
@@ -322,35 +446,61 @@
             </div>
             <div style="display:flex;gap:6px;flex-shrink:0;">
               <button class="btn-faixa"
-                data-id="${esc(String(a.id))}"
-                id="btnFaixa-${esc(String(a.id))}">
+                data-id="${id}"
+                id="btnFaixa-${id}">
                 Trocar Faixa
               </button>
               <button class="btn-toggle"
-                data-id="${esc(String(a.id))}"
+                data-id="${id}"
                 data-status="${esc(a.status)}"
-                id="btn-${esc(String(a.id))}">
+                id="btn-${id}">
                 ${a.status === 'ATIVO' ? 'Desativar' : 'Ativar'}
               </button>
             </div>
           </div>
           <div class="aluno-meta">
-            <span class="aluno-faixa" id="faixaLabel-${esc(String(a.id))}">${esc(a.faixa || '—')} G${esc(String(a.grau_atual ?? '—'))}</span>
-            <span class="${a.status === 'ATIVO' ? 'badge-ativo' : 'badge-inativo'}" id="badge-${esc(String(a.id))}">
+            <span class="aluno-faixa" id="faixaLabel-${id}">${esc(a.faixa || '—')} G${esc(String(a.grau_atual ?? '—'))}</span>
+            <span class="${a.status === 'ATIVO' ? 'badge-ativo' : 'badge-inativo'}" id="badge-${id}">
               ${esc(a.status || '—')}
             </span>
           </div>
-          <div class="aluno-detalhes" id="detalhes-${esc(String(a.id))}">
-            <div class="detalhe-row"><span class="detalhe-label">Categoria</span><span class="detalhe-valor">${esc(a.categoria || '—')}</span></div>
-            <div class="detalhe-row"><span class="detalhe-label">Aulas no Grau</span><span class="detalhe-valor">${esc(String(a.aulas_no_grau ?? '—'))}</span></div>
-            <div class="detalhe-row"><span class="detalhe-label">Aulas Restantes</span><span class="detalhe-valor">${esc(String(a.aulas_restantes ?? '—'))}</span></div>
-            <div class="detalhe-row"><span class="detalhe-label">Último Grau</span><span class="detalhe-valor">${esc(formatarData(a.data_ultimo_grau))}</span></div>
-            <div class="detalhe-row"><span class="detalhe-label">Telefone</span><span class="detalhe-valor">${esc(a.telefone || '—')}</span></div>
-            <div class="detalhe-row"><span class="detalhe-label">CPF</span><span class="detalhe-valor">${esc(a.cpf || '—')}</span></div>
-            <div class="detalhe-row"><span class="detalhe-label">Nascimento</span><span class="detalhe-valor">${esc(formatarData(a.data_nasc))}</span></div>
+          <div class="aluno-detalhes" id="detalhes-${id}">
+            <div class="detalhe-row"><span class="detalhe-label">Categoria</span><span class="detalhe-valor">${cat}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Aulas no Grau</span><span class="detalhe-valor">${aulas}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Aulas Restantes</span><span class="detalhe-valor">${restantes}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Último Grau</span><span class="detalhe-valor">${dataGrau}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Telefone</span><span class="detalhe-valor">${tel}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">CPF</span><span class="detalhe-valor">${cpf}</span></div>
+            <div class="detalhe-row full-width"><span class="detalhe-label">Nascimento</span><span class="detalhe-valor">${nasc}</span></div>
           </div>
-          <div class="trocar-faixa-inline" id="trocaFaixaArea-${esc(String(a.id))}" style="display:none;">
-            <select id="selectFaixa-${esc(String(a.id))}">
+          <div class="aluno-financeiro" id="fin-${id}">
+            <div class="fin-header">💰 Financeiro</div>
+            <div class="fin-grid">
+              <div class="fin-item">
+                <span class="fin-label">PLANO</span>
+                <span class="fin-valor" id="finPlano-${id}">—</span>
+              </div>
+              <div class="fin-item">
+                <span class="fin-label">STATUS</span>
+                <span class="fin-valor fin-status" id="finStatus-${id}">—</span>
+              </div>
+              <div class="fin-item">
+                <span class="fin-label">PRÓX. VENCIMENTO</span>
+                <span class="fin-valor" id="finVenc-${id}">—</span>
+              </div>
+              <div class="fin-item">
+                <span class="fin-label">VALOR</span>
+                <span class="fin-valor" id="finValor-${id}">—</span>
+              </div>
+            </div>
+            <div class="fin-acoes">
+              <button class="btn-fin primary" data-id="${id}">+ Registrar Pagamento</button>
+              <button class="btn-fin secondary" data-id="${id}">📋 Histórico</button>
+            </div>
+            <p class="fin-msg" id="finMsg-${id}"></p>
+          </div>
+          <div class="trocar-faixa-inline" id="trocaFaixaArea-${id}" style="display:none;">
+            <select id="selectFaixa-${id}">
               <optgroup label="── Adulto ──">
                 <option value="Branca">Branca</option>
                 <option value="Azul">Azul</option>
@@ -373,20 +523,38 @@
                 <option value="Verde e Preta">Verde e Preta</option>
               </optgroup>
             </select>
-            <button class="btn-confirmar-faixa" data-id="${esc(String(a.id))}">Confirmar</button>
-            <button class="btn-cancelar-faixa" data-id="${esc(String(a.id))}">Cancelar</button>
+            <button class="btn-confirmar-faixa" data-id="${id}">Confirmar</button>
+            <button class="btn-cancelar-faixa" data-id="${id}">Cancelar</button>
           </div>
         </div>
-      `).join('');
+      `}).join('');
     }
 
     // ── Filtro de busca ────────────────────────────────────────
-    document.getElementById('searchBox').addEventListener('input', (e) => {
+    document.getElementById('searchBox').addEventListener('input', async (e) => {
       const q = e.target.value.trim().toLowerCase();
-      if (!q) { renderLista(todosAlunos); return; }
-      renderLista(todosAlunos.filter(a =>
-        (a.nome_aluno || '').toLowerCase().includes(q)
-      ));
+      if (!listaCarregada && q.length >= 3) {
+        await carregarAlunos();
+        listaCarregada = true;
+      }
+      if (listaCarregada) renderListaFiltrada();
+    });
+
+    document.getElementById('btnVerTodos').addEventListener('click', async () => {
+      if (!listaCarregada) {
+        await carregarAlunos();
+        listaCarregada = true;
+      } else {
+        renderListaFiltrada();
+      }
+    });
+
+    document.getElementById('btnAtualizar').addEventListener('click', async () => {
+      invalidarCacheAlunos();
+      listaCarregada = false;
+      todosAlunos = [];
+      await carregarAlunos(true);
+      listaCarregada = true;
     });
 
     // ── Event delegation para botões de toggle ─────────────────
@@ -462,6 +630,8 @@
             badge.className   = statusAtual === 'ATIVO' ? 'badge-ativo' : 'badge-inativo';
           }
           alert(r && r.erro ? r.erro : 'Erro ao alterar status.');
+        } else {
+          salvarCacheAlunos(todosAlunos);
         }
       } catch (e) {
         // Revert on error
@@ -500,6 +670,7 @@
             aluno.faixa      = novaFaixa;
             aluno.grau_atual = 0;
           }
+          salvarCacheAlunos(todosAlunos);
           if (label) label.textContent = novaFaixa + ' G0';
           if (area) area.style.display = 'none';
         } else {
