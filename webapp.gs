@@ -143,3 +143,113 @@ function limparArquivo() {
   SpreadsheetApp.flush();
   Logger.log("✅ Checkins_Arquivo limpo para o novo mês.");
 }
+
+// ── cadastrarAluno_: salva nas colunas A–K (existentes) + L–P (novos campos)
+// Substituir a função cadastrarAluno_ no arquivo principal do projeto
+/*
+function cadastrarAluno_(params) {
+  try {
+    var planilha = SpreadsheetApp.openById(PLANILHA_ID);
+    var aba      = planilha.getSheetByName("Alunos");
+    var dados    = aba.getDataRange().getValues();
+    var ultimoId = 0;
+    for (var i = 1; i < dados.length; i++) {
+      var idVal = Number(dados[i][0]);
+      if (idVal > ultimoId) ultimoId = idVal;
+    }
+    var novoId   = ultimoId + 1;
+    var faixa    = params.faixa || "Branca";
+    var grau     = Number(params.grau_atual) || 0;
+    var metaGrau = (faixa === "Branca") ? 36 : 56;
+    var dataGrau = params.data_ultimo_grau || "";
+    aba.appendRow([
+      novoId,
+      params.nome  || "",
+      "ATIVO",
+      faixa,
+      grau,
+      0,
+      metaGrau,
+      metaGrau,
+      dataGrau,
+      gerarStatus(faixa, grau, metaGrau),
+      params.email || "",
+      params.telefone || "",        // L
+      params.cpf || "",             // M
+      params.data_nasc || "",       // N
+      params.data_inicio || "",     // O
+      params.categoria || "Adulto"  // P
+    ]);
+    SpreadsheetApp.flush();
+    return { ok: true, id: novoId };
+  } catch(err) {
+    return { ok: false, erro: err.message };
+  }
+}
+*/
+
+// ── listarAlunos_: retornar também os novos campos L–P
+// Substituir a função listarAlunos_ no arquivo principal do projeto
+/*
+function listarAlunos_() {
+  try {
+    var planilha = SpreadsheetApp.openById(PLANILHA_ID);
+    var aba      = planilha.getSheetByName("Alunos");
+    var dados    = aba.getDataRange().getValues();
+    var alunos   = [];
+    for (var i = 1; i < dados.length; i++) {
+      var row = dados[i];
+      if (!row[1]) continue;
+      alunos.push({
+        id:               row[0],
+        nome_aluno:       row[1],
+        status:           row[2],
+        faixa:            row[3],
+        grau_atual:       row[4],
+        aulas_no_grau:    row[5],
+        aulas_restantes:  row[6],
+        meta_grau:        row[7],
+        data_ultimo_grau: row[8],
+        statusExame:      row[9],
+        email:            row[10],
+        telefone:         row[11],
+        cpf:              row[12],
+        data_nasc:        row[13],
+        data_inicio:      row[14],
+        categoria:        row[15]
+      });
+    }
+    return { ok: true, alunos: alunos };
+  } catch(err) {
+    return { ok: false, erro: err.message };
+  }
+}
+*/
+
+// ── trocarFaixa_: troca a faixa do aluno e zera aulas/grau
+// Adicionar no arquivo principal do projeto + registrar no routeAction_:
+//   case 'trocarFaixa': result = trocarFaixa_(params); break;
+function trocarFaixa_(params) {
+  try {
+    var planilha = SpreadsheetApp.openById(PLANILHA_ID);
+    var aba      = planilha.getSheetByName("Alunos");
+    var dados    = aba.getDataRange().getValues();
+    for (var i = 1; i < dados.length; i++) {
+      if (String(dados[i][0]) === String(params.id)) {
+        var novaFaixa = params.novaFaixa || "Branca";
+        var metaGrau  = (novaFaixa === "Branca") ? 36 : 56;
+        aba.getRange(i+1, 4).setValue(novaFaixa);   // faixa
+        aba.getRange(i+1, 5).setValue(0);            // grau_atual = 0
+        aba.getRange(i+1, 6).setValue(0);            // aulas_no_grau = 0
+        aba.getRange(i+1, 7).setValue(metaGrau);     // aulas_restantes
+        aba.getRange(i+1, 8).setValue(metaGrau);     // meta_grau
+        aba.getRange(i+1, 10).setValue(gerarStatus(novaFaixa, 0, metaGrau)); // statusExame
+        SpreadsheetApp.flush();
+        return { ok: true };
+      }
+    }
+    return { ok: false, erro: "Aluno não encontrado" };
+  } catch(err) {
+    return { ok: false, erro: err.message };
+  }
+}
