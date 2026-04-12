@@ -13,6 +13,12 @@
       overflow-x: auto;
       padding-bottom: 8px;
       margin-bottom: 16px;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      cursor: grab;
+    }
+    .dias-row:active {
+      cursor: grabbing;
     }
     .dia-col {
       flex: 0 0 120px;
@@ -241,6 +247,24 @@
     }
 
     init();
+
+    const diasRow = document.getElementById('diasRow');
+    let isDown = false, startX, scrollLeft;
+    diasRow.addEventListener('mousedown', e => {
+      isDown = true;
+      diasRow.style.cursor = 'grabbing';
+      startX = e.pageX - diasRow.offsetLeft;
+      scrollLeft = diasRow.scrollLeft;
+    });
+    diasRow.addEventListener('mouseleave', () => { isDown = false; diasRow.style.cursor = 'grab'; });
+    diasRow.addEventListener('mouseup',    () => { isDown = false; diasRow.style.cursor = 'grab'; });
+    diasRow.addEventListener('mousemove',  e => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x    = e.pageX - diasRow.offsetLeft;
+      const walk = (x - startX) * 1.5;
+      diasRow.scrollLeft = scrollLeft - walk;
+    });
   </script>
 </body>
 </html>
