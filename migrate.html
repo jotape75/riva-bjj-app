@@ -521,23 +521,25 @@
     }
 
     /* ── Preview ──────────────────────────────────────────── */
-    const SHEET_HEADERS = {
-      Alunos:          ['id','nome_aluno','status','faixa','grau_atual','aulas_no_grau','meta_grau','aulas_restantes','data_ultimo_grau','statusExame','email','telefone','cpf','data_nasc','data_inicio','categoria','valorMensalidade','plano','grupo_familiar','data_contrato'],
-      Professores:     ['id','nome','email','senha'],
-      Treinos:         ['diaSemana','horario','nome'],
-      Checkins:        ['id','email','nome','horario','data_treino','status','data_aprovacao'],
-      Checkins_Arquivo:['id','email','nome','horario','data_treino','status','data_aprovacao'],
-    };
-
     function countValidRows(name) {
       const rows = parsedSheets[name];
       if (!rows || rows.length < 2) return 0;
       const data = rows.slice(1);
-      if (name === 'Alunos')           return data.filter(r => String(r[1] || '').trim()).length;
-      if (name === 'Professores')      return data.filter(r => String(r[1] || '').trim() && String(r[2] || '').trim()).length;
-      if (name === 'Treinos')          return data.filter(r => String(r[1] || '').trim() && String(r[2] || '').trim()).length;
-      if (name === 'Checkins' || name === 'Checkins_Arquivo')
+      if (name === 'Alunos')
         return data.filter(r => String(r[1] || '').trim()).length;
+      if (name === 'Professores')
+        return data.filter(r => String(r[0] || '').trim() && String(r[1] || '').trim()).length;
+      if (name === 'Treinos') {
+        let count = 0;
+        for (const r of data) {
+          for (let c = 1; c <= 6; c++) {
+            if (String(r[c] || '').trim()) count++;
+          }
+        }
+        return count;
+      }
+      if (name === 'Checkins' || name === 'Checkins_Arquivo')
+        return data.filter(r => String(r[7] || '').trim()).length;
       return 0;
     }
 
@@ -568,29 +570,34 @@
       });
 
       const rows = parsedSheets[name] || [];
-      const headers = SHEET_HEADERS[name] || [];
       const thead = $('previewHead');
       const tbody = $('previewBody');
 
-      thead.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+      if (rows.length === 0) {
+        thead.innerHTML = '';
+        tbody.innerHTML = '<tr><td style="color:var(--text-muted);padding:20px;text-align:center">Nenhum dado encontrado</td></tr>';
+        return;
+      }
+
+      // Use actual first row from the sheet as column headers
+      const rawHeaders = rows[0].map(String);
+      thead.innerHTML = '<tr>' + rawHeaders.map(h => `<th>${h}</th>`).join('') + '</tr>';
       tbody.innerHTML = '';
 
       // Show first 20 data rows (skip header row)
       const dataRows = rows.slice(1, 21);
       for (const row of dataRows) {
         const tr = document.createElement('tr');
-        for (let i = 0; i < headers.length; i++) {
+        for (let i = 0; i < rawHeaders.length; i++) {
           const td = document.createElement('td');
-          const val = row[i] !== undefined ? row[i] : '';
-          // Apply date conversion in preview for date columns
-          td.textContent = DATE_FIELDS.has(headers[i]) ? excelDateToString(val) : String(val);
+          td.textContent = String(row[i] !== undefined ? row[i] : '');
           tr.appendChild(td);
         }
         tbody.appendChild(tr);
       }
 
       if (dataRows.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="' + headers.length + '" style="color:var(--text-muted);padding:20px;text-align:center">Nenhum dado encontrado</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="' + rawHeaders.length + '" style="color:var(--text-muted);padding:20px;text-align:center">Nenhum dado encontrado</td></tr>';
       }
     }
 
@@ -651,59 +658,48 @@
     }
 
     // Date field names that need conversion from Excel serial
-    const DATE_FIELDS = new Set(['data_nasc','data_ultimo_grau','data_inicio','data_contrato','data_aprovacao','data_treino']);
+    const DATE_FIELDS = new Set(['data_nasc','data_ultimo_grau','data_inicio','data_aprovacao','data_treino']);
 
     function mapAluno(row) {
       return {
-        id:               toStr(row[0]),
-        nome_aluno:       toStr(row[1]),
-        status:           toStr(row[2]),
-        faixa:            toStr(row[3]),
-        grau_atual:       toInt(row[4]),
-        aulas_no_grau:    toInt(row[5]),
-        meta_grau:        toInt(row[6]),
-        aulas_restantes:  toInt(row[7]),
-        data_ultimo_grau: excelDateToString(row[8]),
-        statusExame:      toStr(row[9]),
-        email:            toStr(row[10]),
-        telefone:         toStr(row[11]),
-        cpf:              toStr(row[12]),
-        data_nasc:        excelDateToString(row[13]),
-        data_inicio:      excelDateToString(row[14]),
-        categoria:        toStr(row[15]),
-        valorMensalidade: toNum(row[16]),
-        plano:            toStr(row[17]),
-        grupo_familiar:   toStr(row[18]),
-        data_contrato:    excelDateToString(row[19]),
+        id:               toStr(row[0]),              // Col A
+        nome_aluno:       toStr(row[1]),              // Col B
+        status:           toStr(row[2]),              // Col C
+        faixa:            toStr(row[3]),              // Col D
+        grau_atual:       toInt(row[4]),              // Col E (number)
+        aulas_no_grau:    toInt(row[5]),              // Col F (number)
+        aulas_restantes:  toInt(row[6]),              // Col G (number)
+        meta_grau:        toInt(row[7]),              // Col H (number)
+        data_ultimo_grau: excelDateToString(row[8]), // Col I
+        statusExame:      toStr(row[9]),              // Col J
+        email:            toStr(row[10]),             // Col K
+        telefone:         toStr(row[11]),             // Col L
+        cpf:              toStr(row[12]),             // Col M
+        data_nasc:        excelDateToString(row[13]),// Col N
+        data_inicio:      excelDateToString(row[14]),// Col O
+        categoria:        toStr(row[15]),             // Col P
       };
     }
 
     function mapProfessor(row) {
       return {
-        id:    toStr(row[0]),
-        nome:  toStr(row[1]),
-        email: toStr(row[2]),
-        // Col D (senha) is intentionally omitted
-      };
-    }
-
-    function mapTreino(row) {
-      return {
-        diaSemana: toInt(row[0]),
-        horario:   toStr(row[1]),
-        nome:      toStr(row[2]),
+        nome:  toStr(row[0]),  // Col A
+        email: toStr(row[1]),  // Col B
       };
     }
 
     function mapCheckin(row, arquivado) {
       return {
-        id:             toStr(row[0]),
-        email:          toStr(row[1]),
-        nome:           toStr(row[2]),
-        horario:        toStr(row[3]),
-        data_treino:    excelDateToString(row[4]),
-        status:         toStr(row[5]),
-        data_aprovacao: excelDateToString(row[6]),
+        // Col A (row[0]) = carimbo → IGNORED
+        nome:           toStr(row[1]),             // Col B
+        horario:        toStr(row[2]),             // Col C
+        // Col D (row[3]) = checkin_valido → IGNORED
+        data_treino:    excelDateToString(row[4]), // Col E
+        treino:         toStr(row[5]),             // Col F
+        status:         toStr(row[6]),             // Col G
+        email:          toStr(row[7]),             // Col H
+        data_aprovacao: excelDateToString(row[8]), // Col I
+        // Col J (row[9]) = aprovador → IGNORED
         arquivado,
       };
     }
@@ -773,31 +769,45 @@
       // Build doc list
       if (sheetName === 'Alunos') {
         for (const row of dataRows) {
-          if (!toStr(row[1])) continue;
+          if (!toStr(row[1])) continue; // skip if nome_aluno (Col B) empty
           const d = cleanObject(mapAluno(row));
           if (d.id) docs.push({ type: 'set', collection: 'alunos', id: d.id, data: d });
         }
       } else if (sheetName === 'Professores') {
         for (const row of dataRows) {
-          if (!toStr(row[1]) || !toStr(row[2])) continue;
-          const d = cleanObject(mapProfessor(row));
-          if (d.id) docs.push({ type: 'set', collection: 'professores', id: d.id, data: d });
+          const nome  = toStr(row[0]); // Col A
+          const email = toStr(row[1]); // Col B
+          if (!nome || !email) continue;
+          docs.push({ type: 'add', collection: 'professores', data: cleanObject({ nome, email }) });
         }
       } else if (sheetName === 'Treinos') {
+        // Matrix: Col A = horario, Cols B–G = days (diaSemana 1–6)
+        const DAY_COLS = [
+          { col: 1, diaSemana: 1 }, // Col B = Segunda
+          { col: 2, diaSemana: 2 }, // Col C = Terça
+          { col: 3, diaSemana: 3 }, // Col D = Quarta
+          { col: 4, diaSemana: 4 }, // Col E = Quinta
+          { col: 5, diaSemana: 5 }, // Col F = Sexta
+          { col: 6, diaSemana: 6 }, // Col G = Sábado
+        ];
         for (const row of dataRows) {
-          if (!toStr(row[1]) || !toStr(row[2])) continue;
-          const d = cleanObject(mapTreino(row));
-          docs.push({ type: 'add', collection: 'sessoes', data: d });
+          const horario = toStr(row[0]); // Col A
+          if (!horario) continue;
+          for (const { col, diaSemana } of DAY_COLS) {
+            const nome = toStr(row[col]);
+            if (!nome) continue;
+            docs.push({ type: 'add', collection: 'sessoes', data: { diaSemana, horario, nome } });
+          }
         }
       } else if (sheetName === 'Checkins') {
         for (const row of dataRows) {
-          if (!toStr(row[1])) continue;
+          if (!toStr(row[7])) continue; // skip if email (Col H) empty
           const d = cleanObject(mapCheckin(row, false));
           docs.push({ type: 'add', collection: 'checkins', data: d });
         }
       } else if (sheetName === 'Checkins_Arquivo') {
         for (const row of dataRows) {
-          if (!toStr(row[1])) continue;
+          if (!toStr(row[7])) continue; // skip if email (Col H) empty
           const d = cleanObject(mapCheckin(row, true));
           docs.push({ type: 'add', collection: 'checkins', data: d });
         }
