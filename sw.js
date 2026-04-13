@@ -1,4 +1,4 @@
-const CACHE = "riva-bjj-v29";
+const CACHE = "riva-bjj-v30";
 const ASSETS = [
   "./",
   "./index.html",
@@ -7,6 +7,7 @@ const ASSETS = [
   "./cadastroaluno.html",
   "./alunos.html",
   "./aniversariantes.html",
+  "./financeiro.html",
   "./styles.css",
   "./app.js",
   "./manifest.webmanifest",

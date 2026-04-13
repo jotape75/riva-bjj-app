@@ -1,0 +1,808 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#c0392b" />
+  <title>Financeiro – Riva BJJ</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    /* ── Header desktop compacto ── */
+    .admin-hdr-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .admin-hdr-titulo { display: none; }
+    .admin-hdr-sair { display: none; }
+    .btn-logout {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: #fff;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .btn-logout:active { opacity: .75; }
+    .admin-logo {
+      width: 56px !important;
+      height: 56px !important;
+      margin-top: 0 !important;
+    }
+    @media (min-width: 769px) {
+      .admin-hdr-inner {
+        max-width: 1100px;
+        justify-content: space-between;
+        padding: 0 24px;
+      }
+      .admin-logo {
+        width: 64px !important;
+        height: 64px !important;
+        margin-top: 0 !important;
+      }
+      .admin-hdr-titulo {
+        display: inline;
+        font-size: 20px;
+        font-weight: 900;
+        color: #fff;
+        letter-spacing: 0.5px;
+      }
+      .admin-hdr-sair { display: inline-block; }
+      .admin-page { max-width: 1100px; padding: 32px 32px 64px; }
+    }
+    @media (max-width: 768px) {
+      .admin-hdr-inner { justify-content: center; }
+    }
+
+    /* ── Resumo financeiro ── */
+    .resumo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .resumo-item {
+      background: #141414;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 10px;
+      text-align: center;
+    }
+    .resumo-valor {
+      font-size: 22px;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.1;
+    }
+    .resumo-label {
+      font-size: 11px;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+    .resumo-valor.verde { color: #2ecc71; }
+    .resumo-valor.amarelo { color: #f39c12; }
+    .resumo-valor.azul { color: #3498db; }
+
+    /* ── Filtros ── */
+    .filtros-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .btn-filtro {
+      background: #222;
+      border: 1px solid #444;
+      color: #aaa;
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .btn-filtro.ativo {
+      background: var(--red);
+      color: #fff;
+      border-color: var(--red);
+    }
+    .btn-filtro:active { opacity: .75; }
+
+    /* ── Card de aluno na lista financeira ── */
+    .fin-aluno-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+    .fin-aluno-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .fin-aluno-nome {
+      font-size: 16px;
+      font-weight: 900;
+      color: #fff;
+      flex: 1;
+      min-width: 0;
+      word-break: break-word;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 3px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .status-pago    { background: rgba(46,204,113,.2); color: #2ecc71; border: 1px solid #2ecc71; }
+    .status-pendente{ background: rgba(243,156,18,.15); color: #f39c12; border: 1px solid #f39c12; }
+    .status-vencido { background: rgba(231,76,60,.2);  color: #e74c3c; border: 1px solid #e74c3c; }
+
+    .fin-aluno-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 16px;
+      margin-top: 10px;
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+    }
+    .fin-info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .fin-info-label {
+      font-size: 11px;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .fin-info-valor {
+      font-size: 14px;
+      color: #fff;
+      font-weight: 700;
+    }
+    .btn-registrar-pag {
+      margin-top: 10px;
+      background: var(--red);
+      border: none;
+      color: #fff;
+      border-radius: 10px;
+      padding: 9px 16px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      width: 100%;
+    }
+    .btn-registrar-pag:active { opacity: .75; }
+    .btn-registrar-pag:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* ── Formulário de registro de pagamento ── */
+    .form-section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .form-section .title { font-size: 18px; margin-bottom: 14px; }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 12px;
+    }
+    .form-row .input-wrap { flex: 1; }
+    .select-input {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      border-radius: 12px;
+      background: #222;
+      border: 2px solid #333;
+      color: #fff;
+      outline: none;
+      margin-bottom: 12px;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .select-input:focus { border-color: var(--red); }
+
+    /* ── Barra de busca sticky ── */
+    .busca-fixa {
+      position: sticky;
+      top: 72px;
+      z-index: 9;
+      background: var(--bg);
+      padding: 12px 0 4px;
+      margin-bottom: 8px;
+    }
+    @media (max-width: 768px) {
+      .busca-fixa { top: 68px; }
+    }
+    .busca-fixa .input { margin-bottom: 8px; }
+    .busca-btns {
+      display: flex;
+      gap: 8px;
+    }
+    .busca-btns .btn {
+      flex: 1;
+      margin-top: 0;
+      padding: 12px 14px;
+      font-size: 15px;
+      font-weight: 800;
+    }
+    .busca-btns .btn-atualizar {
+      flex: 0 0 auto;
+      width: auto;
+      padding: 12px 18px;
+    }
+
+    /* ── Rodapé fixo ── */
+    .rodape-fixo {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 20;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+    }
+    .rodape-fixo .btn {
+      margin-top: 0;
+      max-width: 520px;
+      margin-left: auto;
+      margin-right: auto;
+      display: block;
+    }
+    @media (min-width: 769px) {
+      .rodape-fixo .btn { max-width: 1100px; }
+    }
+
+    /* ── Lista com padding-bottom para não ficar atrás do rodapé ── */
+    .lista-scroll { padding-bottom: 90px; }
+
+    .lista-vazia {
+      color: #aaa;
+      text-align: center;
+      padding: 24px 0;
+      font-size: 15px;
+    }
+
+    /* ── Seletor de mês/ano ── */
+    .mes-selector {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .mes-selector .select-input {
+      margin-bottom: 0;
+      flex: 1;
+    }
+    .mes-selector .btn-mes {
+      background: var(--red);
+      border: none;
+      color: #fff;
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .mes-selector .btn-mes:active { opacity: .75; }
+
+    /* ── Modal de pagamento ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.75);
+      z-index: 50;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-overlay.open {
+      display: flex;
+    }
+    .modal-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px 20px 0 0;
+      padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    @media (min-width: 769px) {
+      .modal-overlay { align-items: center; }
+      .modal-box {
+        border-radius: 20px;
+        max-width: 480px;
+        max-height: 80vh;
+      }
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+    .modal-subtitle {
+      font-size: 13px;
+      color: #aaa;
+      margin-bottom: 16px;
+    }
+    .modal-btns {
+      display: flex;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .modal-btns .btn { margin-top: 0; flex: 1; }
+  </style>
+</head>
+<body>
+  <header class="hdr admin-hdr">
+    <div class="hdr-inner admin-hdr-inner">
+      <div class="admin-hdr-left">
+        <img class="logo admin-logo" src="./logo.png" alt="Riva BJJ" />
+        <span class="admin-hdr-titulo">Financeiro</span>
+      </div>
+      <button class="btn-logout admin-hdr-sair" id="btnHdrSair">Sair</button>
+    </div>
+  </header>
+
+  <main class="page admin-page">
+
+    <!-- ── SEÇÃO PRINCIPAL ─────────────────────────────────────── -->
+    <section class="hidden" id="sectionFinanceiro">
+
+      <!-- Seletor de mês/ano + botão carregar -->
+      <div class="busca-fixa">
+        <h1 class="title" style="margin-bottom:10px;">💰 Financeiro</h1>
+        <div class="mes-selector">
+          <select class="select-input" id="selMes">
+            <option value="1">Janeiro</option>
+            <option value="2">Fevereiro</option>
+            <option value="3">Março</option>
+            <option value="4">Abril</option>
+            <option value="5">Maio</option>
+            <option value="6">Junho</option>
+            <option value="7">Julho</option>
+            <option value="8">Agosto</option>
+            <option value="9">Setembro</option>
+            <option value="10">Outubro</option>
+            <option value="11">Novembro</option>
+            <option value="12">Dezembro</option>
+          </select>
+          <select class="select-input" id="selAno" style="max-width:100px;"></select>
+          <button class="btn-mes" id="btnCarregar">Carregar</button>
+        </div>
+
+        <!-- Busca por nome -->
+        <input id="searchBox" class="input" type="search" placeholder="Buscar por nome…" />
+
+        <!-- Filtros por status -->
+        <div class="filtros-row">
+          <button class="btn-filtro ativo" data-filtro="todos">Todos</button>
+          <button class="btn-filtro" data-filtro="pago">✅ Pagos</button>
+          <button class="btn-filtro" data-filtro="pendente">⏳ Pendentes</button>
+          <button class="btn-filtro" data-filtro="vencido">❌ Vencidos</button>
+        </div>
+
+        <p class="msg info" id="listInfo"></p>
+      </div>
+
+      <!-- Resumo financeiro -->
+      <div class="resumo-grid" id="resumoGrid" style="display:none;">
+        <div class="resumo-item">
+          <div class="resumo-valor verde" id="resumoArrecadado">R$ 0</div>
+          <div class="resumo-label">Arrecadado</div>
+        </div>
+        <div class="resumo-item">
+          <div class="resumo-valor amarelo" id="resumoPendente">R$ 0</div>
+          <div class="resumo-label">Pendente</div>
+        </div>
+        <div class="resumo-item">
+          <div class="resumo-valor azul" id="resumoEmDia">0</div>
+          <div class="resumo-label">Em dia</div>
+        </div>
+      </div>
+
+      <!-- Lista de alunos -->
+      <div id="listaAlunos" class="lista-scroll"></div>
+
+      <div class="rodape-fixo">
+        <button class="btn secondary" onclick="location.href='./administrativo.html'">← Voltar ao Portal</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── MODAL DE REGISTRO DE PAGAMENTO ─────────────────────── -->
+  <div class="modal-overlay" id="modalPagamento">
+    <div class="modal-box">
+      <div class="modal-title">Registrar Pagamento</div>
+      <div class="modal-subtitle" id="modalAlunoNome"></div>
+
+      <input type="hidden" id="modalAlunoId" />
+
+      <label class="label" for="fValor">Valor (R$)</label>
+      <input id="fValor" class="input" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" />
+
+      <label class="label" for="fData">Data do Pagamento</label>
+      <input id="fData" class="input" type="date" />
+
+      <label class="label" for="fFormaPag">Forma de Pagamento</label>
+      <select id="fFormaPag" class="select-input">
+        <option value="dinheiro">💵 Dinheiro</option>
+        <option value="pix">📲 Pix</option>
+        <option value="cartao">💳 Cartão</option>
+      </select>
+
+      <p class="msg err" id="modalErr"></p>
+      <p class="msg info" id="modalInfo"></p>
+
+      <div class="modal-btns">
+        <button class="btn secondary" id="btnCancelarModal">Cancelar</button>
+        <button class="btn primary" id="btnConfirmarPag">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE       = 'https://script.google.com/macros/s/AKfycbyBLlVjEvO35RufIh6pH9XOOTDXuj_BMrNHAJfdw9I-reScWX31dsVdOFJna1ZbJVqX/exec';
+    const API_TIMEOUT_MS = 25000;
+    const TOKEN_KEY      = 'rv_prof_token';
+
+    const CACHE_KEY_FIN = 'rv_fin_cache';
+    const CACHE_TTL_FIN = 5 * 60 * 1000; // 5 minutos
+
+    // ── Cache ──────────────────────────────────────────────────
+    function salvarCache(mes, ano, dados) {
+      try {
+        const key = CACHE_KEY_FIN + '_' + mes + '_' + ano;
+        localStorage.setItem(key, JSON.stringify({ ts: Date.now(), dados }));
+      } catch(e) {}
+    }
+
+    function lerCache(mes, ano) {
+      try {
+        const key = CACHE_KEY_FIN + '_' + mes + '_' + ano;
+        const c = JSON.parse(localStorage.getItem(key) || 'null');
+        if (c && Date.now() - c.ts < CACHE_TTL_FIN) return c.dados;
+      } catch(e) {}
+      return null;
+    }
+
+    function invalidarCache(mes, ano) {
+      try {
+        const key = CACHE_KEY_FIN + '_' + mes + '_' + ano;
+        localStorage.removeItem(key);
+      } catch(e) {}
+    }
+
+    // ── API JSONP ──────────────────────────────────────────────
+    function apiCall(params) {
+      return new Promise((resolve, reject) => {
+        const cb = '_rv' + Date.now() + Math.floor(Math.random() * 9999);
+        const s  = document.createElement('script');
+        const t  = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, API_TIMEOUT_MS);
+        function cleanup() { clearTimeout(t); delete window[cb]; s.remove(); }
+        window[cb] = (d) => { cleanup(); resolve(d); };
+        s.onerror  = () => { cleanup(); reject(new Error('net')); };
+        const qs = Object.entries(params).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
+        s.src = `${API_BASE}?${qs}&callback=${cb}`;
+        document.head.appendChild(s);
+      });
+    }
+
+    function show(id) { document.getElementById(id).classList.remove('hidden'); }
+    function hide(id) { document.getElementById(id).classList.add('hidden'); }
+
+    // ── Estado ─────────────────────────────────────────────────
+    let todosRegistros = [];
+    let filtroAtivo = 'todos';
+    let mesSelecionado  = new Date().getMonth() + 1;
+    let anoSelecionado  = new Date().getFullYear();
+
+    // ── Init ───────────────────────────────────────────────────
+    function init() {
+      const token = sessionStorage.getItem(TOKEN_KEY);
+      if (token !== 'rv_prof_ok') {
+        location.href = './administrativo.html';
+        return;
+      }
+      show('sectionFinanceiro');
+      preencherSeletores();
+      carregarFinanceiro();
+    }
+
+    function preencherSeletores() {
+      const selMes = document.getElementById('selMes');
+      const selAno = document.getElementById('selAno');
+
+      selMes.value = mesSelecionado;
+
+      const anoAtual = new Date().getFullYear();
+      for (let a = anoAtual; a >= anoAtual - 3; a--) {
+        const opt = document.createElement('option');
+        opt.value = a;
+        opt.textContent = a;
+        selAno.appendChild(opt);
+      }
+      selAno.value = anoSelecionado;
+    }
+
+    // ── Carregar dados financeiros ─────────────────────────────
+    async function carregarFinanceiro(forcar = false) {
+      const mes = parseInt(document.getElementById('selMes').value);
+      const ano = parseInt(document.getElementById('selAno').value);
+      mesSelecionado = mes;
+      anoSelecionado = ano;
+
+      if (!forcar) {
+        const cached = lerCache(mes, ano);
+        if (cached) {
+          todosRegistros = cached;
+          document.getElementById('listInfo').textContent = '';
+          renderListaFiltrada();
+          atualizarResumo();
+          return;
+        }
+      }
+
+      document.getElementById('listInfo').textContent = 'Carregando…';
+      document.getElementById('listaAlunos').innerHTML = '';
+      document.getElementById('resumoGrid').style.display = 'none';
+
+      try {
+        const r = await apiCall({ action: 'getFinanceiro', mes, ano });
+        if (r && r.ok) {
+          todosRegistros = r.alunos || [];
+          salvarCache(mes, ano, todosRegistros);
+          document.getElementById('listInfo').textContent = '';
+          renderListaFiltrada();
+          atualizarResumo();
+        } else {
+          document.getElementById('listInfo').textContent = (r && r.erro) ? r.erro : 'Erro ao carregar dados.';
+        }
+      } catch(e) {
+        document.getElementById('listInfo').textContent = 'Erro de conexão. Tente novamente.';
+      }
+    }
+
+    // ── Resumo ─────────────────────────────────────────────────
+    function atualizarResumo() {
+      if (!todosRegistros.length) {
+        document.getElementById('resumoGrid').style.display = 'none';
+        return;
+      }
+      let arrecadado = 0;
+      let pendente   = 0;
+      let emDia      = 0;
+      todosRegistros.forEach(a => {
+        const st = (a.statusPagamento || '').toLowerCase();
+        if (st === 'pago') {
+          arrecadado += parseFloat(a.valor || 0);
+          emDia++;
+        } else if (st === 'pendente' || st === 'vencido') {
+          pendente += parseFloat(a.valorMensalidade || a.valor || 0);
+        }
+      });
+      document.getElementById('resumoArrecadado').textContent = 'R$ ' + arrecadado.toFixed(2).replace('.', ',');
+      document.getElementById('resumoPendente').textContent   = 'R$ ' + pendente.toFixed(2).replace('.', ',');
+      document.getElementById('resumoEmDia').textContent      = emDia;
+      document.getElementById('resumoGrid').style.display     = '';
+    }
+
+    // ── Render lista filtrada ──────────────────────────────────
+    function renderListaFiltrada() {
+      const busca = (document.getElementById('searchBox').value || '').toLowerCase().trim();
+      let lista = todosRegistros;
+
+      if (filtroAtivo !== 'todos') {
+        lista = lista.filter(a => (a.statusPagamento || '').toLowerCase() === filtroAtivo);
+      }
+
+      if (busca.length >= 1) {
+        lista = lista.filter(a => (a.nome || '').toLowerCase().includes(busca));
+      }
+
+      const container = document.getElementById('listaAlunos');
+      if (!lista.length) {
+        container.innerHTML = '<div class="lista-vazia">Nenhum resultado encontrado.</div>';
+        return;
+      }
+
+      container.innerHTML = lista.map(a => buildCardHtml(a)).join('');
+    }
+
+    function buildCardHtml(a) {
+      const st = (a.statusPagamento || 'pendente').toLowerCase();
+      let badgeClass = 'status-pendente';
+      let badgeText  = '⏳ Pendente';
+      if (st === 'pago')    { badgeClass = 'status-pago';    badgeText = '✅ Pago'; }
+      if (st === 'vencido') { badgeClass = 'status-vencido'; badgeText = '❌ Vencido'; }
+
+      const valor      = a.valor      ? 'R$ ' + parseFloat(a.valor).toFixed(2).replace('.', ',') : '—';
+      const mensalidade= a.valorMensalidade ? 'R$ ' + parseFloat(a.valorMensalidade).toFixed(2).replace('.', ',') : '—';
+      const dataPag    = a.dataPagamento ? formatData(a.dataPagamento) : '—';
+      const formaPag   = formatFormaPagamento(a.formaPagamento);
+      const podePagar  = st !== 'pago';
+
+      return `
+        <div class="fin-aluno-card">
+          <div class="fin-aluno-header">
+            <div class="fin-aluno-nome">${escHtml(a.nome || '—')}</div>
+            <span class="status-badge ${badgeClass}">${badgeText}</span>
+          </div>
+          <div class="fin-aluno-info">
+            <div class="fin-info-item">
+              <span class="fin-info-label">Mensalidade</span>
+              <span class="fin-info-valor">${mensalidade}</span>
+            </div>
+            <div class="fin-info-item">
+              <span class="fin-info-label">Valor pago</span>
+              <span class="fin-info-valor">${valor}</span>
+            </div>
+            <div class="fin-info-item">
+              <span class="fin-info-label">Data</span>
+              <span class="fin-info-valor">${dataPag}</span>
+            </div>
+            <div class="fin-info-item">
+              <span class="fin-info-label">Forma</span>
+              <span class="fin-info-valor">${formaPag}</span>
+            </div>
+          </div>
+          ${podePagar ? `<button class="btn-registrar-pag" onclick="abrirModal('${escAttr(String(a.id))}','${escAttr(a.nome || '')}','${escAttr(String(a.valorMensalidade || ''))}')">Registrar Pagamento</button>` : ''}
+        </div>`;
+    }
+
+    // ── Modal de pagamento ─────────────────────────────────────
+    function abrirModal(alunoId, alunoNome, valorSugerido) {
+      document.getElementById('modalAlunoId').value    = alunoId;
+      document.getElementById('modalAlunoNome').textContent = alunoNome;
+      document.getElementById('fValor').value          = valorSugerido || '';
+      document.getElementById('fData').value           = new Date().toISOString().slice(0, 10);
+      document.getElementById('fFormaPag').value       = 'pix';
+      document.getElementById('modalErr').textContent  = '';
+      document.getElementById('modalInfo').textContent = '';
+      document.getElementById('btnConfirmarPag').disabled = false;
+      document.getElementById('modalPagamento').classList.add('open');
+    }
+
+    function fecharModal() {
+      document.getElementById('modalPagamento').classList.remove('open');
+    }
+
+    document.getElementById('btnCancelarModal').addEventListener('click', fecharModal);
+    document.getElementById('modalPagamento').addEventListener('click', function(e) {
+      if (e.target === this) fecharModal();
+    });
+
+    document.getElementById('btnConfirmarPag').addEventListener('click', async () => {
+      const alunoId     = document.getElementById('modalAlunoId').value;
+      const valor       = parseFloat(document.getElementById('fValor').value);
+      const data        = document.getElementById('fData').value;
+      const formaPag    = document.getElementById('fFormaPag').value;
+
+      document.getElementById('modalErr').textContent = '';
+
+      if (!alunoId) {
+        document.getElementById('modalErr').textContent = 'Aluno não identificado.';
+        return;
+      }
+      if (!valor || isNaN(valor) || valor <= 0) {
+        document.getElementById('modalErr').textContent = 'Informe um valor válido.';
+        return;
+      }
+      if (!data) {
+        document.getElementById('modalErr').textContent = 'Informe a data do pagamento.';
+        return;
+      }
+
+      document.getElementById('modalInfo').textContent = 'Registrando…';
+      document.getElementById('btnConfirmarPag').disabled = true;
+
+      try {
+        const r = await apiCall({
+          action: 'registrarPagamento',
+          alunoId,
+          valor,
+          data,
+          formaPagamento: formaPag,
+          mes: mesSelecionado,
+          ano: anoSelecionado
+        });
+
+        if (r && r.ok) {
+          document.getElementById('modalInfo').textContent = '';
+          fecharModal();
+          invalidarCache(mesSelecionado, anoSelecionado);
+          await carregarFinanceiro(true);
+        } else {
+          document.getElementById('modalErr').textContent  = (r && r.erro) ? r.erro : 'Erro ao registrar pagamento.';
+          document.getElementById('modalInfo').textContent = '';
+          document.getElementById('btnConfirmarPag').disabled = false;
+        }
+      } catch(e) {
+        document.getElementById('modalErr').textContent  = 'Erro de conexão. Tente novamente.';
+        document.getElementById('modalInfo').textContent = '';
+        document.getElementById('btnConfirmarPag').disabled = false;
+      }
+    });
+
+    // ── Filtros ────────────────────────────────────────────────
+    document.querySelectorAll('.btn-filtro').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.btn-filtro').forEach(b => b.classList.remove('ativo'));
+        btn.classList.add('ativo');
+        filtroAtivo = btn.dataset.filtro;
+        renderListaFiltrada();
+      });
+    });
+
+    document.getElementById('searchBox').addEventListener('input', renderListaFiltrada);
+
+    document.getElementById('btnCarregar').addEventListener('click', () => {
+      invalidarCache(
+        parseInt(document.getElementById('selMes').value),
+        parseInt(document.getElementById('selAno').value)
+      );
+      carregarFinanceiro(true);
+    });
+
+    // ── Logout ─────────────────────────────────────────────────
+    document.getElementById('btnHdrSair').addEventListener('click', () => {
+      sessionStorage.removeItem(TOKEN_KEY);
+      location.href = './administrativo.html';
+    });
+
+    // ── Helpers ────────────────────────────────────────────────
+    function formatData(s) {
+      if (!s) return '—';
+      if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+        const p = s.substring(0, 10).split('-');
+        return p[2] + '/' + p[1] + '/' + p[0];
+      }
+      return s;
+    }
+
+    function formatFormaPagamento(f) {
+      if (!f) return '—';
+      const map = { dinheiro: '💵 Dinheiro', pix: '📲 Pix', cartao: '💳 Cartão' };
+      return map[f.toLowerCase()] || f;
+    }
+
+    function escHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function escAttr(s) {
+      return String(s)
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'");
+    }
+
+    init();
+  </script>
+</body>
+</html>
