@@ -1,9 +1,12 @@
-import { db } from './firebase-config.js';
+import { db, auth } from './firebase-config.js';
 import {
   collection, doc, query, where, orderBy, limit,
   getDocs, getDoc, addDoc, updateDoc, deleteDoc, serverTimestamp,
   Timestamp
 } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+import { signInAnonymously } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+
+signInAnonymously(auth).catch(() => {});
 
 const SEMANA_TTL          = 600000;   // 10 min
 const PRESENCA_TTL        = 600000;   // 10 min
@@ -249,14 +252,23 @@ async function fbAprovar(linhaId) {
 
     const checkinSnap = await getDoc(checkinRef);
     if (checkinSnap.exists()) {
-      const alunoId = checkinSnap.data().alunoId;
-      if (alunoId) {
-        const alunoRef  = doc(db, 'alunos', alunoId);
+      const checkinData = checkinSnap.data();
+      let alunoRef = null;
+
+      if (checkinData.alunoId) {
+        alunoRef = doc(db, 'alunos', checkinData.alunoId);
+      } else if (checkinData.email) {
+        const q = query(collection(db, 'alunos'), where('email', '==', checkinData.email), limit(1));
+        const snap = await getDocs(q);
+        if (!snap.empty) alunoRef = snap.docs[0].ref;
+      }
+
+      if (alunoRef) {
         const alunoSnap = await getDoc(alunoRef);
         if (alunoSnap.exists()) {
-          const a         = alunoSnap.data();
-          const metaGrau  = a.meta_grau ?? (a.faixa === 'Branca' ? 36 : 56);
-          const grauAtual = a.grau_atual ?? 0;
+          const a               = alunoSnap.data();
+          const metaGrau        = a.meta_grau ?? (a.faixa === 'Branca' ? 36 : 56);
+          const grauAtual       = a.grau_atual ?? 0;
           const novoAulasNoGrau = (a.aulas_no_grau ?? 0) + 1;
 
           if (novoAulasNoGrau >= metaGrau && grauAtual < MAX_GRAU_POR_FAIXA) {
