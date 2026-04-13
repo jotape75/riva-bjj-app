@@ -201,7 +201,7 @@
       document.getElementById('btnCadastrar').disabled = true;
 
       try {
-        const metaGrau = 40; // default meta
+        const metaGrau = faixa === 'Branca' ? 36 : 56;
         const aulasNoGrau = parseInt(document.getElementById('fAulasNoGrau').value) || 0;
         await addDoc(collection(db, 'alunos'), {
           nome_aluno:       nome,

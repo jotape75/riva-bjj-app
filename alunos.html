@@ -690,14 +690,24 @@
       if (btnF) btnF.disabled = true;
 
       try {
+        const metaGrau = novaFaixa === 'Branca' ? 36 : 56;
         await updateDoc(doc(db, 'alunos', id), {
           faixa: novaFaixa,
           grau_atual: 0,
           aulas_no_grau: 0,
+          aulas_restantes: metaGrau,
+          meta_grau: metaGrau,
+          statusExame: '',
           data_ultimo_grau: new Date().toISOString().slice(0, 10),
         });
         const aluno = todosAlunos.find(a => String(a.id) === String(id));
-        if (aluno) { aluno.faixa = novaFaixa; aluno.grau_atual = 0; }
+        if (aluno) {
+          aluno.faixa = novaFaixa;
+          aluno.grau_atual = 0;
+          aluno.meta_grau = metaGrau;
+          aluno.aulas_restantes = metaGrau;
+          aluno.aulas_no_grau = 0;
+        }
         salvarCacheAlunos(todosAlunos);
         if (label) label.textContent = novaFaixa + ' G0';
         if (area) area.style.display = 'none';

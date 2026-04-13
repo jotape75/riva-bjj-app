@@ -2,7 +2,7 @@ import { db } from './firebase-config.js';
 import {
   collection, doc, query, where, orderBy, limit,
   getDocs, getDoc, addDoc, updateDoc, deleteDoc, serverTimestamp,
-  Timestamp, increment
+  Timestamp
 } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
 const SEMANA_TTL     = 600000;   // 10 min
@@ -59,16 +59,17 @@ async function fbLogin(email) {
         ok: true,
         tipo: 'aluno',
         data: {
-          id:          alunosSnap.docs[0].id,
-          nome:        docData.nome_aluno || '',
-          faixa:       docData.faixa || '',
-          grau:        docData.grau_atual ?? 0,
-          dataGrau:    docData.data_ultimo_grau || '',
-          status:      docData.status || '',
-          statusExame: docData.statusExame || '',
-          aulasNoGrau: docData.aulas_no_grau ?? 0,
-          metaGrau:    docData.meta_grau ?? 0,
-          email:       docData.email || email,
+          id:             alunosSnap.docs[0].id,
+          nome:           docData.nome_aluno || '',
+          faixa:          docData.faixa || '',
+          grau:           docData.grau_atual ?? 0,
+          dataGrau:       docData.data_ultimo_grau || '',
+          status:         docData.status || '',
+          statusExame:    docData.statusExame || '',
+          aulasNoGrau:    docData.aulas_no_grau ?? 0,
+          aulasRestantes: docData.aulas_restantes ?? null,
+          metaGrau:       docData.meta_grau ?? 0,
+          email:          docData.email || email,
         }
       };
     }
@@ -235,7 +236,7 @@ async function fbDeletarCheckin(email, dataTreino, horario) {
   }
 }
 
-// aprovar: approve a check-in by document ID and decrement student's aulas
+// aprovar: approve a check-in by document ID and update student's aulas/grau
 async function fbAprovar(linhaId) {
   try {
     const checkinRef = doc(db, 'checkins', String(linhaId));
@@ -248,7 +249,31 @@ async function fbAprovar(linhaId) {
     if (checkinSnap.exists()) {
       const alunoId = checkinSnap.data().alunoId;
       if (alunoId) {
-        await updateDoc(doc(db, 'alunos', alunoId), { aulas: increment(-1) });
+        const alunoRef  = doc(db, 'alunos', alunoId);
+        const alunoSnap = await getDoc(alunoRef);
+        if (alunoSnap.exists()) {
+          const a         = alunoSnap.data();
+          const metaGrau  = a.meta_grau ?? (a.faixa === 'Branca' ? 36 : 56);
+          const grauAtual = a.grau_atual ?? 0;
+          const novoAulasNoGrau = (a.aulas_no_grau ?? 0) + 1;
+
+          if (novoAulasNoGrau >= metaGrau && grauAtual < 4) {
+            const novoGrau = grauAtual + 1;
+            await updateDoc(alunoRef, {
+              grau_atual:       novoGrau,
+              aulas_no_grau:    0,
+              aulas_restantes:  metaGrau,
+              meta_grau:        metaGrau,
+              statusExame:      '🔲'.repeat(novoGrau),
+              data_ultimo_grau: new Date().toISOString().slice(0, 10),
+            });
+          } else {
+            await updateDoc(alunoRef, {
+              aulas_no_grau:   novoAulasNoGrau,
+              aulas_restantes: Math.max(0, metaGrau - novoAulasNoGrau),
+            });
+          }
+        }
       }
     }
 
@@ -1412,7 +1437,9 @@ function preencherCard(d) {
   // Stats cards
   if (d.aulasNoGrau != null) {
     $('statAulasNum').textContent = d.aulasNoGrau;
-    const restantes = (d.metaGrau != null) ? Math.max(0, d.metaGrau - d.aulasNoGrau) : '—';
+    const restantes = (d.aulasRestantes != null)
+      ? d.aulasRestantes
+      : (d.metaGrau != null ? Math.max(0, d.metaGrau - d.aulasNoGrau) : '—');
     $('statRestantesNum').textContent = restantes;
   } else {
     $('statAulasNum').textContent = '—';
