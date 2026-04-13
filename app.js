@@ -127,7 +127,7 @@ async function fbTreinosSemana() {
   }
 }
 
-// listaPresenca: get non-archived check-ins for a given date+horario
+// listaPresenca: get check-ins for a given date+horario (sem filtro de arquivado)
 async function fbListaPresenca(dataTreino, horario) {
   try {
     const q = query(
@@ -139,9 +139,7 @@ async function fbListaPresenca(dataTreino, horario) {
     const data = [];
     snap.forEach(d => {
       const item = d.data();
-      if (!item.arquivado) {
-        data.push({ linha: d.id, nome: item.nome, status: item.status });
-      }
+      data.push({ linha: d.id, nome: item.nome, status: item.status });
     });
     return { ok: true, data };
   } catch (e) {
@@ -149,14 +147,13 @@ async function fbListaPresenca(dataTreino, horario) {
   }
 }
 
-// listaPresencaArquivo: get archived check-ins for a given date+horario
+// listaPresencaArquivo: mesma query (sem filtro arquivado — não há arquivamento automático)
 async function fbListaPresencaArquivo(dataTreino, horario) {
   try {
     const q = query(
       collection(db, 'checkins'),
       where('data_treino', '==', dataTreino),
-      where('horario', '==', horario),
-      where('arquivado', '==', true)
+      where('horario', '==', horario)
     );
     const snap = await getDocs(q);
     const data = [];
@@ -173,6 +170,34 @@ async function fbListaPresencaArquivo(dataTreino, horario) {
 // checkin: add a new check-in document
 async function fbCheckin(email, nome, horario, dataTreino) {
   try {
+    // 1. Buscar checkins do aluno para esta data
+    const qDia = query(
+      collection(db, 'checkins'),
+      where('email', '==', email),
+      where('data_treino', '==', dataTreino)
+    );
+    const snapDia = await getDocs(qDia);
+
+    // 2. Contar horários únicos ativos (PENDENTE ou VALIDADO) — excluir REPROVADO
+    const horariosAtivos = new Set();
+    snapDia.forEach(d => {
+      const item = d.data();
+      if (!item.status || !item.status.includes('REPROVADO')) {
+        horariosAtivos.add(item.horario);
+      }
+    });
+
+    // 3. Verificar se já fez check-in neste horário específico
+    if (horariosAtivos.has(horario)) {
+      return { ok: false, erro: 'Você já fez check-in para este treino! ❌' };
+    }
+
+    // 4. Verificar limite de 2 check-ins por dia
+    if (horariosAtivos.size >= 2) {
+      return { ok: false, erro: 'Limite diário: você só pode fazer 2 check-ins por dia. ❌' };
+    }
+
+    // 5. Criar o check-in
     await addDoc(collection(db, 'checkins'), {
       email,
       nome,
