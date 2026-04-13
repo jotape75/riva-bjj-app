@@ -6,7 +6,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 import { signInAnonymously } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
-signInAnonymously(auth).catch(() => {});
+const anonAuthPromise = signInAnonymously(auth).catch(() => {});
 
 const SEMANA_TTL          = 600000;   // 10 min
 const PRESENCA_TTL        = 600000;   // 10 min
@@ -15,7 +15,22 @@ const NOTIF_TTL           = 900000;   // 15 min
 const BIO_GRACE_MS        = 1800000;  // 30 min
 const RP_NAME             = 'Riva BJJ';
 const MAX_GRAU_POR_FAIXA  = 4;
-const STATUS_EXAME_SYMBOL = '🔲';
+
+// Mapa de emojis por faixa (igual ao Apps Script original)
+const EMOJI_FAIXA = {
+  'Branca':  '🔲',
+  'Azul':    '🟦',
+  'Roxa':    '🟪',
+  'Marrom':  '🟫',
+  'Preta':   '⬛',
+};
+
+function gerarStatus(faixa, grau) {
+  const emoji = EMOJI_FAIXA[faixa] || '🔲';
+  const g = Math.min(Math.max(Number(grau) || 0, 0), 4);
+  if (g === 0) return 'Iniciante';
+  return emoji.repeat(g);
+}
 
 /* ── localStorage key constants ──────────────────────────────── */
 const LS_EMAIL        = 'rv_email';
@@ -244,6 +259,9 @@ async function fbDeletarCheckin(email, dataTreino, horario) {
 // aprovar: approve a check-in by document ID and update student's aulas/grau
 async function fbAprovar(linhaId) {
   try {
+    // Ensure anonymous auth is complete before writing to alunos (requires auth)
+    await anonAuthPromise;
+
     const checkinRef = doc(db, 'checkins', String(linhaId));
     await updateDoc(checkinRef, {
       status: 'VALIDADO ✓',
@@ -271,20 +289,36 @@ async function fbAprovar(linhaId) {
           const grauAtual       = a.grau_atual ?? 0;
           const novoAulasNoGrau = (a.aulas_no_grau ?? 0) + 1;
 
-          if (novoAulasNoGrau >= metaGrau && grauAtual < MAX_GRAU_POR_FAIXA) {
-            const novoGrau = grauAtual + 1;
-            await updateDoc(alunoRef, {
-              grau_atual:       novoGrau,
-              aulas_no_grau:    0,
-              aulas_restantes:  metaGrau,
-              meta_grau:        metaGrau,
-              statusExame:      STATUS_EXAME_SYMBOL.repeat(novoGrau),
-              data_ultimo_grau: new Date().toISOString().slice(0, 10),
-            });
+          if (novoAulasNoGrau >= metaGrau && metaGrau > 0) {
+            if (grauAtual < MAX_GRAU_POR_FAIXA) {
+              const novoGrau = grauAtual + 1;
+              const dataBR = (() => {
+                const now = new Date();
+                const dd = String(now.getDate()).padStart(2, '0');
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const yyyy = now.getFullYear();
+                return `${dd}/${mm}/${yyyy}`;
+              })();
+              await updateDoc(alunoRef, {
+                grau_atual:       novoGrau,
+                aulas_no_grau:    0,
+                aulas_restantes:  metaGrau,
+                meta_grau:        metaGrau,
+                statusExame:      gerarStatus(a.faixa, novoGrau),
+                data_ultimo_grau: dataBR,
+              });
+            } else {
+              // Grau máximo: apenas zera restantes e atualiza status
+              await updateDoc(alunoRef, {
+                aulas_restantes: 0,
+                statusExame:     gerarStatus(a.faixa, MAX_GRAU_POR_FAIXA),
+              });
+            }
           } else {
             await updateDoc(alunoRef, {
               aulas_no_grau:   novoAulasNoGrau,
               aulas_restantes: Math.max(0, metaGrau - novoAulasNoGrau),
+              statusExame:     gerarStatus(a.faixa, grauAtual),
             });
           }
         }
@@ -322,7 +356,7 @@ async function fbGraduandos() {
         ? Math.max(0, (a.meta_grau || 0) - (a.aulas_no_grau || 0))
         : (a.aulas_restantes ?? null);
       const grauAtual = a.grau_atual ?? 0;
-      if (restantes !== null && restantes <= 0 && grauAtual >= MAX_GRAU_POR_FAIXA) {
+      if (grauAtual === MAX_GRAU_POR_FAIXA && restantes !== null && restantes <= 0) {
         data.push({
           nome:      a.nome_aluno || '',
           faixa:     a.faixa || '',
@@ -1439,14 +1473,34 @@ function renderNotificacoes(notifs) {
   }).join('');
 }
 
+/* ── Date formatting helper ───────────────────────────────────── */
+function formatarDataBR(val) {
+  if (!val || String(val).trim() === '' || String(val).trim() === 'undefined') return '—';
+  const s = String(val).trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+    const [y, m, d] = s.substring(0, 10).split('-');
+    return `${d}/${m}/${y}`;
+  }
+  return s; // já está em DD/MM/YYYY ou outro formato
+}
+
 /* ── Student card ─────────────────────────────────────────────── */
 function preencherCard(d) {
   $('aNome').textContent  = d.nome  || '—';
   $('aFaixa').textContent = d.faixa || '—';
   const g = (d.grau != null && d.grau !== '') ? Number(d.grau) : null;
   $('aGrau').textContent = (g === 0) ? 'Iniciante' : (g != null ? String(g) : '—');
-  $('aData').textContent  = d.dataGrau || '—';
-  $('aStatus').textContent = d.statusExame || d.status || '—';
+  $('aData').textContent  = d.dataGrau ? formatarDataBR(d.dataGrau) : '—';
+
+  // Status badge: INATIVO aparece em vermelho, ATIVO mostra statusExame
+  const statusEl = $('aStatus');
+  if (d.status === 'INATIVO') {
+    statusEl.textContent = 'INATIVO';
+    statusEl.style.color = '#e74c3c';
+  } else {
+    statusEl.textContent = d.statusExame || d.status || '—';
+    statusEl.style.color = '';
+  }
 
   // Stats cards
   if (d.aulasNoGrau != null) {
