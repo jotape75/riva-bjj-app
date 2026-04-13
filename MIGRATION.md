@@ -1,4 +1,22 @@
-# Firebase Migration Guide
+## Required Firebase Configuration
+
+### Anonymous Authentication (obrigatório)
+
+The student-facing app (`app.js`) uses Firebase Anonymous Authentication to satisfy the Firestore security rules that require `request.auth != null` when writing to the `alunos` collection.
+
+**You must enable Anonymous Authentication in the Firebase Console:**
+
+1. Go to [Firebase Console](https://console.firebase.google.com/) → Project `rivabjj-a477b`
+2. Navigate to **Authentication** → **Sign-in method**
+3. Find **Anonymous** in the list
+4. Click the toggle to **Enable** it
+5. Click **Save**
+
+If Anonymous Authentication is not enabled, professors will receive a "missing permissions" error when approving check-ins, and student progress (`aulas_no_grau`, `aulas_restantes`, `grau_atual`, `statusExame`) will not be updated.
+
+---
+
+## Firebase Migration Guide
 
 This document describes how to migrate the Riva BJJ app backend from Google Apps Script + Google Sheets to Firebase (Firestore + Firebase Authentication).
 

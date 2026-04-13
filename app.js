@@ -6,7 +6,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 import { signInAnonymously } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
-signInAnonymously(auth).catch(() => {});
+let _authReady = signInAnonymously(auth).catch(() => null);
 
 const SEMANA_TTL          = 600000;   // 10 min
 const PRESENCA_TTL        = 600000;   // 10 min
@@ -250,6 +250,11 @@ async function fbAprovar(linhaId) {
       data_aprovacao: serverTimestamp()
     });
 
+    const authResult = await _authReady;
+    if (!authResult || !authResult.user) {
+      return { ok: false, erro: 'Erro: autenticação não disponível. Verifique se "Anonymous" está habilitado no Firebase Console.' };
+    }
+
     const checkinSnap = await getDoc(checkinRef);
     if (checkinSnap.exists()) {
       const checkinData = checkinSnap.data();
@@ -271,21 +276,28 @@ async function fbAprovar(linhaId) {
           const grauAtual       = a.grau_atual ?? 0;
           const novoAulasNoGrau = (a.aulas_no_grau ?? 0) + 1;
 
-          if (novoAulasNoGrau >= metaGrau && grauAtual < MAX_GRAU_POR_FAIXA) {
-            const novoGrau = grauAtual + 1;
-            await updateDoc(alunoRef, {
-              grau_atual:       novoGrau,
-              aulas_no_grau:    0,
-              aulas_restantes:  metaGrau,
-              meta_grau:        metaGrau,
-              statusExame:      STATUS_EXAME_SYMBOL.repeat(novoGrau),
-              data_ultimo_grau: new Date().toISOString().slice(0, 10),
-            });
-          } else {
-            await updateDoc(alunoRef, {
-              aulas_no_grau:   novoAulasNoGrau,
-              aulas_restantes: Math.max(0, metaGrau - novoAulasNoGrau),
-            });
+          try {
+            if (novoAulasNoGrau >= metaGrau && grauAtual < MAX_GRAU_POR_FAIXA) {
+              const novoGrau = grauAtual + 1;
+              await updateDoc(alunoRef, {
+                grau_atual:       novoGrau,
+                aulas_no_grau:    0,
+                aulas_restantes:  metaGrau,
+                meta_grau:        metaGrau,
+                statusExame:      STATUS_EXAME_SYMBOL.repeat(novoGrau),
+                data_ultimo_grau: new Date().toISOString().slice(0, 10),
+              });
+            } else {
+              await updateDoc(alunoRef, {
+                aulas_no_grau:   novoAulasNoGrau,
+                aulas_restantes: Math.max(0, metaGrau - novoAulasNoGrau),
+              });
+            }
+          } catch (permErr) {
+            if (permErr.code === 'permission-denied') {
+              return { ok: false, erro: 'Erro de permissão: verifique se Anonymous Auth está habilitado no Firebase Console.' };
+            }
+            throw permErr;
           }
         }
       }
