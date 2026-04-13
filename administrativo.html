@@ -201,8 +201,8 @@
         <div class="portal-card">
           <div class="portal-card-icon">💰</div>
           <div class="portal-card-title">Financeiro</div>
-          <div class="portal-card-subtitle">Controle de mensalidades e pagamentos</div>
-          <button class="btn primary" id="btnFinanceiro" disabled>Em breve</button>
+          <div class="portal-card-subtitle" id="finSubtitle">Controle de mensalidades e pagamentos</div>
+          <button class="btn primary" onclick="location.href='./financeiro.html'">Ver Financeiro</button>
         </div>
       </div>
     </section>
@@ -303,6 +303,25 @@
     document.getElementById('btnHdrSair').addEventListener('click', doLogout);
 
     init();
+
+    // ── Resumo rápido do Financeiro ────────────────────────────
+    (function mostrarResumoFinanceiro() {
+      try {
+        const mes = new Date().getMonth() + 1;
+        const ano = new Date().getFullYear();
+        const key = 'rv_fin_cache_' + mes + '_' + ano;
+        const c   = JSON.parse(localStorage.getItem(key) || 'null');
+        const TTL = 5 * 60 * 1000;
+        if (!c || Date.now() - c.ts > TTL) return;
+        const emDia = (c.dados || []).filter(a =>
+          (a.statusPagamento || '').toLowerCase() === 'pago'
+        ).length;
+        const el = document.getElementById('finSubtitle');
+        if (el && emDia > 0) {
+          el.textContent = emDia + ' aluno' + (emDia > 1 ? 's' : '') + ' em dia este mês';
+        }
+      } catch(e) {}
+    })();
   </script>
 </body>
 </html>
