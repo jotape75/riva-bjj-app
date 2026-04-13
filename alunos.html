@@ -28,6 +28,12 @@
       flex-shrink: 0;
     }
     .btn-logout:active { opacity: .75; }
+    /* ── Logo maior ── */
+    .admin-logo {
+      width: 56px !important;
+      height: 56px !important;
+      margin-top: 0 !important;
+    }
     @media (min-width: 769px) {
       .admin-hdr-inner {
         max-width: 1100px;
@@ -35,8 +41,8 @@
         padding: 0 24px;
       }
       .admin-logo {
-        width: 48px !important;
-        height: 48px !important;
+        width: 64px !important;
+        height: 64px !important;
         margin-top: 0 !important;
       }
       .admin-hdr-titulo {
@@ -282,6 +288,61 @@
       margin-top: 8px;
       min-height: 18px;
     }
+
+    /* ── Barra de busca sticky ── */
+    .busca-fixa {
+      position: sticky;
+      top: 72px;
+      z-index: 9;
+      background: var(--bg);
+      padding: 12px 0 4px;
+      margin-bottom: 8px;
+    }
+    @media (max-width: 768px) {
+      .busca-fixa { top: 68px; }
+    }
+    .busca-fixa .input { margin-bottom: 8px; }
+    .busca-btns {
+      display: flex;
+      gap: 8px;
+    }
+    .busca-btns .btn {
+      margin-top: 0;
+      padding: 12px 14px;
+      font-size: 15px;
+      font-weight: 800;
+    }
+    .busca-btns .btn:first-child { flex: 1; }
+    .busca-btns .btn-atualizar {
+      flex-shrink: 0;
+      width: auto;
+      padding: 12px 18px;
+    }
+
+    /* ── Rodapé fixo ── */
+    .rodape-fixo {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 20;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+    }
+    .rodape-fixo .btn {
+      margin-top: 0;
+      max-width: 520px;
+      margin-left: auto;
+      margin-right: auto;
+      display: block;
+    }
+    @media (min-width: 769px) {
+      .rodape-fixo .btn { max-width: 1100px; }
+    }
+
+    /* ── Lista com padding-bottom para não ficar atrás do rodapé ── */
+    .lista-scroll { padding-bottom: 90px; }
   </style>
 </head>
 <body>
@@ -299,20 +360,19 @@
 
     <!-- ── LISTA ──────────────────────────────────────────────── -->
     <section class="hidden" id="sectionAlunos">
-      <div class="card">
-        <h1 class="title">Alunos</h1>
+      <div class="busca-fixa">
+        <h1 class="title" style="margin-bottom:10px;">Alunos</h1>
         <input id="searchBox" class="input" type="search" placeholder="Buscar por nome ou CPF…" />
-        <div style="display:flex;gap:8px;margin-top:8px;">
-          <button class="btn secondary" id="btnVerTodos" style="flex:1;">Ver todos</button>
-          <button class="btn secondary" id="btnAtualizar" style="flex-shrink:0;">🔄 Atualizar</button>
+        <div class="busca-btns">
+          <button class="btn secondary" id="btnVerTodos">Ver todos</button>
+          <button class="btn secondary btn-atualizar" id="btnAtualizar">🔄 Atualizar</button>
         </div>
         <p class="msg info" id="listInfo"></p>
       </div>
 
-      <div id="listaAlunos"></div>
+      <div id="listaAlunos" class="lista-scroll"></div>
 
-      <div class="card">
-        <button class="btn secondary" onclick="location.href='./cadastroaluno.html'">+ Cadastrar Aluno</button>
+      <div class="rodape-fixo">
         <button class="btn secondary" onclick="location.href='./administrativo.html'">← Voltar ao Portal</button>
       </div>
     </section>
