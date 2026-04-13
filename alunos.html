@@ -242,7 +242,7 @@
       gap: 8px;
       flex-wrap: wrap;
     }
-      margin-top: 10px;
+    .aluno-detalhes {
       border-top: 1px solid var(--border);
       padding-top: 10px;
       display: grid;
@@ -436,7 +436,7 @@
 
   <script type="module">
     import { db, auth } from './firebase-config.js';
-    import { collection, doc, query, orderBy, getDocs, updateDoc, deleteDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { collection, doc, query, orderBy, getDocs, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
     import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
     const TOKEN_KEY = 'rv_prof_token';

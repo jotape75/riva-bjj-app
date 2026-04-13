@@ -32,6 +32,14 @@ function gerarStatus(faixa, grau) {
   return emoji.repeat(g);
 }
 
+function hojeDataBR() {
+  const now = new Date();
+  const dd = String(now.getDate()).padStart(2, '0');
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const yyyy = now.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
+
 /* ── localStorage key constants ──────────────────────────────── */
 const LS_EMAIL        = 'rv_email';
 const LS_NOME         = 'rv_nome';
@@ -292,20 +300,13 @@ async function fbAprovar(linhaId) {
           if (novoAulasNoGrau >= metaGrau && metaGrau > 0) {
             if (grauAtual < MAX_GRAU_POR_FAIXA) {
               const novoGrau = grauAtual + 1;
-              const dataBR = (() => {
-                const now = new Date();
-                const dd = String(now.getDate()).padStart(2, '0');
-                const mm = String(now.getMonth() + 1).padStart(2, '0');
-                const yyyy = now.getFullYear();
-                return `${dd}/${mm}/${yyyy}`;
-              })();
               await updateDoc(alunoRef, {
                 grau_atual:       novoGrau,
                 aulas_no_grau:    0,
                 aulas_restantes:  metaGrau,
                 meta_grau:        metaGrau,
                 statusExame:      gerarStatus(a.faixa, novoGrau),
-                data_ultimo_grau: dataBR,
+                data_ultimo_grau: hojeDataBR(),
               });
             } else {
               // Grau máximo: apenas zera restantes e atualiza status

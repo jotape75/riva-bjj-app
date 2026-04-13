@@ -238,7 +238,7 @@
         const q = query(collection(db, 'professores'), where('email', '==', email));
         const snap = await getDocs(q);
         if (!snap.empty) return snap.docs[0].data().nome || '';
-      } catch (_) {}
+      } catch (err) { console.error('Failed to fetch professor name:', err); }
       return '';
     }
 
