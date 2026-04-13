@@ -440,7 +440,10 @@
       const file = e.dataTransfer.files[0];
       if (file) processFile(file);
     });
-    dropZone.addEventListener('click', () => $('fileInput').click());
+    dropZone.addEventListener('click', e => {
+      if (e.target.closest('button, input')) return;
+      $('fileInput').click();
+    });
 
     $('fileInput').addEventListener('change', e => {
       if (e.target.files[0]) processFile(e.target.files[0]);
@@ -512,6 +515,8 @@
           show('importCard');
           buildPreviewTabs();
           buildImportButtons();
+          // Reset input so the same file can be selected again if needed
+          $('fileInput').value = '';
         } catch (err) {
           errEl.textContent = 'Erro ao ler o arquivo: ' + err.message;
           showEl(errEl);
