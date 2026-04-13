@@ -297,30 +297,37 @@ async function fbAprovar(linhaId) {
           const grauAtual       = a.grau_atual ?? 0;
           const novoAulasNoGrau = (a.aulas_no_grau ?? 0) + 1;
 
-          if (novoAulasNoGrau >= metaGrau && metaGrau > 0) {
-            if (grauAtual < MAX_GRAU_POR_FAIXA) {
-              const novoGrau = grauAtual + 1;
-              await updateDoc(alunoRef, {
-                grau_atual:       novoGrau,
-                aulas_no_grau:    0,
-                aulas_restantes:  metaGrau,
-                meta_grau:        metaGrau,
-                statusExame:      gerarStatus(a.faixa, novoGrau),
-                data_ultimo_grau: hojeDataBR(),
-              });
+          try {
+            if (novoAulasNoGrau >= metaGrau && metaGrau > 0) {
+              if (grauAtual < MAX_GRAU_POR_FAIXA) {
+                const novoGrau = grauAtual + 1;
+                await updateDoc(alunoRef, {
+                  grau_atual:       novoGrau,
+                  aulas_no_grau:    0,
+                  aulas_restantes:  metaGrau,
+                  meta_grau:        metaGrau,
+                  statusExame:      gerarStatus(a.faixa, novoGrau),
+                  data_ultimo_grau: hojeDataBR(),
+                });
+              } else {
+                // Grau máximo: apenas zera restantes e atualiza status
+                await updateDoc(alunoRef, {
+                  aulas_restantes: 0,
+                  statusExame:     gerarStatus(a.faixa, MAX_GRAU_POR_FAIXA),
+                });
+              }
             } else {
-              // Grau máximo: apenas zera restantes e atualiza status
               await updateDoc(alunoRef, {
-                aulas_restantes: 0,
-                statusExame:     gerarStatus(a.faixa, MAX_GRAU_POR_FAIXA),
+                aulas_no_grau:   novoAulasNoGrau,
+                aulas_restantes: Math.max(0, metaGrau - novoAulasNoGrau),
+                statusExame:     gerarStatus(a.faixa, grauAtual),
               });
             }
-          } else {
-            await updateDoc(alunoRef, {
-              aulas_no_grau:   novoAulasNoGrau,
-              aulas_restantes: Math.max(0, metaGrau - novoAulasNoGrau),
-              statusExame:     gerarStatus(a.faixa, grauAtual),
-            });
+          } catch (permErr) {
+            if (permErr.code === 'permission-denied') {
+              return { ok: false, erro: 'Erro de permissão: verifique se Anonymous Auth está habilitado no Firebase Console.' };
+            }
+            throw permErr;
           }
         }
       }
