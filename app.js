@@ -1,5 +1,10 @@
-const API_BASE       = 'https://script.google.com/macros/s/AKfycbyBLlVjEvO35RufIh6pH9XOOTDXuj_BMrNHAJfdw9I-reScWX31dsVdOFJna1ZbJVqX/exec';
-const API_TIMEOUT_MS = 25000;
+import { db } from './firebase-config.js';
+import {
+  collection, doc, query, where, orderBy, limit,
+  getDocs, addDoc, updateDoc, deleteDoc, serverTimestamp,
+  Timestamp
+} from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+
 const SEMANA_TTL     = 600000;   // 10 min
 const PRESENCA_TTL   = 600000;   // 10 min
 const GRADUANDOS_TTL = 43200000; // 12 h
@@ -21,29 +26,273 @@ const LS_SEMANA_CACHE      = 'rv_semana_cache';
 const LS_GRADUANDOS_CACHE  = 'rv_graduandos_cache';
 
 /* ── sessionStorage key constants ─────────────────────────────── */
-const SS_PAGE  = 'rv_page';   // sessionStorage key para página atual
-const SS_SESSAO = 'rv_sessao'; // sessionStorage key para sessão selecionada
+const SS_PAGE  = 'rv_page';
+const SS_SESSAO = 'rv_sessao';
 
-/* ── JSONP helper ─────────────────────────────────────────────── */
-function apiCall(params, retries = 1) {
-  return apiCallOnce(params).catch(err => {
-    if (retries > 0) return apiCall(params, retries - 1);
-    throw err;
-  });
+/* ── Firebase helpers ─────────────────────────────────────────── */
+
+// Helper: format Firestore Timestamp to "DD/MM/YYYY • HH:MM"
+function formatTimestamp(ts) {
+  if (!ts) return '';
+  let d;
+  if (ts && typeof ts.toDate === 'function') d = ts.toDate();
+  else if (ts instanceof Date) d = ts;
+  else d = new Date(ts);
+  if (isNaN(d.getTime())) return '';
+  const dd   = String(d.getDate()).padStart(2, '0');
+  const mm   = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  const hh   = String(d.getHours()).padStart(2, '0');
+  const min  = String(d.getMinutes()).padStart(2, '0');
+  return `${dd}/${mm}/${yyyy} • ${hh}:${min}`;
 }
 
-function apiCallOnce(params) {
-  return new Promise((resolve, reject) => {
-    const cb = '_rv' + Date.now() + Math.floor(Math.random() * 9999);
-    const s  = document.createElement('script');
-    const t  = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, API_TIMEOUT_MS);
-    function cleanup() { clearTimeout(t); delete window[cb]; s.remove(); }
-    window[cb] = (d) => { cleanup(); resolve(d); };
-    s.onerror   = () => { cleanup(); reject(new Error('net')); };
-    const qs = Object.entries(params).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&');
-    s.src = `${API_BASE}?${qs}&callback=${cb}`;
-    document.head.appendChild(s);
-  });
+// login: search alunos then professores by email
+async function fbLogin(email) {
+  try {
+    // Check alunos
+    const alunosQ = query(collection(db, 'alunos'), where('email', '==', email));
+    const alunosSnap = await getDocs(alunosQ);
+    if (!alunosSnap.empty) {
+      const docData = alunosSnap.docs[0].data();
+      return {
+        ok: true,
+        tipo: 'aluno',
+        data: {
+          nome:        docData.nome_aluno || '',
+          faixa:       docData.faixa || '',
+          grau:        docData.grau_atual ?? 0,
+          dataGrau:    docData.data_ultimo_grau || '',
+          status:      docData.status || '',
+          statusExame: docData.statusExame || '',
+          aulasNoGrau: docData.aulas_no_grau ?? 0,
+          metaGrau:    docData.meta_grau ?? 0,
+          email:       docData.email || email,
+        }
+      };
+    }
+    // Check professores
+    const profsQ = query(collection(db, 'professores'), where('email', '==', email));
+    const profsSnap = await getDocs(profsQ);
+    if (!profsSnap.empty) {
+      const docData = profsSnap.docs[0].data();
+      return {
+        ok: true,
+        tipo: 'prof',
+        data: { nome: docData.nome || '', email: docData.email || email }
+      };
+    }
+    return { ok: false, erro: 'Email não encontrado.' };
+  } catch (e) {
+    return { ok: false, erro: e.message || 'Erro ao buscar.' };
+  }
+}
+
+// profLoginEmail: get professor data by email
+async function fbProfLoginEmail(email) {
+  try {
+    const q = query(collection(db, 'professores'), where('email', '==', email));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      const d = snap.docs[0].data();
+      return { ok: true, data: { nome: d.nome || '', email: d.email || email } };
+    }
+    return { ok: false, erro: 'Professor não encontrado.' };
+  } catch (e) {
+    return { ok: false, erro: e.message };
+  }
+}
+
+// treinosSemana: get all sessions grouped by diaSemana
+async function fbTreinosSemana() {
+  try {
+    const snap = await getDocs(collection(db, 'sessoes'));
+    const byDow = {};
+    snap.forEach(d => {
+      const s = d.data();
+      if (!byDow[s.diaSemana]) byDow[s.diaSemana] = [];
+      byDow[s.diaSemana].push({ horario: s.horario, nome: s.nome });
+    });
+    // Sort treinos within each day by horario
+    Object.keys(byDow).forEach(dow => {
+      byDow[dow].sort((a, b) => a.horario.localeCompare(b.horario));
+    });
+    const data = Object.entries(byDow).map(([diaSemana, treinos]) => ({
+      diaSemana: parseInt(diaSemana),
+      treinos
+    }));
+    return { ok: true, data };
+  } catch (e) {
+    return { ok: false, erro: e.message };
+  }
+}
+
+// listaPresenca: get non-archived check-ins for a given date+horario
+async function fbListaPresenca(dataTreino, horario) {
+  try {
+    const q = query(
+      collection(db, 'checkins'),
+      where('data_treino', '==', dataTreino),
+      where('horario', '==', horario)
+    );
+    const snap = await getDocs(q);
+    const data = [];
+    snap.forEach(d => {
+      const item = d.data();
+      if (!item.arquivado) {
+        data.push({ linha: d.id, nome: item.nome, status: item.status });
+      }
+    });
+    return { ok: true, data };
+  } catch (e) {
+    return { ok: false, erro: e.message };
+  }
+}
+
+// listaPresencaArquivo: get archived check-ins for a given date+horario
+async function fbListaPresencaArquivo(dataTreino, horario) {
+  try {
+    const q = query(
+      collection(db, 'checkins'),
+      where('data_treino', '==', dataTreino),
+      where('horario', '==', horario),
+      where('arquivado', '==', true)
+    );
+    const snap = await getDocs(q);
+    const data = [];
+    snap.forEach(d => {
+      const item = d.data();
+      data.push({ linha: d.id, nome: item.nome, status: item.status });
+    });
+    return { ok: true, data };
+  } catch (e) {
+    return { ok: false, erro: e.message };
+  }
+}
+
+// checkin: add a new check-in document
+async function fbCheckin(email, nome, horario, dataTreino) {
+  try {
+    await addDoc(collection(db, 'checkins'), {
+      email,
+      nome,
+      horario,
+      data_treino: dataTreino,
+      status: 'PENDENTE ⏳',
+      data_aprovacao: null,
+      arquivado: false,
+      criadoEm: serverTimestamp()
+    });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, erro: e.message };
+  }
+}
+
+// deletarCheckin: delete check-in by email + data_treino + horario
+async function fbDeletarCheckin(email, dataTreino, horario) {
+  try {
+    const q = query(
+      collection(db, 'checkins'),
+      where('email', '==', email),
+      where('data_treino', '==', dataTreino),
+      where('horario', '==', horario)
+    );
+    const snap = await getDocs(q);
+    const deletions = snap.docs.map(d => deleteDoc(doc(db, 'checkins', d.id)));
+    await Promise.all(deletions);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, erro: e.message };
+  }
+}
+
+// aprovar: approve a check-in by document ID
+async function fbAprovar(linhaId) {
+  try {
+    await updateDoc(doc(db, 'checkins', String(linhaId)), {
+      status: 'VALIDADO ✓',
+      data_aprovacao: serverTimestamp()
+    });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, erro: e.message };
+  }
+}
+
+// reprovar: reject a check-in by document ID
+async function fbReprovar(linhaId) {
+  try {
+    await updateDoc(doc(db, 'checkins', String(linhaId)), {
+      status: 'REPROVADO ✗',
+      data_aprovacao: serverTimestamp()
+    });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, erro: e.message };
+  }
+}
+
+// graduandos: students ready for graduation (aulas_restantes <= 0)
+async function fbGraduandos() {
+  try {
+    const q = query(collection(db, 'alunos'), where('status', '==', 'ATIVO'));
+    const snap = await getDocs(q);
+    const data = [];
+    snap.forEach(d => {
+      const a = d.data();
+      const restantes = (a.meta_grau != null && a.aulas_no_grau != null)
+        ? Math.max(0, (a.meta_grau || 0) - (a.aulas_no_grau || 0))
+        : (a.aulas_restantes ?? null);
+      if (restantes !== null && restantes <= 0) {
+        data.push({
+          nome:      a.nome_aluno || '',
+          faixa:     a.faixa || '',
+          grau:      a.grau_atual ?? '',
+          restantes: restantes
+        });
+      }
+    });
+    data.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+    return { ok: true, data };
+  } catch (e) {
+    return { ok: false, erro: e.message };
+  }
+}
+
+// notificacoes: get validated/rejected check-ins for a student in last 30 days
+async function fbNotificacoes(email) {
+  try {
+    const q = query(
+      collection(db, 'checkins'),
+      where('email', '==', email),
+      where('status', 'in', ['VALIDADO ✓', 'REPROVADO ✗']),
+      orderBy('data_aprovacao', 'desc'),
+      limit(50)
+    );
+    const snap = await getDocs(q);
+    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const data = [];
+    snap.forEach(d => {
+      const item = d.data();
+      let ts = 0;
+      if (item.data_aprovacao) {
+        const dt = item.data_aprovacao.toDate ? item.data_aprovacao.toDate() : new Date(item.data_aprovacao);
+        ts = dt.getTime();
+      }
+      if (ts >= thirtyDaysAgo) {
+        data.push({
+          status:         item.status,
+          horario:        item.horario || '',
+          dataTreino:     item.data_treino || '',
+          dataAprovacao:  formatTimestamp(item.data_aprovacao)
+        });
+      }
+    });
+    return { ok: true, data };
+  } catch (e) {
+    return { ok: false, erro: e.message };
+  }
 }
 
 /* ── Helpers ──────────────────────────────────────────────────── */
@@ -213,7 +462,7 @@ function afterBioSuccess(updateTs = true) {
   if (pEmail && pNome) {
     profData = { nome: pNome, email: pEmail };
     showProfPage();
-    apiCall({ action: 'profLoginEmail', email: pEmail })
+    fbProfLoginEmail(pEmail)
       .then(r => { if (r && r.ok) { profData = r.data; $('pNome').textContent = profData.nome || 'Professor'; } })
       .catch(() => {});
     if (savedPage === 'sessaoProf' && savedSessao) {
@@ -226,7 +475,7 @@ function afterBioSuccess(updateTs = true) {
     alunoData = { nome };
     preencherCard(alunoData);
     showAlunoSkeleton();
-    apiCall({ action: 'loginEmail', email })
+    fbLogin(email)
       .then(r => { if (r && r.ok) { alunoData = r.data; preencherCard(alunoData); } })
       .catch(() => {});
     if (savedPage === 'sessaoAluno' && savedSessao) {
@@ -450,7 +699,7 @@ async function revalidateSemana(onSuccess) {
   if (semanaInFlight) return;
   semanaInFlight = true;
   try {
-    const r = await apiCall({ action: 'treinosSemana' });
+    const r = await fbTreinosSemana();
     if (r.ok) { semanaCache = { ts: Date.now(), data: r.data }; saveSemanaCache(r.data); onSuccess(r.data); }
   } catch (_) { /* keep stale */ }
   finally { semanaInFlight = false; }
@@ -472,7 +721,7 @@ async function loadSemana(ctx) {
   showSessoesSkeleton(ctx === 'prof' ? 'profSessoesLista' : 'sessoesLista');
   const cancel = delayedLoader($(rowId));
   try {
-    const r = await apiCall({ action: 'treinosSemana' });
+    const r = await fbTreinosSemana();
     cancel();
     if (r.ok) {
       semanaCache = { ts: Date.now(), data: r.data };
@@ -571,7 +820,7 @@ async function loadSemanaProfessor() {
   showSessoesSkeleton('profSessoesLista');
   const cancel = delayedLoader($(rowId));
   try {
-    const r = await apiCall({ action: 'treinosSemana' });
+    const r = await fbTreinosSemana();
     cancel();
     if (!r.ok) {
       $(rowId).innerHTML = '<p class="msg err">Erro ao carregar treinos.</p>';
@@ -674,7 +923,6 @@ async function loadPresencaSessao(ctx, sessao) {
   const daysAgo        = diasDiferenca(sessao.data);
   sessao.isPast    = ctx !== 'prof' && daysAgo > 0;
   sessao.isArquivo = ctx !== 'prof' && daysAgo > 2;
-  const actionPresenca = sessao.isArquivo ? 'listaPresencaArquivo' : 'listaPresenca';
 
   presencaInFlight[k] = true;
 
@@ -682,7 +930,7 @@ async function loadPresencaSessao(ctx, sessao) {
   if (cached) {
     renderPresencaLista(ctx, cached, sessao);
     try {
-      const r = await apiCall({ action: actionPresenca, data: sessao.data, horario: sessao.horario });
+      const r = await (sessao.isArquivo ? fbListaPresencaArquivo(sessao.data, sessao.horario) : fbListaPresenca(sessao.data, sessao.horario));
       if (r.ok) {
         setCachedPresenca(sessao.data, sessao.horario, r.data || []);
         renderPresencaLista(ctx, r.data || [], sessao);
@@ -696,7 +944,7 @@ async function loadPresencaSessao(ctx, sessao) {
   if (ctx !== 'prof') { hide('btnSessaoCheckin'); hide('btnSessaoDeletarCheckin'); }
 
   try {
-    const r = await apiCall({ action: actionPresenca, data: sessao.data, horario: sessao.horario });
+    const r = await (sessao.isArquivo ? fbListaPresencaArquivo(sessao.data, sessao.horario) : fbListaPresenca(sessao.data, sessao.horario));
     cancel();
     if (!r.ok) { $(listaId).innerHTML = `<p class="msg err">${r.erro || 'Erro'}</p>`; return; }
     setCachedPresenca(sessao.data, sessao.horario, r.data || []);
@@ -729,7 +977,7 @@ async function loadPresenca(ctx, sessao) {
   if (cached) {
     renderPresencaLista(ctx, cached, sessao);
     try {
-      const r = await apiCall({ action: 'listaPresenca', data: sessao.data, horario: sessao.horario });
+      const r = await fbListaPresenca(sessao.data, sessao.horario);
       if (r.ok) {
         setCachedPresenca(sessao.data, sessao.horario, r.data || []);
         renderPresencaLista(ctx, r.data || [], sessao);
@@ -743,7 +991,7 @@ async function loadPresenca(ctx, sessao) {
   if (ctx !== 'prof') { showPresencaSkeleton(); hide('btnCheckin'); hide('btnDeletarCheckin'); }
 
   try {
-    const r = await apiCall({ action: 'listaPresenca', data: sessao.data, horario: sessao.horario });
+    const r = await fbListaPresenca(sessao.data, sessao.horario);
     cancel();
     if (!r.ok) { $(listaId).innerHTML = `<p class="msg err">${r.erro || 'Erro'}</p>`; return; }
     setCachedPresenca(sessao.data, sessao.horario, r.data || []);
@@ -788,9 +1036,9 @@ function renderPresencaLista(ctx, lista, sessao) {
 
     if (ctx === 'prof') {
       el.querySelectorAll('.btn-ap.aprovar').forEach(btn =>
-        btn.addEventListener('click', () => profAprovar(+btn.dataset.linha, sessao, btn)));
+        btn.addEventListener('click', () => profAprovar(btn.dataset.linha, sessao, btn)));
       el.querySelectorAll('.btn-ap.reprovar').forEach(btn =>
-        btn.addEventListener('click', () => profReprovar(+btn.dataset.linha, sessao, btn)));
+        btn.addEventListener('click', () => profReprovar(btn.dataset.linha, sessao, btn)));
     }
   }
 
@@ -838,13 +1086,7 @@ async function fazerCheckin() {
   show('btnSessaoDeletarCheckin');
 
   try {
-    const r = await apiCall({
-      action:  'checkin',
-      email:   localStorage.getItem(LS_EMAIL) || '',
-      data:    aSelSessao.data,
-      horario: aSelSessao.horario,
-      treino:  aSelSessao.nome,
-    });
+    const r = await fbCheckin(localStorage.getItem(LS_EMAIL) || '', alunoData.nome, aSelSessao.horario, aSelSessao.data);
     if (r.ok) {
       invalidatePresenca(aSelSessao.data, aSelSessao.horario);
     } else {
@@ -888,12 +1130,7 @@ async function deletarCheckin() {
   hide('btnSessaoDeletarCheckin');
 
   try {
-    const r = await apiCall({
-      action:  'deletarCheckin',
-      email:   localStorage.getItem(LS_EMAIL) || '',
-      data:    aSelSessao.data,
-      horario: aSelSessao.horario,
-    });
+    const r = await fbDeletarCheckin(localStorage.getItem(LS_EMAIL) || '', aSelSessao.data, aSelSessao.horario);
     if (r.ok) {
       invalidatePresenca(aSelSessao.data, aSelSessao.horario);
     } else {
@@ -926,11 +1163,7 @@ async function profAprovar(linha, sessao, btn) {
   if (actionsEl) actionsEl.remove();
 
   try {
-    const r = await apiCall({
-      action:    'aprovar',
-      emailProf: localStorage.getItem(LS_PROF_EMAIL) || '',
-      linha,
-    });
+    const r = await fbAprovar(linha);
     if (r.ok) {
       // DOM already updated optimistically above
     } else {
@@ -963,11 +1196,7 @@ async function profReprovar(linha, sessao, btn) {
   if (actionsEl) actionsEl.remove();
 
   try {
-    const r = await apiCall({
-      action:    'reprovar',
-      emailProf: localStorage.getItem(LS_PROF_EMAIL) || '',
-      linha,
-    });
+    const r = await fbReprovar(linha);
     if (r.ok) {
       // DOM already updated optimistically above
     } else {
@@ -1003,7 +1232,7 @@ async function carregarGraduandos(force = false) {
 
   showGraduandosSkeleton();
   try {
-    const r = await apiCall({ action: 'graduandos' });
+    const r = await fbGraduandos();
     if (!r || !r.ok) throw new Error((r && r.erro) ? r.erro : 'Falha ao carregar.');
     graduandosCache = { ts: Date.now(), data: r.data || [] };
     saveGraduandosCache(r.data || []);
@@ -1068,7 +1297,7 @@ function checkBellBadge() {
 
   if (notifInFlight) return;
   notifInFlight = true;
-  apiCall({ action: 'notificacoes', email })
+  fbNotificacoes(email)
     .then(r => {
       if (r && r.ok) {
         notifCache = { ts: Date.now(), data: r.data || [] };
@@ -1100,7 +1329,7 @@ async function loadNotificacoes() {
   notifInFlight = true;
   const cancel = delayedLoader($('notifLista'));
   try {
-    const r = await apiCall({ action: 'notificacoes', email });
+    const r = await fbNotificacoes(email);
     cancel();
     if (!r.ok) { $('notifLista').innerHTML = `<p class="msg err">${r.erro || 'Erro'}</p>`; return; }
     notifCache = { ts: Date.now(), data: r.data || [] };
@@ -1160,7 +1389,7 @@ async function loginGeneric() {
   $('info').textContent = 'Buscando…';
   $('btnLogin').disabled = true;
   try {
-    const r = await apiCall({ action: 'login', email });
+    const r = await fbLogin(email);
     if (!r.ok) { $('err').textContent = r.erro || 'Email não encontrado.'; $('info').textContent = ''; return; }
 
     if (r.tipo === 'prof') {

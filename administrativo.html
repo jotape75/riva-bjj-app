@@ -209,30 +209,18 @@
 
   </main>
 
-  <script>
-    const API_BASE       = 'https://script.google.com/macros/s/AKfycbyBLlVjEvO35RufIh6pH9XOOTDXuj_BMrNHAJfdw9I-reScWX31dsVdOFJna1ZbJVqX/exec';
-    const API_TIMEOUT_MS = 25000;
-    const TOKEN_KEY      = 'rv_prof_token';
-    const NOME_KEY       = 'rv_prof_nome';
+  <script type="module">
+    import { auth } from './firebase-config.js';
+    import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
-    function apiCall(params) {
-      return new Promise((resolve, reject) => {
-        const cb = '_rv' + Date.now() + Math.floor(Math.random() * 9999);
-        const s  = document.createElement('script');
-        const t  = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, API_TIMEOUT_MS);
-        function cleanup() { clearTimeout(t); delete window[cb]; s.remove(); }
-        window[cb] = (d) => { cleanup(); resolve(d); };
-        s.onerror  = () => { cleanup(); reject(new Error('net')); };
-        const qs = Object.entries(params).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
-        s.src = `${API_BASE}?${qs}&callback=${cb}`;
-        document.head.appendChild(s);
-      });
-    }
+    const TOKEN_KEY = 'rv_prof_token';
+    const NOME_KEY  = 'rv_prof_nome';
 
     function show(id) { document.getElementById(id).classList.remove('hidden'); }
     function hide(id) { document.getElementById(id).classList.add('hidden'); }
 
     function doLogout() {
+      signOut(auth).catch(() => {});
       sessionStorage.removeItem(TOKEN_KEY);
       sessionStorage.removeItem(NOME_KEY);
       location.reload();
@@ -244,14 +232,13 @@
       show('cardPortal');
     }
 
-    // ── Init ───────────────────────────────────────────────────
-    function init() {
-      const token = sessionStorage.getItem(TOKEN_KEY);
-      const nome  = sessionStorage.getItem(NOME_KEY);
-      if (token === 'rv_prof_ok') {
+    // ── Check auth state ────────────────────────────────────────
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const nome = sessionStorage.getItem(NOME_KEY) || user.displayName || user.email || '';
         showPortal(nome);
       }
-    }
+    });
 
     // ── Login ──────────────────────────────────────────────────
     document.getElementById('btnEntrar').addEventListener('click', async () => {
@@ -272,18 +259,17 @@
       document.getElementById('btnEntrar').disabled    = true;
 
       try {
-        const r = await apiCall({ action: 'loginProfessor', email, senha });
-        if (r && r.ok) {
-          sessionStorage.setItem(TOKEN_KEY, r.token || 'rv_prof_ok');
-          sessionStorage.setItem(NOME_KEY, r.nome || '');
-          document.getElementById('loginInfo').textContent = '';
-          showPortal(r.nome);
-        } else {
-          document.getElementById('loginErr').textContent  = r && r.erro ? r.erro : 'Credenciais inválidas.';
-          document.getElementById('loginInfo').textContent = '';
-        }
+        const cred = await signInWithEmailAndPassword(auth, email, senha);
+        const nome = cred.user.displayName || cred.user.email || '';
+        sessionStorage.setItem(TOKEN_KEY, 'rv_prof_ok');
+        sessionStorage.setItem(NOME_KEY, nome);
+        document.getElementById('loginInfo').textContent = '';
+        showPortal(nome);
       } catch (e) {
-        document.getElementById('loginErr').textContent  = 'Erro de conexão. Tente novamente.';
+        const msg = (e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found')
+          ? 'Credenciais inválidas.'
+          : 'Erro de conexão. Tente novamente.';
+        document.getElementById('loginErr').textContent  = msg;
         document.getElementById('loginInfo').textContent = '';
       } finally {
         document.getElementById('btnEntrar').disabled = false;
@@ -301,8 +287,6 @@
     // ── Logout ─────────────────────────────────────────────────
     document.getElementById('btnLogout').addEventListener('click', doLogout);
     document.getElementById('btnHdrSair').addEventListener('click', doLogout);
-
-    init();
 
     // ── Resumo rápido do Financeiro ────────────────────────────
     (function mostrarResumoFinanceiro() {
