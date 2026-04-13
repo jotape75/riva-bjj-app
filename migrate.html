@@ -778,7 +778,7 @@
           const nome  = toStr(row[0]); // Col A
           const email = toStr(row[1]); // Col B
           if (!nome || !email) continue;
-          docs.push({ type: 'add', collection: 'professores', data: cleanObject({ nome, email }) });
+          docs.push({ type: 'add', collection: 'professores', data: cleanObject(mapProfessor(row)) });
         }
       } else if (sheetName === 'Treinos') {
         // Matrix: Col A = horario, Cols B–G = days (diaSemana 1–6)
@@ -796,7 +796,7 @@
           for (const { col, diaSemana } of DAY_COLS) {
             const nome = toStr(row[col]);
             if (!nome) continue;
-            docs.push({ type: 'add', collection: 'sessoes', data: { diaSemana, horario, nome } });
+            docs.push({ type: 'add', collection: 'sessoes', data: cleanObject({ diaSemana, horario, nome }) });
           }
         }
       } else if (sheetName === 'Checkins') {
