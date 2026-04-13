@@ -5,12 +5,14 @@ import {
   Timestamp
 } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
-const SEMANA_TTL     = 600000;   // 10 min
-const PRESENCA_TTL   = 600000;   // 10 min
-const GRADUANDOS_TTL = 43200000; // 12 h
-const NOTIF_TTL      = 900000;   // 15 min
-const BIO_GRACE_MS   = 1800000;  // 30 min
-const RP_NAME        = 'Riva BJJ';
+const SEMANA_TTL          = 600000;   // 10 min
+const PRESENCA_TTL        = 600000;   // 10 min
+const GRADUANDOS_TTL      = 43200000; // 12 h
+const NOTIF_TTL           = 900000;   // 15 min
+const BIO_GRACE_MS        = 1800000;  // 30 min
+const RP_NAME             = 'Riva BJJ';
+const MAX_GRAU_POR_FAIXA  = 4;
+const STATUS_EXAME_SYMBOL = '🔲';
 
 /* ── localStorage key constants ──────────────────────────────── */
 const LS_EMAIL        = 'rv_email';
@@ -257,14 +259,14 @@ async function fbAprovar(linhaId) {
           const grauAtual = a.grau_atual ?? 0;
           const novoAulasNoGrau = (a.aulas_no_grau ?? 0) + 1;
 
-          if (novoAulasNoGrau >= metaGrau && grauAtual < 4) {
+          if (novoAulasNoGrau >= metaGrau && grauAtual < MAX_GRAU_POR_FAIXA) {
             const novoGrau = grauAtual + 1;
             await updateDoc(alunoRef, {
               grau_atual:       novoGrau,
               aulas_no_grau:    0,
               aulas_restantes:  metaGrau,
               meta_grau:        metaGrau,
-              statusExame:      '🔲'.repeat(novoGrau),
+              statusExame:      STATUS_EXAME_SYMBOL.repeat(novoGrau),
               data_ultimo_grau: new Date().toISOString().slice(0, 10),
             });
           } else {
@@ -308,7 +310,7 @@ async function fbGraduandos() {
         ? Math.max(0, (a.meta_grau || 0) - (a.aulas_no_grau || 0))
         : (a.aulas_restantes ?? null);
       const grauAtual = a.grau_atual ?? 0;
-      if (restantes !== null && restantes <= 0 && grauAtual >= 4) {
+      if (restantes !== null && restantes <= 0 && grauAtual >= MAX_GRAU_POR_FAIXA) {
         data.push({
           nome:      a.nome_aluno || '',
           faixa:     a.faixa || '',
