@@ -59,6 +59,7 @@ async function fbLogin(email) {
         ok: true,
         tipo: 'aluno',
         data: {
+          id:          alunosSnap.docs[0].id,
           nome:        docData.nome_aluno || '',
           faixa:       docData.faixa || '',
           grau:        docData.grau_atual ?? 0,
@@ -168,7 +169,7 @@ async function fbListaPresencaArquivo(dataTreino, horario) {
 }
 
 // checkin: add a new check-in document
-async function fbCheckin(email, nome, horario, dataTreino) {
+async function fbCheckin(email, nome, horario, dataTreino, alunoId) {
   try {
     // 1. Buscar checkins do aluno para esta data
     const qDia = query(
@@ -198,7 +199,7 @@ async function fbCheckin(email, nome, horario, dataTreino) {
     }
 
     // 5. Criar o check-in
-    await addDoc(collection(db, 'checkins'), {
+    const checkinData = {
       email,
       nome,
       horario,
@@ -207,7 +208,9 @@ async function fbCheckin(email, nome, horario, dataTreino) {
       data_aprovacao: null,
       arquivado: false,
       criadoEm: serverTimestamp()
-    });
+    };
+    if (alunoId) checkinData.alunoId = alunoId;
+    await addDoc(collection(db, 'checkins'), checkinData);
     return { ok: true };
   } catch (e) {
     return { ok: false, erro: e.message };
@@ -232,7 +235,7 @@ async function fbDeletarCheckin(email, dataTreino, horario) {
   }
 }
 
-// aprovar: approve a check-in by document ID and decrement student's aulas_no_grau
+// aprovar: approve a check-in by document ID and decrement student's aulas
 async function fbAprovar(linhaId) {
   try {
     const checkinRef = doc(db, 'checkins', String(linhaId));
@@ -241,22 +244,12 @@ async function fbAprovar(linhaId) {
       data_aprovacao: serverTimestamp()
     });
 
-    // Increment aulas_no_grau for the student (reduces computed aulas_restantes)
-    try {
-      const checkinSnap = await getDoc(checkinRef);
-      if (checkinSnap.exists()) {
-        const email = checkinSnap.data().email;
-        if (email) {
-          const alunosQ = query(collection(db, 'alunos'), where('email', '==', email));
-          const alunosSnap = await getDocs(alunosQ);
-          if (!alunosSnap.empty) {
-            await updateDoc(alunosSnap.docs[0].ref, { aulas_no_grau: increment(1) });
-          }
-        }
+    const checkinSnap = await getDoc(checkinRef);
+    if (checkinSnap.exists()) {
+      const alunoId = checkinSnap.data().alunoId;
+      if (alunoId) {
+        await updateDoc(doc(db, 'alunos', alunoId), { aulas: increment(-1) });
       }
-    } catch (e) {
-      // Non-fatal: check-in is already approved, aulas_no_grau update failure is secondary
-      console.error('Erro ao atualizar aulas_no_grau:', e);
     }
 
     return { ok: true };
@@ -1132,7 +1125,7 @@ async function fazerCheckin() {
   show('btnSessaoDeletarCheckin');
 
   try {
-    const r = await fbCheckin(localStorage.getItem(LS_EMAIL) || '', alunoData.nome, aSelSessao.horario, aSelSessao.data);
+    const r = await fbCheckin(localStorage.getItem(LS_EMAIL) || '', alunoData.nome, aSelSessao.horario, aSelSessao.data, alunoData.id || '');
     if (r.ok) {
       invalidatePresenca(aSelSessao.data, aSelSessao.horario);
     } else {
