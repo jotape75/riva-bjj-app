@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Riva BJJ — Migração de Dados</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0d;
+      --surface: #1a1a1a;
+      --surface2: #222;
+      --border: #333;
+      --red: #c0392b;
+      --red-hover: #a93226;
+      --text: #f0f0f0;
+      --text-muted: #888;
+      --green: #27ae60;
+      --yellow: #f39c12;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── Header ─────────────────────────────────────────── */
+    header {
+      background: var(--surface);
+      border-bottom: 2px solid var(--red);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    header img { height: 48px; border-radius: 8px; }
+    header h1 { font-size: 1.4rem; font-weight: 700; }
+    header h1 span { color: var(--red); }
+
+    /* ── Warning banner ──────────────────────────────────── */
+    .warning-banner {
+      background: #3d2002;
+      border: 1px solid var(--yellow);
+      color: var(--yellow);
+      padding: 12px 24px;
+      text-align: center;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    /* ── Main layout ─────────────────────────────────────── */
+    main { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+
+    /* ── Card ────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .card h2 { font-size: 1.1rem; margin-bottom: 16px; color: var(--red); }
+
+    /* ── Login form ──────────────────────────────────────── */
+    #loginCard { max-width: 400px; margin: 60px auto; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; margin-bottom: 6px; font-size: 0.9rem; color: var(--text-muted); }
+    .form-group input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 1rem;
+    }
+    .form-group input:focus { outline: none; border-color: var(--red); }
+
+    /* ── Buttons ─────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 6px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-primary { background: var(--red); color: #fff; }
+    .btn-primary:hover { background: var(--red-hover); }
+    .btn-primary:disabled { background: #5a1a15; cursor: not-allowed; }
+    .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: #2a2a2a; }
+    .btn-small { padding: 6px 14px; font-size: 0.85rem; }
+    .btn-full { width: 100%; justify-content: center; }
+
+    /* ── Drop zone ───────────────────────────────────────── */
+    #dropZone {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    #dropZone.dragover { border-color: var(--red); background: #1f0f0e; }
+    #dropZone .icon { font-size: 3rem; margin-bottom: 12px; }
+    #dropZone p { color: var(--text-muted); margin-bottom: 12px; }
+    #fileInput { display: none; }
+
+    /* ── File info ───────────────────────────────────────── */
+    #fileInfo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+    }
+    #fileInfo .file-name { font-weight: 600; }
+    #fileInfo .file-size { color: var(--text-muted); font-size: 0.85rem; }
+
+    /* ── Preview tabs ────────────────────────────────────── */
+    .tab-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .tab-btn {
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .tab-btn.active { background: var(--red); color: #fff; border-color: var(--red); }
+    .tab-btn .badge {
+      background: rgba(255,255,255,0.2);
+      border-radius: 10px;
+      padding: 1px 7px;
+      font-size: 0.75rem;
+      margin-left: 4px;
+    }
+
+    /* ── Preview table ───────────────────────────────────── */
+    .table-wrap { overflow-x: auto; max-height: 300px; overflow-y: auto; border-radius: 6px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    thead th {
+      background: var(--surface2);
+      padding: 8px 12px;
+      text-align: left;
+      position: sticky;
+      top: 0;
+      color: var(--red);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    tbody td { padding: 6px 12px; border-bottom: 1px solid #1e1e1e; white-space: nowrap; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: var(--surface2); }
+
+    /* ── Import actions ──────────────────────────────────── */
+    .import-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 16px; }
+
+    /* ── Progress ────────────────────────────────────────── */
+    #progressSection { display: none; }
+    .progress-label { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 6px; }
+    .progress-bar-bg {
+      background: var(--surface2);
+      border-radius: 6px;
+      height: 12px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--red);
+      transition: width 0.2s;
+      border-radius: 6px;
+    }
+
+    /* ── Log ─────────────────────────────────────────────── */
+    #logSection { display: none; }
+    #logBox {
+      background: #0a0a0a;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      height: 260px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      line-height: 1.6;
+    }
+    .log-ok { color: #2ecc71; }
+    .log-err { color: #e74c3c; }
+    .log-info { color: #3498db; }
+    .log-warn { color: var(--yellow); }
+
+    /* ── Summary ─────────────────────────────────────────── */
+    #summarySection { display: none; }
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .summary-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+    .summary-item .count { font-size: 2rem; font-weight: 700; color: var(--red); }
+    .summary-item .label { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+
+    /* ── Helpers ─────────────────────────────────────────── */
+    .hidden { display: none !important; }
+    .msg-error { color: #e74c3c; font-size: 0.9rem; margin-top: 8px; }
+    .flex-gap { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .mt-12 { margin-top: 12px; }
+    .text-muted { color: var(--text-muted); }
+    .section-title { font-size: 1rem; font-weight: 600; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <img src="logo.png" alt="Riva BJJ" onerror="this.style.display='none'" />
+    <h1>Riva BJJ — <span>Migração de Dados</span></h1>
+  </header>
+
+  <div class="warning-banner">
+    ⚠️ Use esta ferramenta apenas uma vez para importação inicial — ela não faz parte do app em produção.
+  </div>
+
+  <main>
+
+    <!-- ── Login ─────────────────────────────────────────── -->
+    <div class="card" id="loginCard">
+      <h2>🔐 Login de Administrador</h2>
+      <p class="text-muted" style="margin-bottom:18px;font-size:0.9rem;">
+        Somente administradores autenticados podem realizar a importação.
+      </p>
+      <div class="form-group">
+        <label for="loginEmail">E-mail</label>
+        <input type="email" id="loginEmail" placeholder="admin@rivabjj.com" autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label for="loginPassword">Senha</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <p class="msg-error hidden" id="loginError"></p>
+      <button class="btn btn-primary btn-full mt-12" id="btnLogin">Entrar</button>
+    </div>
+
+    <!-- ── Upload ─────────────────────────────────────────── -->
+    <div class="card hidden" id="uploadCard">
+      <h2>📂 Upload do arquivo .xlsx</h2>
+
+      <div id="dropZone">
+        <div class="icon">📊</div>
+        <p>Arraste e solte o arquivo <strong>.xlsx</strong> aqui</p>
+        <button class="btn btn-secondary" type="button" onclick="document.getElementById('fileInput').click()">
+          Selecionar arquivo
+        </button>
+        <input type="file" id="fileInput" accept=".xlsx,.xls" />
+      </div>
+
+      <p class="msg-error hidden mt-12" id="uploadError"></p>
+    </div>
+
+    <!-- ── Preview ────────────────────────────────────────── -->
+    <div class="card hidden" id="previewCard">
+      <h2>👁️ Preview dos dados</h2>
+
+      <div id="fileInfo">
+        <span style="font-size:1.5rem">📄</span>
+        <div>
+          <div class="file-name" id="fileName"></div>
+          <div class="file-size" id="fileSize"></div>
+        </div>
+        <button class="btn btn-secondary btn-small" id="btnChangeFile" style="margin-left:auto">Trocar arquivo</button>
+      </div>
+
+      <div class="tab-buttons" id="tabButtons"></div>
+      <div class="table-wrap" id="previewTableWrap">
+        <table id="previewTable">
+          <thead id="previewHead"></thead>
+          <tbody id="previewBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Import actions ─────────────────────────────────── -->
+    <div class="card hidden" id="importCard">
+      <h2>🚀 Importar para o Firestore</h2>
+      <p class="text-muted" style="font-size:0.85rem;margin-bottom:16px;">
+        Documentos existentes serão atualizados com merge. Novos documentos serão criados.
+      </p>
+      <div class="import-grid" id="importGrid"></div>
+      <button class="btn btn-primary" id="btnImportAll">⬆️ Importar tudo</button>
+    </div>
+
+    <!-- ── Progress ───────────────────────────────────────── -->
+    <div class="card" id="progressSection">
+      <h2>⏳ Progresso</h2>
+      <p class="progress-label" id="progressLabel">Aguardando…</p>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- ── Log ────────────────────────────────────────────── -->
+    <div class="card" id="logSection">
+      <div class="flex-gap" style="margin-bottom:12px;">
+        <h2 style="margin:0">📋 Log de Importação</h2>
+        <button class="btn btn-secondary btn-small" id="btnClearLog" style="margin-left:auto">Limpar log</button>
+      </div>
+      <div id="logBox"></div>
+    </div>
+
+    <!-- ── Summary ────────────────────────────────────────── -->
+    <div class="card" id="summarySection">
+      <h2>✅ Resumo da Importação</h2>
+      <div class="summary-grid" id="summaryGrid"></div>
+      <button class="btn btn-secondary" id="btnNewImport">🔄 Nova importação</button>
+    </div>
+
+  </main>
+
+  <!-- SheetJS -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+    import {
+      getFirestore, collection, doc, writeBatch, addDoc, setDoc
+    } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import {
+      getAuth, signInWithEmailAndPassword, onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+
+    /* ── Firebase ─────────────────────────────────────────── */
+    const firebaseConfig = {
+      apiKey: "AIzaSyDj9SIhTF4-8oun-eACP179aUjSpMAR3So",
+      authDomain: "rivabjj-a477b.firebaseapp.com",
+      projectId: "rivabjj-a477b",
+      storageBucket: "rivabjj-a477b.firebasestorage.app",
+      messagingSenderId: "196632623313",
+      appId: "1:196632623313:web:9a7a3c1fee0795d7302df0",
+      measurementId: "G-7371GD4QK1"
+    };
+    const app  = initializeApp(firebaseConfig);
+    const db   = getFirestore(app);
+    const auth = getAuth(app);
+
+    /* ── UI helpers ───────────────────────────────────────── */
+    const $  = id => document.getElementById(id);
+    const show = id => $(id).classList.remove('hidden');
+    const hide = id => $(id).classList.add('hidden');
+    const showEl = el => el.classList.remove('hidden');
+    const hideEl = el => el.classList.add('hidden');
+
+    function log(msg, type = 'info') {
+      const box = $('logBox');
+      const line = document.createElement('div');
+      line.className = `log-${type}`;
+      line.textContent = `[${new Date().toLocaleTimeString('pt-BR')}] ${msg}`;
+      box.appendChild(line);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function setProgress(label, pct) {
+      $('progressLabel').textContent = label;
+      $('progressFill').style.width = Math.min(100, pct) + '%';
+    }
+
+    /* ── Auth ─────────────────────────────────────────────── */
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        hide('loginCard');
+        show('uploadCard');
+      } else {
+        show('loginCard');
+        hide('uploadCard');
+        hide('previewCard');
+        hide('importCard');
+      }
+    });
+
+    $('btnLogin').addEventListener('click', async () => {
+      const email = $('loginEmail').value.trim();
+      const pwd   = $('loginPassword').value;
+      const errEl = $('loginError');
+      hideEl(errEl);
+      if (!email || !pwd) {
+        errEl.textContent = 'Preencha e-mail e senha.';
+        showEl(errEl);
+        return;
+      }
+      $('btnLogin').disabled = true;
+      $('btnLogin').textContent = 'Entrando…';
+      try {
+        await signInWithEmailAndPassword(auth, email, pwd);
+      } catch (e) {
+        errEl.textContent = 'Falha no login: ' + (e.message || e.code || 'erro desconhecido');
+        showEl(errEl);
+        $('btnLogin').disabled = false;
+        $('btnLogin').textContent = 'Entrar';
+      }
+    });
+
+    $('loginPassword').addEventListener('keydown', e => {
+      if (e.key === 'Enter') $('btnLogin').click();
+    });
+
+    /* ── File handling ────────────────────────────────────── */
+    let workbook = null;
+    let parsedSheets = {};  // { sheetName: [ {col:val,...}, ... ] }
+
+    const SHEET_NAMES = ['Checkins', 'Checkins_Arquivo', 'Alunos', 'Professores', 'Treinos'];
+
+    const dropZone = $('dropZone');
+
+    dropZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) processFile(file);
+    });
+    dropZone.addEventListener('click', () => $('fileInput').click());
+
+    $('fileInput').addEventListener('change', e => {
+      if (e.target.files[0]) processFile(e.target.files[0]);
+    });
+
+    $('btnChangeFile').addEventListener('click', () => {
+      workbook = null;
+      parsedSheets = {};
+      hide('previewCard');
+      hide('importCard');
+      hide('progressSection');
+      hide('logSection');
+      hide('summarySection');
+      show('uploadCard');
+      $('fileInput').value = '';
+    });
+
+    function formatBytes(b) {
+      if (b < 1024) return b + ' B';
+      if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+      return (b / 1048576).toFixed(1) + ' MB';
+    }
+
+    function processFile(file) {
+      const errEl = $('uploadError');
+      hideEl(errEl);
+      if (!file.name.match(/\.(xlsx|xls)$/i)) {
+        errEl.textContent = 'Selecione um arquivo .xlsx ou .xls válido.';
+        showEl(errEl);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          workbook = XLSX.read(e.target.result, { type: 'array', cellDates: false });
+          parsedSheets = {};
+
+          // Parse each known sheet
+          for (const name of SHEET_NAMES) {
+            if (!workbook.SheetNames.includes(name)) {
+              log(`⚠️ Aba "${name}" não encontrada no arquivo.`, 'warn');
+              continue;
+            }
+            const ws = workbook.Sheets[name];
+            const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+            parsedSheets[name] = rows;
+          }
+
+          // Show file info
+          $('fileName').textContent = file.name;
+          $('fileSize').textContent = formatBytes(file.size);
+
+          hide('uploadCard');
+          show('previewCard');
+          show('importCard');
+          buildPreviewTabs();
+          buildImportButtons();
+
+          // Show log section ready
+          show('logSection');
+          $('logBox').innerHTML = '';
+          log('Arquivo carregado com sucesso: ' + file.name, 'ok');
+        } catch (err) {
+          errEl.textContent = 'Erro ao ler o arquivo: ' + err.message;
+          showEl(errEl);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    /* ── Preview ──────────────────────────────────────────── */
+    const SHEET_HEADERS = {
+      Alunos:          ['id','nome_aluno','status','faixa','grau_atual','aulas_no_grau','meta_grau','aulas_restantes','data_ultimo_grau','statusExame','email','telefone','cpf','data_nasc','data_inicio','categoria','valorMensalidade','plano','grupo_familiar','data_contrato'],
+      Professores:     ['id','nome','email','senha'],
+      Treinos:         ['diaSemana','horario','nome'],
+      Checkins:        ['id','email','nome','horario','data_treino','status','data_aprovacao'],
+      Checkins_Arquivo:['id','email','nome','horario','data_treino','status','data_aprovacao'],
+    };
+
+    function countValidRows(name) {
+      const rows = parsedSheets[name];
+      if (!rows || rows.length < 2) return 0;
+      const data = rows.slice(1);
+      if (name === 'Alunos')           return data.filter(r => String(r[1] || '').trim()).length;
+      if (name === 'Professores')      return data.filter(r => String(r[1] || '').trim() && String(r[2] || '').trim()).length;
+      if (name === 'Treinos')          return data.filter(r => String(r[1] || '').trim() && String(r[2] || '').trim()).length;
+      if (name === 'Checkins' || name === 'Checkins_Arquivo')
+        return data.filter(r => String(r[1] || '').trim()).length;
+      return 0;
+    }
+
+    let activeTab = null;
+
+    function buildPreviewTabs() {
+      const container = $('tabButtons');
+      container.innerHTML = '';
+      const available = SHEET_NAMES.filter(n => parsedSheets[n]);
+
+      for (const name of available) {
+        const count = countValidRows(name);
+        const btn = document.createElement('button');
+        btn.className = 'tab-btn';
+        btn.dataset.sheet = name;
+        btn.innerHTML = `${name} <span class="badge">${count}</span>`;
+        btn.addEventListener('click', () => showTab(name));
+        container.appendChild(btn);
+      }
+
+      if (available.length) showTab(available[0]);
+    }
+
+    function showTab(name) {
+      activeTab = name;
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.sheet === name);
+      });
+
+      const rows = parsedSheets[name] || [];
+      const headers = SHEET_HEADERS[name] || [];
+      const thead = $('previewHead');
+      const tbody = $('previewBody');
+
+      thead.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+      tbody.innerHTML = '';
+
+      // Show first 20 data rows (skip header row)
+      const dataRows = rows.slice(1, 21);
+      for (const row of dataRows) {
+        const tr = document.createElement('tr');
+        for (let i = 0; i < headers.length; i++) {
+          const td = document.createElement('td');
+          td.textContent = row[i] !== undefined ? String(row[i]) : '';
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+
+      if (dataRows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="' + headers.length + '" style="color:var(--text-muted);padding:20px;text-align:center">Nenhum dado encontrado</td></tr>';
+      }
+    }
+
+    /* ── Import buttons ───────────────────────────────────── */
+    function buildImportButtons() {
+      const grid = $('importGrid');
+      grid.innerHTML = '';
+      const available = SHEET_NAMES.filter(n => parsedSheets[n]);
+      for (const name of available) {
+        const count = countValidRows(name);
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-secondary';
+        btn.id = 'btnImport_' + name;
+        btn.innerHTML = `Importar <strong>${name}</strong><br><small style="font-weight:400">${count} registros</small>`;
+        btn.style.flexDirection = 'column';
+        btn.style.height = '64px';
+        btn.addEventListener('click', () => importSheet(name));
+        grid.appendChild(btn);
+      }
+    }
+
+    /* ── Import logic ─────────────────────────────────────── */
+    const BATCH_SIZE = 50;
+
+    function cleanObject(obj) {
+      const out = {};
+      for (const [k, v] of Object.entries(obj)) {
+        if (v !== null && v !== undefined && v !== '') {
+          out[k] = v;
+        }
+      }
+      return out;
+    }
+
+    function toNum(v, def = 0) {
+      const n = parseFloat(String(v).replace(',', '.'));
+      return isNaN(n) ? def : n;
+    }
+    function toInt(v, def = 0) {
+      const n = parseInt(String(v), 10);
+      return isNaN(n) ? def : n;
+    }
+    function toStr(v) { return String(v === null || v === undefined ? '' : v).trim(); }
+
+    function mapAluno(row) {
+      return {
+        id:               toStr(row[0]),
+        nome_aluno:       toStr(row[1]),
+        status:           toStr(row[2]),
+        faixa:            toStr(row[3]),
+        grau_atual:       toInt(row[4]),
+        aulas_no_grau:    toInt(row[5]),
+        meta_grau:        toInt(row[6]),
+        aulas_restantes:  toInt(row[7]),
+        data_ultimo_grau: toStr(row[8]),
+        statusExame:      toStr(row[9]),
+        email:            toStr(row[10]),
+        telefone:         toStr(row[11]),
+        cpf:              toStr(row[12]),
+        data_nasc:        toStr(row[13]),
+        data_inicio:      toStr(row[14]),
+        categoria:        toStr(row[15]),
+        valorMensalidade: toNum(row[16]),
+        plano:            toStr(row[17]),
+        grupo_familiar:   toStr(row[18]),
+        data_contrato:    toStr(row[19]),
+      };
+    }
+
+    function mapProfessor(row) {
+      return {
+        id:    toStr(row[0]),
+        nome:  toStr(row[1]),
+        email: toStr(row[2]),
+        // Col D (senha) is intentionally omitted
+      };
+    }
+
+    function mapTreino(row) {
+      return {
+        diaSemana: toInt(row[0]),
+        horario:   toStr(row[1]),
+        nome:      toStr(row[2]),
+      };
+    }
+
+    function mapCheckin(row, arquivado) {
+      return {
+        id:             toStr(row[0]),
+        email:          toStr(row[1]),
+        nome:           toStr(row[2]),
+        horario:        toStr(row[3]),
+        data_treino:    toStr(row[4]),
+        status:         toStr(row[5]),
+        data_aprovacao: toStr(row[6]),
+        arquivado,
+      };
+    }
+
+    const summaryCount = { alunos: 0, professores: 0, sessoes: 0, checkins: 0 };
+
+    async function importSheet(sheetName) {
+      const rows = parsedSheets[sheetName];
+      if (!rows || rows.length < 2) {
+        log(`⚠️ Aba "${sheetName}" vazia ou sem dados.`, 'warn');
+        return;
+      }
+
+      // Disable all buttons during import
+      setImportingState(true);
+      show('progressSection');
+
+      const dataRows = rows.slice(1); // skip header
+      let docs = [];
+
+      // Build doc list
+      if (sheetName === 'Alunos') {
+        for (const row of dataRows) {
+          if (!toStr(row[1])) continue;
+          const d = cleanObject(mapAluno(row));
+          if (d.id) docs.push({ type: 'set', collection: 'alunos', id: d.id, data: d });
+        }
+      } else if (sheetName === 'Professores') {
+        for (const row of dataRows) {
+          if (!toStr(row[1]) || !toStr(row[2])) continue;
+          const d = cleanObject(mapProfessor(row));
+          if (d.id) docs.push({ type: 'set', collection: 'professores', id: d.id, data: d });
+        }
+      } else if (sheetName === 'Treinos') {
+        for (const row of dataRows) {
+          if (!toStr(row[1]) || !toStr(row[2])) continue;
+          const d = cleanObject(mapTreino(row));
+          docs.push({ type: 'add', collection: 'sessoes', data: d });
+        }
+      } else if (sheetName === 'Checkins') {
+        for (const row of dataRows) {
+          if (!toStr(row[1])) continue;
+          const d = cleanObject(mapCheckin(row, false));
+          docs.push({ type: 'add', collection: 'checkins', data: d });
+        }
+      } else if (sheetName === 'Checkins_Arquivo') {
+        for (const row of dataRows) {
+          if (!toStr(row[1])) continue;
+          const d = cleanObject(mapCheckin(row, true));
+          docs.push({ type: 'add', collection: 'checkins', data: d });
+        }
+      }
+
+      log(`▶ Iniciando importação de "${sheetName}" — ${docs.length} registros válidos…`, 'info');
+
+      let ok = 0;
+      let err = 0;
+      const total = docs.length;
+
+      for (let i = 0; i < total; i += BATCH_SIZE) {
+        const chunk = docs.slice(i, i + BATCH_SIZE);
+        const pct = Math.round((i / total) * 100);
+        setProgress(`Importando ${sheetName}… ${i}/${total}`, pct);
+
+        // Separate set-docs (use batch) from add-docs (use addDoc)
+        const setChunk  = chunk.filter(d => d.type === 'set');
+        const addChunk  = chunk.filter(d => d.type === 'add');
+
+        // Batch for set docs
+        if (setChunk.length) {
+          const batch = writeBatch(db);
+          const targetCollection = setChunk[0].collection;
+          for (const item of setChunk) {
+            const ref = doc(db, item.collection, item.id);
+            batch.set(ref, item.data, { merge: true });
+          }
+          try {
+            await batch.commit();
+            ok += setChunk.length;
+            log(`✅ Lote ${Math.ceil(i / BATCH_SIZE) + 1}: ${setChunk.length} docs salvos em "${targetCollection}"`, 'ok');
+          } catch (e) {
+            err += setChunk.length;
+            log(`❌ Erro no lote ${Math.ceil(i / BATCH_SIZE) + 1}: ${e.message}`, 'err');
+          }
+        }
+
+        // Sequential addDoc for auto-ID docs
+        for (const item of addChunk) {
+          try {
+            await addDoc(collection(db, item.collection), item.data);
+            ok++;
+          } catch (e) {
+            err++;
+            log(`❌ Erro ao adicionar doc em "${item.collection}": ${e.message}`, 'err');
+          }
+        }
+
+        // Update progress after chunk
+        setProgress(`Importando ${sheetName}… ${Math.min(i + BATCH_SIZE, total)}/${total}`, Math.round(Math.min(i + BATCH_SIZE, total) / total * 100));
+      }
+
+      // Update summary counters
+      if (sheetName === 'Alunos')           summaryCount.alunos      += ok;
+      if (sheetName === 'Professores')      summaryCount.professores += ok;
+      if (sheetName === 'Treinos')          summaryCount.sessoes     += ok;
+      if (sheetName === 'Checkins' || sheetName === 'Checkins_Arquivo') summaryCount.checkins += ok;
+
+      setProgress(`"${sheetName}" concluído — ${ok} importados, ${err} erros.`, 100);
+      log(`✅ "${sheetName}" finalizado: ${ok} sucesso${ok !== 1 ? 's' : ''}, ${err} erro${err !== 1 ? 's' : ''}.`, ok > 0 ? 'ok' : 'warn');
+
+      setImportingState(false);
+    }
+
+    async function importAll() {
+      summaryCount.alunos = 0;
+      summaryCount.professores = 0;
+      summaryCount.sessoes = 0;
+      summaryCount.checkins = 0;
+
+      $('logBox').innerHTML = '';
+      show('logSection');
+
+      for (const name of SHEET_NAMES) {
+        if (parsedSheets[name]) {
+          await importSheet(name);
+        }
+      }
+
+      showSummary();
+    }
+
+    function showSummary() {
+      const grid = $('summaryGrid');
+      grid.innerHTML = '';
+      const items = [
+        { label: 'Alunos',      count: summaryCount.alunos,      icon: '🥋' },
+        { label: 'Professores', count: summaryCount.professores, icon: '👨‍🏫' },
+        { label: 'Sessões',     count: summaryCount.sessoes,     icon: '📅' },
+        { label: 'Checkins',    count: summaryCount.checkins,    icon: '✅' },
+      ];
+      for (const item of items) {
+        const el = document.createElement('div');
+        el.className = 'summary-item';
+        el.innerHTML = `<div style="font-size:1.8rem">${item.icon}</div><div class="count">${item.count}</div><div class="label">${item.label}</div>`;
+        grid.appendChild(el);
+      }
+      show('summarySection');
+      log(`🏁 Importação completa! Alunos: ${summaryCount.alunos}, Professores: ${summaryCount.professores}, Sessões: ${summaryCount.sessoes}, Checkins: ${summaryCount.checkins}`, 'ok');
+    }
+
+    $('btnImportAll').addEventListener('click', importAll);
+
+    $('btnClearLog').addEventListener('click', () => {
+      $('logBox').innerHTML = '';
+      log('Log limpo.', 'info');
+    });
+
+    $('btnNewImport').addEventListener('click', () => {
+      workbook = null;
+      parsedSheets = {};
+      hide('summarySection');
+      hide('previewCard');
+      hide('importCard');
+      hide('progressSection');
+      $('logBox').innerHTML = '';
+      hide('logSection');
+      show('uploadCard');
+      $('fileInput').value = '';
+      summaryCount.alunos = 0;
+      summaryCount.professores = 0;
+      summaryCount.sessoes = 0;
+      summaryCount.checkins = 0;
+    });
+
+    function setImportingState(importing) {
+      $('btnImportAll').disabled = importing;
+      document.querySelectorAll('[id^="btnImport_"]').forEach(b => b.disabled = importing);
+    }
+  </script>
+</body>
+</html>
