@@ -194,11 +194,22 @@ firebase deploy --only firestore:rules
 ```
 
 Key rules:
-- **alunos**: Public read (students look themselves up by email), authenticated write only
-- **professores**: Authenticated read/write only  
-- **checkins**: Public read and create (students check in), authenticated update/delete
-- **sessoes**: Public read, authenticated write
-- **pagamentos**: Authenticated read/write only
+- **alunos**: Public read (students look themselves up by email); authenticated write only (professors update progress when approving check-ins)
+- **professores**: Public read (student app resolves professor name by email); authenticated write only
+- **checkins**: Public read and create (students check in without Firebase Auth); authenticated update/delete only (professor approves/rejects via `administrativo.html`)
+- **sessoes**: Public read (training schedules visible in student app); authenticated write only
+- **pagamentos**: Authenticated read/write only (sensitive financial data)
+
+### Future improvements (production hardening via Custom Claims)
+
+Once Firebase Custom Claims (`role: 'professor'` / `role: 'admin'`) are configured, the rules can be tightened:
+
+- **alunos update**: restrict to `request.auth.token.role == 'professor' || 'admin'`
+- **checkins create**: require auth after migrating student login to Firebase Auth
+- **checkins update/delete**: restrict to `request.auth.token.role == 'professor' || 'admin'`
+- **pagamentos read**: restrict to own document (`request.auth.uid == resource.data.uid`) or admin
+
+See the comments inside `firestore.rules` for exact rule snippets.
 
 ---
 

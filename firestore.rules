@@ -1,23 +1,73 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ── alunos ──────────────────────────────────────────────────────────────
+    // Leitura pública: alunos consultam o próprio perfil por e-mail no app.
+    // Escrita (create/update/delete) exige autenticação Firebase Auth:
+    //   - Professores (autenticados via administrativo.html) podem atualizar
+    //     campos de progresso ao aprovar um check-in.
+    //   - O Firebase Admin SDK (backend/Cloud Functions) ignora as regras e
+    //     pode atualizar qualquer campo diretamente.
+    //
+    // TODO (produção segura — roles via Custom Claims):
+    //   allow update: if request.auth.token.role == 'professor'
+    //                 || request.auth.token.role == 'admin';
+    //   allow create, delete: if request.auth.token.role == 'admin';
     match /alunos/{id} {
       allow read: if true;
-      allow write: if true;
+      allow write: if request.auth != null;
     }
+
+    // ── professores ─────────────────────────────────────────────────────────
+    // Leitura pública: o app do aluno resolve o nome do professor por e-mail.
+    // Escrita exige autenticação (apenas admin cadastra/remove professores).
+    //
+    // TODO (produção segura):
+    //   allow write: if request.auth.token.role == 'admin';
     match /professores/{id} {
       allow read: if true;
       allow write: if request.auth != null;
     }
+
+    // ── checkins ────────────────────────────────────────────────────────────
+    // Leitura pública.
+    // Criação pública: alunos registram presença pelo app sem Firebase Auth
+    //   (autenticação do aluno é feita via e-mail + biometria WebAuthn local).
+    // Update e deleção exigem autenticação: somente o professor autenticado
+    //   pode aprovar/reprovar um check-in (ação realizada em administrativo.html).
+    //
+    // TODO (produção segura):
+    //   - Migrar o login do aluno para Firebase Auth e então exigir auth na criação:
+    //       allow create: if request.auth != null;
+    //   - Restringir update/delete a professores via Custom Claim:
+    //       allow update, delete: if request.auth.token.role == 'professor'
+    //                             || request.auth.token.role == 'admin';
     match /checkins/{id} {
       allow read: if true;
       allow create: if true;
-      allow update, delete: if true;
+      allow update, delete: if request.auth != null;
     }
+
+    // ── sessoes ─────────────────────────────────────────────────────────────
+    // Leitura pública: horários de treino visíveis no app do aluno.
+    // Escrita exige autenticação (apenas professor/admin gerencia horários).
+    //
+    // TODO (produção segura):
+    //   allow write: if request.auth.token.role == 'professor'
+    //                || request.auth.token.role == 'admin';
     match /sessoes/{id} {
       allow read: if true;
       allow write: if request.auth != null;
     }
+
+    // ── pagamentos ──────────────────────────────────────────────────────────
+    // Dados financeiros sensíveis: leitura e escrita exigem autenticação.
+    //
+    // TODO (produção segura):
+    //   allow read: if request.auth.uid == resource.data.uid
+    //               || request.auth.token.role == 'admin';
+    //   allow write: if request.auth.token.role == 'admin';
     match /pagamentos/{id} {
       allow read, write: if request.auth != null;
     }
