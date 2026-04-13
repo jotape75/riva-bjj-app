@@ -1,8 +1,8 @@
 import { db } from './firebase-config.js';
 import {
   collection, doc, query, where, orderBy, limit,
-  getDocs, addDoc, updateDoc, deleteDoc, serverTimestamp,
-  Timestamp
+  getDocs, getDoc, addDoc, updateDoc, deleteDoc, serverTimestamp,
+  Timestamp, increment
 } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
 const SEMANA_TTL     = 600000;   // 10 min
@@ -232,13 +232,33 @@ async function fbDeletarCheckin(email, dataTreino, horario) {
   }
 }
 
-// aprovar: approve a check-in by document ID
+// aprovar: approve a check-in by document ID and decrement student's aulas_no_grau
 async function fbAprovar(linhaId) {
   try {
-    await updateDoc(doc(db, 'checkins', String(linhaId)), {
+    const checkinRef = doc(db, 'checkins', String(linhaId));
+    await updateDoc(checkinRef, {
       status: 'VALIDADO ✓',
       data_aprovacao: serverTimestamp()
     });
+
+    // Increment aulas_no_grau for the student (reduces computed aulas_restantes)
+    try {
+      const checkinSnap = await getDoc(checkinRef);
+      if (checkinSnap.exists()) {
+        const email = checkinSnap.data().email;
+        if (email) {
+          const alunosQ = query(collection(db, 'alunos'), where('email', '==', email));
+          const alunosSnap = await getDocs(alunosQ);
+          if (!alunosSnap.empty) {
+            await updateDoc(alunosSnap.docs[0].ref, { aulas_no_grau: increment(1) });
+          }
+        }
+      }
+    } catch (e) {
+      // Non-fatal: check-in is already approved, aulas_no_grau update failure is secondary
+      console.error('Erro ao atualizar aulas_no_grau:', e);
+    }
+
     return { ok: true };
   } catch (e) {
     return { ok: false, erro: e.message };
@@ -269,11 +289,12 @@ async function fbGraduandos() {
       const restantes = (a.meta_grau != null && a.aulas_no_grau != null)
         ? Math.max(0, (a.meta_grau || 0) - (a.aulas_no_grau || 0))
         : (a.aulas_restantes ?? null);
-      if (restantes !== null && restantes <= 0) {
+      const grauAtual = a.grau_atual ?? 0;
+      if (restantes !== null && restantes <= 0 && grauAtual >= 4) {
         data.push({
           nome:      a.nome_aluno || '',
           faixa:     a.faixa || '',
-          grau:      a.grau_atual ?? '',
+          grau:      grauAtual,
           restantes: restantes
         });
       }
