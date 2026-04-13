@@ -168,35 +168,22 @@
 
   </main>
 
-  <script>
-    const API_BASE       = 'https://script.google.com/macros/s/AKfycbyBLlVjEvO35RufIh6pH9XOOTDXuj_BMrNHAJfdw9I-reScWX31dsVdOFJna1ZbJVqX/exec';
-    const API_TIMEOUT_MS = 25000;
-    const TOKEN_KEY      = 'rv_prof_token';
+  <script type="module">
+    import { db, auth } from './firebase-config.js';
+    import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
-    function apiCall(params) {
-      return new Promise((resolve, reject) => {
-        const cb = '_rv' + Date.now() + Math.floor(Math.random() * 9999);
-        const s  = document.createElement('script');
-        const t  = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, API_TIMEOUT_MS);
-        function cleanup() { clearTimeout(t); delete window[cb]; s.remove(); }
-        window[cb] = (d) => { cleanup(); resolve(d); };
-        s.onerror  = () => { cleanup(); reject(new Error('net')); };
-        const qs = Object.entries(params).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&');
-        s.src = `${API_BASE}?${qs}&callback=${cb}`;
-        document.head.appendChild(s);
-      });
-    }
+    const TOKEN_KEY = 'rv_prof_token';
 
     function setErr(id, msg)  { document.getElementById(id).textContent = msg; }
     function setInfo(id, msg) { document.getElementById(id).textContent = msg; }
 
-    // ── Init ───────────────────────────────────────────────────
-    function init() {
-      const token = sessionStorage.getItem(TOKEN_KEY);
-      if (token !== 'rv_prof_ok') {
+    // ── Auth check ─────────────────────────────────────────────
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
         location.href = './administrativo.html';
       }
-    }
+    });
 
     // ── Cadastrar aluno ────────────────────────────────────────
     document.getElementById('btnCadastrar').addEventListener('click', async () => {
@@ -214,57 +201,56 @@
       document.getElementById('btnCadastrar').disabled = true;
 
       try {
-        const r = await apiCall({
-          action:          'cadastrarAluno',
-          token:           sessionStorage.getItem(TOKEN_KEY) || '',
-          nome,
-          email,
-          faixa,
-          grau_atual:      grau,
-          data_ultimo_grau: data,
-          aulas_no_grau:   parseInt(document.getElementById('fAulasNoGrau').value) || 0,
-          categoria:       document.getElementById('fCategoria').value,
-          cpf:             document.getElementById('fCpf').value.trim(),
-          data_nasc:       document.getElementById('fDataNasc').value,
-          data_inicio:     document.getElementById('fDataInicio').value,
-          telefone:        document.getElementById('fTelefone').value.trim(),
-          plano:           document.getElementById('fPlano').value,
-          grupo_familiar:  document.getElementById('fGrupoFamiliar').value.trim(),
-          data_contrato:   document.getElementById('fDataContrato').value,
+        const metaGrau = 40; // default meta
+        const aulasNoGrau = parseInt(document.getElementById('fAulasNoGrau').value) || 0;
+        await addDoc(collection(db, 'alunos'), {
+          nome_aluno:       nome,
+          email:            email,
+          status:           'ATIVO',
+          faixa:            faixa,
+          grau_atual:       parseInt(grau) || 0,
+          aulas_no_grau:    aulasNoGrau,
+          aulas_restantes:  Math.max(0, metaGrau - aulasNoGrau),
+          meta_grau:        metaGrau,
+          data_ultimo_grau: data || '',
+          statusExame:      '',
+          telefone:         document.getElementById('fTelefone').value.trim(),
+          cpf:              document.getElementById('fCpf').value.trim(),
+          data_nasc:        document.getElementById('fDataNasc').value,
+          data_inicio:      document.getElementById('fDataInicio').value,
+          categoria:        document.getElementById('fCategoria').value,
+          plano:            document.getElementById('fPlano').value,
+          grupo_familiar:   document.getElementById('fGrupoFamiliar').value.trim(),
+          data_contrato:    document.getElementById('fDataContrato').value,
+          criadoEm:         serverTimestamp(),
         });
-        if (r && r.ok) {
-          setInfo('formInfo', '✅ Aluno cadastrado com sucesso!');
-          document.getElementById('fNome').value      = '';
-          document.getElementById('fEmail').value     = '';
-          document.getElementById('fFaixa').value     = 'Branca';
-          document.getElementById('fGrau').value      = '0';
-          document.getElementById('fAulasNoGrau').value = '0';
-          document.getElementById('fData').value      = '';
-          document.getElementById('fCategoria').value = 'Adulto';
-          document.getElementById('fCpf').value       = '';
-          document.getElementById('fDataNasc').value  = '';
-          document.getElementById('fDataInicio').value = '';
-          document.getElementById('fTelefone').value  = '';
-          document.getElementById('fPlano').value          = '';
-          document.getElementById('fGrupoFamiliar').value  = '';
-          document.getElementById('fDataContrato').value   = '';
-          // Invalidar cache de alunos
-          localStorage.removeItem('rv_alunos_cache');
-        } else {
-          setErr('formErr', r && r.erro ? r.erro : 'Erro ao cadastrar.');
-          setInfo('formInfo', '');
-        }
+
+        setInfo('formInfo', '✅ Aluno cadastrado com sucesso!');
+        document.getElementById('fNome').value           = '';
+        document.getElementById('fEmail').value          = '';
+        document.getElementById('fFaixa').value          = 'Branca';
+        document.getElementById('fGrau').value           = '0';
+        document.getElementById('fAulasNoGrau').value    = '0';
+        document.getElementById('fData').value           = '';
+        document.getElementById('fCategoria').value      = 'Adulto';
+        document.getElementById('fCpf').value            = '';
+        document.getElementById('fDataNasc').value       = '';
+        document.getElementById('fDataInicio').value     = '';
+        document.getElementById('fTelefone').value       = '';
+        document.getElementById('fPlano').value          = '';
+        document.getElementById('fGrupoFamiliar').value  = '';
+        document.getElementById('fDataContrato').value   = '';
+        localStorage.removeItem('rv_alunos_cache');
       } catch (e) {
-        setErr('formErr', 'Erro de conexão. Tente novamente.');
+        setErr('formErr', 'Erro ao cadastrar: ' + (e.message || 'tente novamente.'));
         setInfo('formInfo', '');
       } finally {
         document.getElementById('btnCadastrar').disabled = false;
       }
     });
 
-    init();
-
     document.getElementById('btnHdrSair').addEventListener('click', () => {
+      signOut(auth).catch(() => {});
       sessionStorage.removeItem(TOKEN_KEY);
       location.href = './administrativo.html';
     });

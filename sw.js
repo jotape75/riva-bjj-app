@@ -1,4 +1,4 @@
-const CACHE = "riva-bjj-v30";
+const CACHE = "riva-bjj-v31";
 const ASSETS = [
   "./",
   "./index.html",
@@ -10,6 +10,7 @@ const ASSETS = [
   "./financeiro.html",
   "./styles.css",
   "./app.js",
+  "./firebase-config.js",
   "./manifest.webmanifest",
   "./icon-192.png",
   "./icon-512.png"
@@ -69,16 +70,6 @@ async function cacheFirst(req) {
 
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-
-  // Never cache Apps Script API calls (JSONP / action= requests)
-  if (
-    url.href.includes("script.google.com/macros") ||
-    url.searchParams.has("action") ||
-    url.searchParams.has("callback")
-  ) {
-    event.respondWith(fetch(event.request));
-    return;
-  }
 
   // HTML navigation: prefer fresh HTML so deployments propagate quickly
   const isNav = event.request.mode === "navigate" ||

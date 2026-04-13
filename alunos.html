@@ -379,11 +379,12 @@
 
   </main>
 
-  <script>
-    const API_BASE       = 'https://script.google.com/macros/s/AKfycbyBLlVjEvO35RufIh6pH9XOOTDXuj_BMrNHAJfdw9I-reScWX31dsVdOFJna1ZbJVqX/exec';
-    const API_TIMEOUT_MS = 25000;
-    const TOKEN_KEY      = 'rv_prof_token';
+  <script type="module">
+    import { db, auth } from './firebase-config.js';
+    import { collection, doc, query, orderBy, getDocs, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
+    const TOKEN_KEY = 'rv_prof_token';
     const CACHE_KEY_ALUNOS = 'rv_alunos_cache';
     const CACHE_TTL_ALUNOS = 60 * 60 * 1000; // 1 hora
 
@@ -408,34 +409,19 @@
     let todosAlunos = [];
     let listaCarregada = false;
 
-    function apiCall(params) {
-      return new Promise((resolve, reject) => {
-        const cb = '_rv' + Date.now() + Math.floor(Math.random() * 9999);
-        const s  = document.createElement('script');
-        const t  = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, API_TIMEOUT_MS);
-        function cleanup() { clearTimeout(t); delete window[cb]; s.remove(); }
-        window[cb] = (d) => { cleanup(); resolve(d); };
-        s.onerror  = () => { cleanup(); reject(new Error('net')); };
-        const qs = Object.entries(params).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&');
-        s.src = `${API_BASE}?${qs}&callback=${cb}`;
-        document.head.appendChild(s);
-      });
-    }
-
     function show(id) { document.getElementById(id).classList.remove('hidden'); }
     function hide(id) { document.getElementById(id).classList.add('hidden'); }
     function setErr(id, msg)  { document.getElementById(id).textContent = msg; }
     function setInfo(id, msg) { document.getElementById(id).textContent = msg; }
 
-    // ── Init ───────────────────────────────────────────────────
-    function init() {
-      const token = sessionStorage.getItem(TOKEN_KEY);
-      if (token === 'rv_prof_ok') {
+    // ── Auth check ─────────────────────────────────────────────
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
         show('sectionAlunos');
       } else {
         location.href = './administrativo.html';
       }
-    }
+    });
 
     // ── Carregar alunos ────────────────────────────────────────
     async function carregarAlunos(forcar = false) {
@@ -451,18 +437,31 @@
       setInfo('listInfo', 'Carregando alunos…');
       document.getElementById('listaAlunos').innerHTML = '';
       try {
-        const r = await apiCall({
-          action: 'listarAlunos',
-          token:  sessionStorage.getItem(TOKEN_KEY) || '',
+        const q = query(collection(db, 'alunos'), orderBy('nome_aluno'));
+        const snap = await getDocs(q);
+        todosAlunos = snap.docs.map(d => {
+          const a = d.data();
+          return {
+            id:              d.id,
+            nome_aluno:      a.nome_aluno || '',
+            email:           a.email || '',
+            status:          a.status || 'ATIVO',
+            faixa:           a.faixa || '',
+            grau_atual:      a.grau_atual ?? 0,
+            aulas_no_grau:   a.aulas_no_grau ?? 0,
+            aulas_restantes: a.aulas_restantes ?? 0,
+            meta_grau:       a.meta_grau ?? 0,
+            data_ultimo_grau: a.data_ultimo_grau || '',
+            telefone:        a.telefone || '',
+            cpf:             a.cpf || '',
+            data_nasc:       a.data_nasc || '',
+            categoria:       a.categoria || '',
+            plano:           a.plano || '',
+          };
         });
-        if (r && r.ok && Array.isArray(r.alunos)) {
-          todosAlunos = r.alunos;
-          salvarCacheAlunos(todosAlunos);
-          setInfo('listInfo', '');
-          renderListaFiltrada();
-        } else {
-          setInfo('listInfo', r && r.erro ? r.erro : 'Erro ao carregar alunos.');
-        }
+        salvarCacheAlunos(todosAlunos);
+        setInfo('listInfo', '');
+        renderListaFiltrada();
       } catch (e) {
         setInfo('listInfo', 'Erro de conexão. Tente novamente.');
       }
@@ -538,7 +537,7 @@
             <div class="fin-grid">
               <div class="fin-item">
                 <span class="fin-label">PLANO</span>
-                <span class="fin-valor" id="finPlano-${id}">—</span>
+                <span class="fin-valor" id="finPlano-${id}">${esc(a.plano || '—')}</span>
               </div>
               <div class="fin-item">
                 <span class="fin-label">STATUS</span>
@@ -617,7 +616,7 @@
       listaCarregada = true;
     });
 
-    // ── Event delegation para botões de toggle ─────────────────
+    // ── Event delegation para botões ───────────────────────────
     document.getElementById('listaAlunos').addEventListener('click', (e) => {
       const btnToggle = e.target.closest('.btn-toggle');
       if (btnToggle) {
@@ -652,13 +651,12 @@
       }
     });
 
-    // ── Toggle status (otimista) ────────────────────────────────
+    // ── Toggle status ──────────────────────────────────────────
     async function toggleStatus(id, statusAtual) {
       const novoStatus = statusAtual === 'ATIVO' ? 'INATIVO' : 'ATIVO';
       const btn   = document.getElementById('btn-' + id);
       const badge = document.getElementById('badge-' + id);
 
-      // Optimistic UI update
       const aluno = todosAlunos.find(a => String(a.id) === String(id));
       if (aluno) aluno.status = novoStatus;
       if (btn) {
@@ -672,45 +670,19 @@
       }
 
       try {
-        const r = await apiCall({
-          action: 'alterarStatusAluno',
-          token:  sessionStorage.getItem(TOKEN_KEY) || '',
-          id,
-          status: novoStatus,
-        });
-        if (!r || !r.ok) {
-          // Revert on failure
-          if (aluno) aluno.status = statusAtual;
-          if (btn) {
-            btn.textContent    = statusAtual === 'ATIVO' ? 'Desativar' : 'Ativar';
-            btn.dataset.status = statusAtual;
-          }
-          if (badge) {
-            badge.textContent = statusAtual;
-            badge.className   = statusAtual === 'ATIVO' ? 'badge-ativo' : 'badge-inativo';
-          }
-          alert(r && r.erro ? r.erro : 'Erro ao alterar status.');
-        } else {
-          salvarCacheAlunos(todosAlunos);
-        }
+        await updateDoc(doc(db, 'alunos', id), { status: novoStatus });
+        salvarCacheAlunos(todosAlunos);
       } catch (e) {
-        // Revert on error
         if (aluno) aluno.status = statusAtual;
-        if (btn) {
-          btn.textContent    = statusAtual === 'ATIVO' ? 'Desativar' : 'Ativar';
-          btn.dataset.status = statusAtual;
-        }
-        if (badge) {
-          badge.textContent = statusAtual;
-          badge.className   = statusAtual === 'ATIVO' ? 'badge-ativo' : 'badge-inativo';
-        }
-        alert('Erro de conexão.');
+        if (btn) { btn.textContent = statusAtual === 'ATIVO' ? 'Desativar' : 'Ativar'; btn.dataset.status = statusAtual; }
+        if (badge) { badge.textContent = statusAtual; badge.className = statusAtual === 'ATIVO' ? 'badge-ativo' : 'badge-inativo'; }
+        alert('Erro ao alterar status.');
       } finally {
         if (btn) btn.disabled = false;
       }
     }
 
-    // ── Trocar faixa ────────────────────────────────────────────
+    // ── Trocar faixa ───────────────────────────────────────────
     async function trocarFaixa(id, novaFaixa) {
       const btnF  = document.getElementById('btnFaixa-' + id);
       const area  = document.getElementById('trocaFaixaArea-' + id);
@@ -718,26 +690,19 @@
       if (btnF) btnF.disabled = true;
 
       try {
-        const r = await apiCall({
-          action:    'trocarFaixa',
-          token:     sessionStorage.getItem(TOKEN_KEY) || '',
-          id,
-          novaFaixa,
+        await updateDoc(doc(db, 'alunos', id), {
+          faixa: novaFaixa,
+          grau_atual: 0,
+          aulas_no_grau: 0,
+          data_ultimo_grau: new Date().toISOString().slice(0, 10),
         });
-        if (r && r.ok) {
-          const aluno = todosAlunos.find(a => String(a.id) === String(id));
-          if (aluno) {
-            aluno.faixa      = novaFaixa;
-            aluno.grau_atual = 0;
-          }
-          salvarCacheAlunos(todosAlunos);
-          if (label) label.textContent = novaFaixa + ' G0';
-          if (area) area.style.display = 'none';
-        } else {
-          alert(r && r.erro ? r.erro : 'Erro ao trocar faixa.');
-        }
+        const aluno = todosAlunos.find(a => String(a.id) === String(id));
+        if (aluno) { aluno.faixa = novaFaixa; aluno.grau_atual = 0; }
+        salvarCacheAlunos(todosAlunos);
+        if (label) label.textContent = novaFaixa + ' G0';
+        if (area) area.style.display = 'none';
       } catch (e) {
-        alert('Erro de conexão.');
+        alert('Erro ao trocar faixa.');
       } finally {
         if (btnF) btnF.disabled = false;
       }
@@ -764,9 +729,8 @@
       return s;
     }
 
-    init();
-
     document.getElementById('btnHdrSair').addEventListener('click', () => {
+      signOut(auth).catch(() => {});
       sessionStorage.removeItem(TOKEN_KEY);
       location.href = './administrativo.html';
     });

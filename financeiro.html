@@ -463,13 +463,14 @@
     </div>
   </div>
 
-  <script>
-    const API_BASE       = 'https://script.google.com/macros/s/AKfycbyBLlVjEvO35RufIh6pH9XOOTDXuj_BMrNHAJfdw9I-reScWX31dsVdOFJna1ZbJVqX/exec';
-    const API_TIMEOUT_MS = 25000;
-    const TOKEN_KEY      = 'rv_prof_token';
+  <script type="module">
+    import { db, auth } from './firebase-config.js';
+    import { collection, doc, query, where, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
-    const CACHE_KEY_FIN = 'rv_fin_cache';
-    const CACHE_TTL_FIN = 5 * 60 * 1000; // 5 minutos
+    const TOKEN_KEY      = 'rv_prof_token';
+    const CACHE_KEY_FIN  = 'rv_fin_cache';
+    const CACHE_TTL_FIN  = 5 * 60 * 1000; // 5 minutos
 
     // ── Cache ──────────────────────────────────────────────────
     function salvarCache(mes, ano, dados) {
@@ -495,48 +496,39 @@
       } catch(e) {}
     }
 
-    // ── API JSONP ──────────────────────────────────────────────
-    function apiCall(params) {
-      return new Promise((resolve, reject) => {
-        const cb = '_rv' + Date.now() + Math.floor(Math.random() * 9999);
-        const s  = document.createElement('script');
-        const t  = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, API_TIMEOUT_MS);
-        function cleanup() { clearTimeout(t); delete window[cb]; s.remove(); }
-        window[cb] = (d) => { cleanup(); resolve(d); };
-        s.onerror  = () => { cleanup(); reject(new Error('net')); };
-        const qs = Object.entries(params).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
-        s.src = `${API_BASE}?${qs}&callback=${cb}`;
-        document.head.appendChild(s);
-      });
+    // Derive valor mensalidade from plano string
+    function valorDePlano(plano) {
+      if (!plano) return 0;
+      const p = plano.toLowerCase();
+      if (p.includes('recorrente')) return 200;
+      if (p.includes('semestral'))  return 220;
+      if (p.includes('mensal'))     return 240;
+      return 0;
     }
 
     function show(id) { document.getElementById(id).classList.remove('hidden'); }
     function hide(id) { document.getElementById(id).classList.add('hidden'); }
 
-    // ── Estado ─────────────────────────────────────────────────
     let todosRegistros = [];
-    let filtroAtivo = 'todos';
+    let filtroAtivo    = 'todos';
     let mesSelecionado  = new Date().getMonth() + 1;
     let anoSelecionado  = new Date().getFullYear();
 
-    // ── Init ───────────────────────────────────────────────────
-    function init() {
-      const token = sessionStorage.getItem(TOKEN_KEY);
-      if (token !== 'rv_prof_ok') {
+    // ── Auth check ─────────────────────────────────────────────
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        show('sectionFinanceiro');
+        preencherSeletores();
+        carregarFinanceiro();
+      } else {
         location.href = './administrativo.html';
-        return;
       }
-      show('sectionFinanceiro');
-      preencherSeletores();
-      carregarFinanceiro();
-    }
+    });
 
     function preencherSeletores() {
       const selMes = document.getElementById('selMes');
       const selAno = document.getElementById('selAno');
-
       selMes.value = mesSelecionado;
-
       const anoAtual = new Date().getFullYear();
       for (let a = anoAtual; a >= anoAtual - 3; a--) {
         const opt = document.createElement('option');
@@ -570,16 +562,63 @@
       document.getElementById('resumoGrid').style.display = 'none';
 
       try {
-        const r = await apiCall({ action: 'getFinanceiro', mes, ano });
-        if (r && r.ok) {
-          todosRegistros = r.alunos || [];
-          salvarCache(mes, ano, todosRegistros);
-          document.getElementById('listInfo').textContent = '';
-          renderListaFiltrada();
-          atualizarResumo();
-        } else {
-          document.getElementById('listInfo').textContent = (r && r.erro) ? r.erro : 'Erro ao carregar dados.';
-        }
+        // Get all active alunos
+        const alunosQ = query(collection(db, 'alunos'), where('status', '==', 'ATIVO'));
+        const alunosSnap = await getDocs(alunosQ);
+
+        // Get all payments for this month/year
+        const pagQ = query(
+          collection(db, 'pagamentos'),
+          where('mes', '==', mes),
+          where('ano', '==', ano)
+        );
+        const pagSnap = await getDocs(pagQ);
+
+        // Map payments by alunoId
+        const pagByAluno = {};
+        pagSnap.forEach(d => {
+          const p = d.data();
+          pagByAluno[p.alunoId] = p;
+        });
+
+        // Determine if month is in the past
+        const agora = new Date();
+        const mesAtual = agora.getMonth() + 1;
+        const anoAtual = agora.getFullYear();
+        const isPast = (ano < anoAtual) || (ano === anoAtual && mes < mesAtual);
+
+        todosRegistros = alunosSnap.docs.map(d => {
+          const a = d.data();
+          const id = d.id;
+          const pag = pagByAluno[id];
+          const valorMensalidade = valorDePlano(a.plano);
+          if (pag) {
+            return {
+              id,
+              nome:            a.nome_aluno || '',
+              valorMensalidade,
+              statusPagamento: 'pago',
+              valor:           pag.valor || 0,
+              dataPagamento:   pag.data || '',
+              formaPagamento:  pag.formaPagamento || '',
+            };
+          } else {
+            return {
+              id,
+              nome:            a.nome_aluno || '',
+              valorMensalidade,
+              statusPagamento: isPast ? 'vencido' : 'pendente',
+              valor:           0,
+              dataPagamento:   '',
+              formaPagamento:  '',
+            };
+          }
+        });
+
+        salvarCache(mes, ano, todosRegistros);
+        document.getElementById('listInfo').textContent = '';
+        renderListaFiltrada();
+        atualizarResumo();
       } catch(e) {
         document.getElementById('listInfo').textContent = 'Erro de conexão. Tente novamente.';
       }
@@ -600,7 +639,7 @@
           arrecadado += parseFloat(a.valor || 0);
           emDia++;
         } else if (st === 'pendente' || st === 'vencido') {
-          pendente += parseFloat(a.valorMensalidade || a.valor || 0);
+          pendente += parseFloat(a.valorMensalidade || 0);
         }
       });
       document.getElementById('resumoArrecadado').textContent = 'R$ ' + arrecadado.toFixed(2).replace('.', ',');
@@ -613,21 +652,17 @@
     function renderListaFiltrada() {
       const busca = (document.getElementById('searchBox').value || '').toLowerCase().trim();
       let lista = todosRegistros;
-
       if (filtroAtivo !== 'todos') {
         lista = lista.filter(a => (a.statusPagamento || '').toLowerCase() === filtroAtivo);
       }
-
       if (busca.length >= 1) {
         lista = lista.filter(a => (a.nome || '').toLowerCase().includes(busca));
       }
-
       const container = document.getElementById('listaAlunos');
       if (!lista.length) {
         container.innerHTML = '<div class="lista-vazia">Nenhum resultado encontrado.</div>';
         return;
       }
-
       container.innerHTML = lista.map(a => buildCardHtml(a)).join('');
     }
 
@@ -637,13 +672,11 @@
       let badgeText  = '⏳ Pendente';
       if (st === 'pago')    { badgeClass = 'status-pago';    badgeText = '✅ Pago'; }
       if (st === 'vencido') { badgeClass = 'status-vencido'; badgeText = '❌ Vencido'; }
-
       const valor      = a.valor      ? 'R$ ' + parseFloat(a.valor).toFixed(2).replace('.', ',') : '—';
       const mensalidade= a.valorMensalidade ? 'R$ ' + parseFloat(a.valorMensalidade).toFixed(2).replace('.', ',') : '—';
       const dataPag    = a.dataPagamento ? formatData(a.dataPagamento) : '—';
       const formaPag   = formatFormaPagamento(a.formaPagamento);
       const podePagar  = st !== 'pago';
-
       return `
         <div class="fin-aluno-card">
           <div class="fin-aluno-header">
@@ -651,39 +684,27 @@
             <span class="status-badge ${badgeClass}">${badgeText}</span>
           </div>
           <div class="fin-aluno-info">
-            <div class="fin-info-item">
-              <span class="fin-info-label">Mensalidade</span>
-              <span class="fin-info-valor">${mensalidade}</span>
-            </div>
-            <div class="fin-info-item">
-              <span class="fin-info-label">Valor pago</span>
-              <span class="fin-info-valor">${valor}</span>
-            </div>
-            <div class="fin-info-item">
-              <span class="fin-info-label">Data</span>
-              <span class="fin-info-valor">${dataPag}</span>
-            </div>
-            <div class="fin-info-item">
-              <span class="fin-info-label">Forma</span>
-              <span class="fin-info-valor">${formaPag}</span>
-            </div>
+            <div class="fin-info-item"><span class="fin-info-label">Mensalidade</span><span class="fin-info-valor">${mensalidade}</span></div>
+            <div class="fin-info-item"><span class="fin-info-label">Valor pago</span><span class="fin-info-valor">${valor}</span></div>
+            <div class="fin-info-item"><span class="fin-info-label">Data</span><span class="fin-info-valor">${dataPag}</span></div>
+            <div class="fin-info-item"><span class="fin-info-label">Forma</span><span class="fin-info-valor">${formaPag}</span></div>
           </div>
-          ${podePagar ? `<button class="btn-registrar-pag" onclick="abrirModal('${escAttr(String(a.id))}','${escAttr(a.nome || '')}','${escAttr(String(a.valorMensalidade || ''))}')">Registrar Pagamento</button>` : ''}
+          ${podePagar ? `<button class="btn-registrar-pag" onclick="window._abrirModal('${escAttr(String(a.id))}','${escAttr(a.nome || '')}','${escAttr(String(a.valorMensalidade || ''))}')">Registrar Pagamento</button>` : ''}
         </div>`;
     }
 
-    // ── Modal de pagamento ─────────────────────────────────────
-    function abrirModal(alunoId, alunoNome, valorSugerido) {
-      document.getElementById('modalAlunoId').value    = alunoId;
+    // Expose to onclick attributes
+    window._abrirModal = function(alunoId, alunoNome, valorSugerido) {
+      document.getElementById('modalAlunoId').value        = alunoId;
       document.getElementById('modalAlunoNome').textContent = alunoNome;
-      document.getElementById('fValor').value          = valorSugerido || '';
-      document.getElementById('fData').value           = new Date().toISOString().slice(0, 10);
-      document.getElementById('fFormaPag').value       = 'pix';
-      document.getElementById('modalErr').textContent  = '';
-      document.getElementById('modalInfo').textContent = '';
-      document.getElementById('btnConfirmarPag').disabled = false;
+      document.getElementById('fValor').value              = valorSugerido || '';
+      document.getElementById('fData').value               = new Date().toISOString().slice(0, 10);
+      document.getElementById('fFormaPag').value           = 'pix';
+      document.getElementById('modalErr').textContent      = '';
+      document.getElementById('modalInfo').textContent     = '';
+      document.getElementById('btnConfirmarPag').disabled  = false;
       document.getElementById('modalPagamento').classList.add('open');
-    }
+    };
 
     function fecharModal() {
       document.getElementById('modalPagamento').classList.remove('open');
@@ -695,52 +716,38 @@
     });
 
     document.getElementById('btnConfirmarPag').addEventListener('click', async () => {
-      const alunoId     = document.getElementById('modalAlunoId').value;
-      const valor       = parseFloat(document.getElementById('fValor').value);
-      const data        = document.getElementById('fData').value;
-      const formaPag    = document.getElementById('fFormaPag').value;
+      const alunoId  = document.getElementById('modalAlunoId').value;
+      const valor    = parseFloat(document.getElementById('fValor').value);
+      const data     = document.getElementById('fData').value;
+      const formaPag = document.getElementById('fFormaPag').value;
 
       document.getElementById('modalErr').textContent = '';
-
-      if (!alunoId) {
-        document.getElementById('modalErr').textContent = 'Aluno não identificado.';
-        return;
-      }
-      if (!valor || isNaN(valor) || valor <= 0) {
-        document.getElementById('modalErr').textContent = 'Informe um valor válido.';
-        return;
-      }
-      if (!data) {
-        document.getElementById('modalErr').textContent = 'Informe a data do pagamento.';
-        return;
-      }
+      if (!alunoId) { document.getElementById('modalErr').textContent = 'Aluno não identificado.'; return; }
+      if (!valor || isNaN(valor) || valor <= 0) { document.getElementById('modalErr').textContent = 'Informe um valor válido.'; return; }
+      if (!data) { document.getElementById('modalErr').textContent = 'Informe a data do pagamento.'; return; }
 
       document.getElementById('modalInfo').textContent = 'Registrando…';
       document.getElementById('btnConfirmarPag').disabled = true;
 
       try {
-        const r = await apiCall({
-          action: 'registrarPagamento',
+        const aluno = todosRegistros.find(a => String(a.id) === String(alunoId));
+        const nomeAluno = aluno ? aluno.nome : '';
+        await addDoc(collection(db, 'pagamentos'), {
           alunoId,
+          nome:           nomeAluno,
           valor,
           data,
           formaPagamento: formaPag,
-          mes: mesSelecionado,
-          ano: anoSelecionado
+          mes:            mesSelecionado,
+          ano:            anoSelecionado,
+          criadoEm:       serverTimestamp()
         });
-
-        if (r && r.ok) {
-          document.getElementById('modalInfo').textContent = '';
-          fecharModal();
-          invalidarCache(mesSelecionado, anoSelecionado);
-          await carregarFinanceiro(true);
-        } else {
-          document.getElementById('modalErr').textContent  = (r && r.erro) ? r.erro : 'Erro ao registrar pagamento.';
-          document.getElementById('modalInfo').textContent = '';
-          document.getElementById('btnConfirmarPag').disabled = false;
-        }
+        document.getElementById('modalInfo').textContent = '';
+        fecharModal();
+        invalidarCache(mesSelecionado, anoSelecionado);
+        await carregarFinanceiro(true);
       } catch(e) {
-        document.getElementById('modalErr').textContent  = 'Erro de conexão. Tente novamente.';
+        document.getElementById('modalErr').textContent  = 'Erro ao registrar pagamento.';
         document.getElementById('modalInfo').textContent = '';
         document.getElementById('btnConfirmarPag').disabled = false;
       }
@@ -766,8 +773,8 @@
       carregarFinanceiro(true);
     });
 
-    // ── Logout ─────────────────────────────────────────────────
     document.getElementById('btnHdrSair').addEventListener('click', () => {
+      signOut(auth).catch(() => {});
       sessionStorage.removeItem(TOKEN_KEY);
       location.href = './administrativo.html';
     });
@@ -781,28 +788,17 @@
       }
       return s;
     }
-
     function formatFormaPagamento(f) {
       if (!f) return '—';
       const map = { dinheiro: '💵 Dinheiro', pix: '📲 Pix', cartao: '💳 Cartão' };
       return map[f.toLowerCase()] || f;
     }
-
     function escHtml(s) {
-      return String(s)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
-
     function escAttr(s) {
-      return String(s)
-        .replace(/\\/g, '\\\\')
-        .replace(/'/g, "\\'");
+      return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     }
-
-    init();
   </script>
 </body>
 </html>
