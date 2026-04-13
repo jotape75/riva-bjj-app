@@ -297,9 +297,13 @@
     <!-- ── Import actions ─────────────────────────────────── -->
     <div class="card hidden" id="importCard">
       <h2>🚀 Importar para o Firestore</h2>
-      <p class="text-muted" style="font-size:0.85rem;margin-bottom:16px;">
+      <p class="text-muted" style="font-size:0.85rem;margin-bottom:12px;">
         Documentos existentes serão atualizados com merge. Novos documentos serão criados.
       </p>
+      <label style="display:flex;align-items:center;gap:10px;margin-bottom:16px;cursor:pointer;font-size:0.9rem;">
+        <input type="checkbox" id="chkClearBefore" style="width:16px;height:16px;accent-color:var(--red);cursor:pointer;" />
+        <span>⚠️ Limpar dados existentes antes de importar</span>
+      </label>
       <div class="import-grid" id="importGrid"></div>
       <button class="btn btn-primary" id="btnImportAll">⬆️ Importar tudo</button>
     </div>
@@ -337,7 +341,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
     import {
-      getFirestore, collection, doc, writeBatch, addDoc, setDoc
+      getFirestore, collection, doc, writeBatch, addDoc, setDoc, getDocs, deleteDoc
     } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
     import {
       getAuth, signInWithEmailAndPassword, onAuthStateChanged
@@ -473,17 +477,30 @@
       reader.onload = e => {
         try {
           workbook = XLSX.read(e.target.result, { type: 'array', cellDates: false });
+          // Show log section first so sheet-found logs are visible
+          show('logSection');
+          $('logBox').innerHTML = '';
+          log('Arquivo carregado: ' + file.name, 'ok');
+
           parsedSheets = {};
 
-          // Parse each known sheet
+          // Parse each known sheet and log found/not found
           for (const name of SHEET_NAMES) {
             if (!workbook.SheetNames.includes(name)) {
-              log(`⚠️ Aba "${name}" não encontrada no arquivo.`, 'warn');
+              log(`❌ Aba '${name}' não encontrada no arquivo.`, 'warn');
               continue;
             }
             const ws = workbook.Sheets[name];
             const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
             parsedSheets[name] = rows;
+            const count = rows.length > 1 ? rows.length - 1 : 0;
+            log(`✅ Aba '${name}' encontrada: ${count} registro${count !== 1 ? 's' : ''}.`, 'ok');
+          }
+
+          // Log any extra sheets in the file that we don't handle
+          const extra = workbook.SheetNames.filter(n => !SHEET_NAMES.includes(n));
+          if (extra.length) {
+            log(`ℹ️ Abas ignoradas (não mapeadas): ${extra.join(', ')}`, 'info');
           }
 
           // Show file info
@@ -495,11 +512,6 @@
           show('importCard');
           buildPreviewTabs();
           buildImportButtons();
-
-          // Show log section ready
-          show('logSection');
-          $('logBox').innerHTML = '';
-          log('Arquivo carregado com sucesso: ' + file.name, 'ok');
         } catch (err) {
           errEl.textContent = 'Erro ao ler o arquivo: ' + err.message;
           showEl(errEl);
@@ -569,7 +581,9 @@
         const tr = document.createElement('tr');
         for (let i = 0; i < headers.length; i++) {
           const td = document.createElement('td');
-          td.textContent = row[i] !== undefined ? String(row[i]) : '';
+          const val = row[i] !== undefined ? row[i] : '';
+          // Apply date conversion in preview for date columns
+          td.textContent = DATE_FIELDS.has(headers[i]) ? excelDateToString(val) : String(val);
           tr.appendChild(td);
         }
         tbody.appendChild(tr);
@@ -621,6 +635,24 @@
     }
     function toStr(v) { return String(v === null || v === undefined ? '' : v).trim(); }
 
+    // Convert Excel serial date number to DD/MM/YYYY string
+    function excelDateToString(serial) {
+      if (serial === null || serial === undefined) return '';
+      if (typeof serial === 'string' && serial.includes('/')) return serial;
+      const num = parseFloat(serial);
+      if (isNaN(num)) return String(serial);
+      const EXCEL_EPOCH_OFFSET = 25569; // days between Excel epoch (1900-01-00) and Unix epoch (1970-01-01)
+      const SECONDS_PER_DAY    = 86400;
+      const date = new Date(Math.round((num - EXCEL_EPOCH_OFFSET) * SECONDS_PER_DAY * 1000));
+      const d = String(date.getUTCDate()).padStart(2, '0');
+      const m = String(date.getUTCMonth() + 1).padStart(2, '0');
+      const y = date.getUTCFullYear();
+      return `${d}/${m}/${y}`;
+    }
+
+    // Date field names that need conversion from Excel serial
+    const DATE_FIELDS = new Set(['data_nasc','data_ultimo_grau','data_inicio','data_contrato','data_aprovacao','data_treino']);
+
     function mapAluno(row) {
       return {
         id:               toStr(row[0]),
@@ -631,18 +663,18 @@
         aulas_no_grau:    toInt(row[5]),
         meta_grau:        toInt(row[6]),
         aulas_restantes:  toInt(row[7]),
-        data_ultimo_grau: toStr(row[8]),
+        data_ultimo_grau: excelDateToString(row[8]),
         statusExame:      toStr(row[9]),
         email:            toStr(row[10]),
         telefone:         toStr(row[11]),
         cpf:              toStr(row[12]),
-        data_nasc:        toStr(row[13]),
-        data_inicio:      toStr(row[14]),
+        data_nasc:        excelDateToString(row[13]),
+        data_inicio:      excelDateToString(row[14]),
         categoria:        toStr(row[15]),
         valorMensalidade: toNum(row[16]),
         plano:            toStr(row[17]),
         grupo_familiar:   toStr(row[18]),
-        data_contrato:    toStr(row[19]),
+        data_contrato:    excelDateToString(row[19]),
       };
     }
 
@@ -669,14 +701,52 @@
         email:          toStr(row[1]),
         nome:           toStr(row[2]),
         horario:        toStr(row[3]),
-        data_treino:    toStr(row[4]),
+        data_treino:    excelDateToString(row[4]),
         status:         toStr(row[5]),
-        data_aprovacao: toStr(row[6]),
+        data_aprovacao: excelDateToString(row[6]),
         arquivado,
       };
     }
 
     const summaryCount = { alunos: 0, professores: 0, sessoes: 0, checkins: 0 };
+
+    // Map each sheet to the Firestore collection(s) it writes to
+    const SHEET_COLLECTION = {
+      Alunos:           ['alunos'],
+      Professores:      ['professores'],
+      Treinos:          ['sessoes'],
+      Checkins:         ['checkins'],
+      Checkins_Arquivo: ['checkins'],
+    };
+
+    /**
+     * Deletes all documents in a Firestore collection using batched writes.
+     * Fetches all document refs first, then deletes in chunks of BATCH_SIZE.
+     * @param {string} colPath - The Firestore collection path to clear.
+     */
+    async function deleteCollection(colPath) {
+      log(`🗑️ Limpando coleção "${colPath}"…`, 'info');
+      let deleted = 0;
+      let snap;
+      try {
+        snap = await getDocs(collection(db, colPath));
+      } catch (e) {
+        log(`❌ Erro ao listar "${colPath}": ${e.message}`, 'err');
+        return;
+      }
+      const refs = snap.docs.map(d => d.ref);
+      for (let i = 0; i < refs.length; i += BATCH_SIZE) {
+        const batch = writeBatch(db);
+        refs.slice(i, i + BATCH_SIZE).forEach(docRef => batch.delete(docRef));
+        try {
+          await batch.commit();
+          deleted += Math.min(BATCH_SIZE, refs.length - i);
+        } catch (e) {
+          log(`❌ Erro ao apagar lote de "${colPath}": ${e.message}`, 'err');
+        }
+      }
+      log(`🗑️ Coleção "${colPath}" limpa — ${deleted} doc${deleted !== 1 ? 's' : ''} removido${deleted !== 1 ? 's' : ''}.`, 'info');
+    }
 
     async function importSheet(sheetName) {
       const rows = parsedSheets[sheetName];
@@ -688,6 +758,14 @@
       // Disable all buttons during import
       setImportingState(true);
       show('progressSection');
+
+      // If "clear before import" is checked, delete existing docs first
+      if ($('chkClearBefore').checked) {
+        const cols = SHEET_COLLECTION[sheetName] || [];
+        for (const col of cols) {
+          await deleteCollection(col);
+        }
+      }
 
       const dataRows = rows.slice(1); // skip header
       let docs = [];
