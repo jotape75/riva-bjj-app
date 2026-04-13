@@ -185,6 +185,22 @@
       }
     });
 
+    // ── Helpers ────────────────────────────────────────────────
+    const EMOJI_FAIXA_CAD = {
+      'Branca': '🔲', 'Azul': '🟦', 'Roxa': '🟪', 'Marrom': '🟫', 'Preta': '⬛',
+    };
+    function gerarStatusCad(faixa, grau) {
+      const emoji = EMOJI_FAIXA_CAD[faixa] || '🔲';
+      const g = Math.min(Math.max(Number(grau) || 0, 0), 4);
+      if (g === 0) return 'Iniciante';
+      return emoji.repeat(g);
+    }
+    function toDateBR(isoDate) {
+      if (!isoDate) return '';
+      const [y, m, d] = isoDate.split('-');
+      return `${d}/${m}/${y}`;
+    }
+
     // ── Cadastrar aluno ────────────────────────────────────────
     document.getElementById('btnCadastrar').addEventListener('click', async () => {
       const nome  = document.getElementById('fNome').value.trim();
@@ -212,8 +228,8 @@
           aulas_no_grau:    aulasNoGrau,
           aulas_restantes:  Math.max(0, metaGrau - aulasNoGrau),
           meta_grau:        metaGrau,
-          data_ultimo_grau: data || '',
-          statusExame:      '',
+          data_ultimo_grau: toDateBR(data) || '',
+          statusExame:      gerarStatusCad(faixa, parseInt(grau) || 0),
           telefone:         document.getElementById('fTelefone').value.trim(),
           cpf:              document.getElementById('fCpf').value.trim(),
           data_nasc:        document.getElementById('fDataNasc').value,

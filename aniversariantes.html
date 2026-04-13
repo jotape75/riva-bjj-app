@@ -290,23 +290,28 @@
           return mes === dia.mes && diaNum === dia.dia;
         });
 
-        const col = document.createElement('div');
         col.className = 'dia-col' + (dia.ehHoje ? ' hoje' : '');
-        col.innerHTML = `<div class="dia-header ${dia.ehHoje ? 'dia-hoje' : ''}">${dia.nomeDia}<br><span class="dia-data-sm">${formatarDataBr(dia.data)}</span></div>`;
+        col.innerHTML = `<div class="dia-header ${dia.ehHoje ? 'dia-hoje' : ''}"><div class="dia-info">${dia.nomeDia}<br><span class="dia-data-sm">${formatarDataBr(dia.data)}</span></div></div>`;
+        const anivContainer = document.createElement('div');
+        anivContainer.className = 'dia-anivs';
         if (aniversariantes.length) {
           aniversariantes.forEach(a => {
             const nome = a.nome_aluno || a.nome || '—';
-            const span = document.createElement('div');
-            span.className = 'aniversariante-nome';
-            span.textContent = '🎂 ' + nome;
-            col.appendChild(span);
+            const card = document.createElement('div');
+            card.className = 'aniversariante-card';
+            card.innerHTML = `
+              <div class="aniv-nome">🎂 ${nome}</div>
+              <div class="aniv-categoria">${a.categoria || ''} · ${a.faixa || ''}</div>
+            `;
+            anivContainer.appendChild(card);
           });
         } else {
           const vazio = document.createElement('div');
           vazio.className = 'sem-aniv';
           vazio.textContent = '—';
-          col.appendChild(vazio);
+          anivContainer.appendChild(vazio);
         }
+        col.appendChild(anivContainer);
         container.appendChild(col);
       });
     }

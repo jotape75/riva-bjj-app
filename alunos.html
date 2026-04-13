@@ -186,8 +186,63 @@
       white-space: nowrap;
     }
     .btn-cancelar-faixa:active { opacity: .75; }
-    .aluno-detalhes {
+    .btn-editar {
+      background: #1a3a1a;
+      border: 1px solid #2ecc71;
+      color: #2ecc71;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .btn-editar:active { opacity: .75; }
+    .btn-remover {
+      background: #3a1a1a;
+      border: 1px solid #e74c3c;
+      color: #e74c3c;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .btn-remover:active { opacity: .75; }
+    .editar-inline {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
       margin-top: 10px;
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+    }
+    .editar-inline label {
+      font-size: 12px;
+      color: #aaa;
+      margin-bottom: 2px;
+      display: block;
+    }
+    .editar-inline input,
+    .editar-inline select {
+      background: #222;
+      border: 1px solid #555;
+      color: #fff;
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 13px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .editar-inline-btns {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .aluno-detalhes {
       border-top: 1px solid var(--border);
       padding-top: 10px;
       display: grid;
@@ -381,7 +436,7 @@
 
   <script type="module">
     import { db, auth } from './firebase-config.js';
-    import { collection, doc, query, orderBy, getDocs, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { collection, doc, query, orderBy, getDocs, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
     import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
     const TOKEN_KEY = 'rv_prof_token';
@@ -503,7 +558,17 @@
               <div class="aluno-nome">${esc(a.nome_aluno)}</div>
               <div class="aluno-email">${esc(a.email || '—')}</div>
             </div>
-            <div style="display:flex;gap:6px;flex-shrink:0;">
+            <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;">
+              <button class="btn-editar"
+                data-id="${id}"
+                id="btnEditar-${id}">
+                ✏️ Editar
+              </button>
+              <button class="btn-remover"
+                data-id="${id}"
+                id="btnRemover-${id}">
+                🗑️ Remover
+              </button>
               <button class="btn-faixa"
                 data-id="${id}"
                 id="btnFaixa-${id}">
@@ -585,6 +650,51 @@
             <button class="btn-confirmar-faixa" data-id="${id}">Confirmar</button>
             <button class="btn-cancelar-faixa" data-id="${id}">Cancelar</button>
           </div>
+          <div class="editar-inline" id="editarArea-${id}">
+            <div>
+              <label>Nome</label>
+              <input type="text" id="editNome-${id}" value="${esc(a.nome_aluno || '')}" />
+            </div>
+            <div>
+              <label>Email</label>
+              <input type="email" id="editEmail-${id}" value="${esc(a.email || '')}" />
+            </div>
+            <div>
+              <label>Telefone</label>
+              <input type="tel" id="editTelefone-${id}" value="${esc(a.telefone || '')}" />
+            </div>
+            <div>
+              <label>CPF</label>
+              <input type="text" id="editCpf-${id}" value="${esc(a.cpf || '')}" />
+            </div>
+            <div>
+              <label>Data de Nascimento</label>
+              <input type="text" id="editDataNasc-${id}" value="${esc(a.data_nasc || '')}" placeholder="DD/MM/AAAA" />
+            </div>
+            <div>
+              <label>Categoria</label>
+              <select id="editCategoria-${id}">
+                <option value="Adulto" ${a.categoria === 'Adulto' ? 'selected' : ''}>Adulto</option>
+                <option value="Kids" ${a.categoria === 'Kids' ? 'selected' : ''}>Kids</option>
+                <option value="Infantil" ${a.categoria === 'Infantil' ? 'selected' : ''}>Infantil</option>
+                <option value="Juvenil" ${a.categoria === 'Juvenil' ? 'selected' : ''}>Juvenil</option>
+              </select>
+            </div>
+            <div>
+              <label>Plano</label>
+              <select id="editPlano-${id}">
+                <option value="" ${!a.plano ? 'selected' : ''}>Não definido</option>
+                <option value="Recorrente" ${a.plano === 'Recorrente' ? 'selected' : ''}>Recorrente</option>
+                <option value="Semestral" ${a.plano === 'Semestral' ? 'selected' : ''}>Semestral</option>
+                <option value="Mensal" ${a.plano === 'Mensal' ? 'selected' : ''}>Mensal</option>
+              </select>
+            </div>
+            <div class="editar-inline-btns">
+              <button class="btn-confirmar-faixa btn-salvar-editar" data-id="${id}">💾 Salvar</button>
+              <button class="btn-cancelar-faixa btn-cancelar-editar" data-id="${id}">Cancelar</button>
+            </div>
+            <p class="fin-msg" id="editMsg-${id}"></p>
+          </div>
         </div>
       `}).join('');
     }
@@ -634,6 +744,21 @@
         return;
       }
 
+      const btnSalvarEditar = e.target.closest('.btn-salvar-editar');
+      if (btnSalvarEditar) {
+        const id = btnSalvarEditar.dataset.id;
+        salvarEdicao(id);
+        return;
+      }
+
+      const btnCancelarEditar = e.target.closest('.btn-cancelar-editar');
+      if (btnCancelarEditar) {
+        const id   = btnCancelarEditar.dataset.id;
+        const area = document.getElementById('editarArea-' + id);
+        if (area) area.style.display = 'none';
+        return;
+      }
+
       const btnConfirmar = e.target.closest('.btn-confirmar-faixa');
       if (btnConfirmar) {
         const id        = btnConfirmar.dataset.id;
@@ -647,6 +772,21 @@
         const id   = btnCancelar.dataset.id;
         const area = document.getElementById('trocaFaixaArea-' + id);
         if (area) area.style.display = 'none';
+        return;
+      }
+
+      const btnEditar = e.target.closest('.btn-editar');
+      if (btnEditar) {
+        const id   = btnEditar.dataset.id;
+        const area = document.getElementById('editarArea-' + id);
+        if (area) area.style.display = area.style.display === 'none' ? 'flex' : 'none';
+        return;
+      }
+
+      const btnRemover = e.target.closest('.btn-remover');
+      if (btnRemover) {
+        const id = btnRemover.dataset.id;
+        removerAluno(id);
         return;
       }
     });
@@ -715,6 +855,70 @@
         alert('Erro ao trocar faixa.');
       } finally {
         if (btnF) btnF.disabled = false;
+      }
+    }
+
+    // ── Salvar edição inline ───────────────────────────────────
+    async function salvarEdicao(id) {
+      const msg = document.getElementById('editMsg-' + id);
+      const btn = document.querySelector(`.btn-salvar-editar[data-id="${id}"]`);
+      if (btn) btn.disabled = true;
+      if (msg) msg.textContent = 'Salvando…';
+
+      try {
+        const updates = {
+          nome_aluno: document.getElementById('editNome-' + id).value.trim(),
+          email:      document.getElementById('editEmail-' + id).value.trim().toLowerCase(),
+          telefone:   document.getElementById('editTelefone-' + id).value.trim(),
+          cpf:        document.getElementById('editCpf-' + id).value.trim(),
+          data_nasc:  document.getElementById('editDataNasc-' + id).value.trim(),
+          categoria:  document.getElementById('editCategoria-' + id).value,
+          plano:      document.getElementById('editPlano-' + id).value,
+        };
+
+        await updateDoc(doc(db, 'alunos', id), updates);
+
+        // Update local cache
+        const aluno = todosAlunos.find(a => String(a.id) === String(id));
+        if (aluno) Object.assign(aluno, updates);
+        salvarCacheAlunos(todosAlunos);
+
+        // Update visible name/email in the card
+        const cardNome = document.querySelector(`#card-${id} .aluno-nome`);
+        const cardEmail = document.querySelector(`#card-${id} .aluno-email`);
+        if (cardNome) cardNome.textContent = updates.nome_aluno || '—';
+        if (cardEmail) cardEmail.textContent = updates.email || '—';
+
+        if (msg) msg.textContent = '✅ Salvo!';
+        setTimeout(() => {
+          if (msg) msg.textContent = '';
+          const area = document.getElementById('editarArea-' + id);
+          if (area) area.style.display = 'none';
+        }, 1500);
+      } catch (e) {
+        if (msg) msg.textContent = 'Erro ao salvar: ' + (e.message || 'tente novamente.');
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    // ── Remover aluno ──────────────────────────────────────────
+    async function removerAluno(id) {
+      if (!confirm('Tem certeza que deseja remover este aluno? Esta ação não pode ser desfeita.')) return;
+
+      const btn = document.getElementById('btnRemover-' + id);
+      if (btn) btn.disabled = true;
+
+      try {
+        await deleteDoc(doc(db, 'alunos', id));
+        // Remove from local list and re-render
+        todosAlunos = todosAlunos.filter(a => String(a.id) !== String(id));
+        salvarCacheAlunos(todosAlunos);
+        const card = document.getElementById('card-' + id);
+        if (card) card.remove();
+      } catch (e) {
+        alert('Erro ao remover aluno: ' + (e.message || 'tente novamente.'));
+        if (btn) btn.disabled = false;
       }
     }
 
