@@ -7,51 +7,25 @@
   <title>Cadastrar Aluno – Riva BJJ</title>
   <link rel="stylesheet" href="./styles.css" />
   <style>
-    /* ── Header desktop compacto ── */
-    .admin-hdr-left {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
+    .admin-hdr-left { display: flex; align-items: center; gap: 14px; }
     .admin-hdr-titulo { display: none; }
     .admin-hdr-sair { display: none; }
-    .btn-logout {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: #fff;
-      border-radius: 10px;
-      padding: 8px 14px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
+    .btn-logout { background: transparent; border: 1px solid var(--border); color: #fff; border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
     .btn-logout:active { opacity: .75; }
     @media (min-width: 769px) {
-      .admin-hdr-inner {
-        max-width: 1100px;
-        justify-content: space-between;
-        padding: 0 24px;
-      }
-      .admin-logo {
-        width: 48px !important;
-        height: 48px !important;
-        margin-top: 0 !important;
-      }
-      .admin-hdr-titulo {
-        display: inline;
-        font-size: 20px;
-        font-weight: 900;
-        color: #fff;
-        letter-spacing: 0.5px;
-      }
+      .admin-hdr-inner { max-width: 1100px; justify-content: space-between; padding: 0 24px; }
+      .admin-logo { width: 48px !important; height: 48px !important; margin-top: 0 !important; }
+      .admin-hdr-titulo { display: inline; font-size: 20px; font-weight: 900; color: #fff; letter-spacing: 0.5px; }
       .admin-hdr-sair { display: inline-block; }
       .admin-page { max-width: 1100px; padding: 32px 32px 64px; }
     }
-    @media (max-width: 768px) {
-      .admin-hdr-inner { justify-content: center; }
-    }
+    @media (max-width: 768px) { .admin-hdr-inner { justify-content: center; } }
+    .cep-wrap { position: relative; margin-bottom: 4px; }
+    .cep-wrap .input { margin-bottom: 0; padding-right: 44px; }
+    .cep-spinner { display: none; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 14px; color: #aaa; pointer-events: none; }
+    .addr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 0; }
+    .addr-grid .input { margin-bottom: 0; background: #1a1a1a; color: #bbb; }
+    .addr-readonly { background: #1a1a1a !important; color: #bbb !important; }
   </style>
 </head>
 <body>
@@ -66,8 +40,6 @@
   </header>
 
   <main class="page admin-page">
-
-    <!-- ── FORMULÁRIO ─────────────────────────────────────────── -->
     <section class="card" id="cardForm">
       <h1 class="title">Cadastrar Aluno</h1>
 
@@ -79,7 +51,6 @@
 
       <label class="label" for="fFaixa">Faixa</label>
       <select id="fFaixa" class="input">
-        <!-- Adulto -->
         <optgroup label="── Adulto ──">
           <option value="Branca">Branca</option>
           <option value="Azul">Azul</option>
@@ -87,7 +58,6 @@
           <option value="Marrom">Marrom</option>
           <option value="Preta">Preta</option>
         </optgroup>
-        <!-- Kids / Infantil / Juvenil -->
         <optgroup label="── Kids / Infantil / Juvenil ──">
           <option value="Cinza e Branca">Cinza e Branca</option>
           <option value="Cinza">Cinza</option>
@@ -139,7 +109,33 @@
       <label class="label" for="fTelefone">Telefone</label>
       <input id="fTelefone" class="input" type="tel" placeholder="(00) 00000-0000" />
 
-      <!-- ── Financeiro ─────────────────────────────────────────── -->
+      <!-- ── CEP + Endereço ── -->
+      <label class="label" for="fCep">CEP</label>
+      <div class="cep-wrap">
+        <input id="fCep" class="input" type="tel" inputmode="numeric" maxlength="9" placeholder="00000-000" autocomplete="off" />
+        <span class="cep-spinner" id="cepSpinner">⏳</span>
+      </div>
+      <p class="msg err" id="cepErr" style="margin-bottom:6px;"></p>
+
+      <label class="label" for="fRua">Rua</label>
+      <input id="fRua" class="input addr-readonly" type="text" placeholder="Preenchido pelo CEP" readonly />
+
+      <div class="addr-grid">
+        <div>
+          <label class="label" for="fBairro">Bairro</label>
+          <input id="fBairro" class="input addr-readonly" type="text" placeholder="—" readonly />
+        </div>
+        <div>
+          <label class="label" for="fCidade">Cidade</label>
+          <input id="fCidade" class="input addr-readonly" type="text" placeholder="—" readonly />
+        </div>
+      </div>
+      <div style="height:10px;"></div>
+
+      <label class="label" for="fEstado">Estado</label>
+      <input id="fEstado" class="input addr-readonly" type="text" maxlength="2" placeholder="UF" readonly style="max-width:80px;" />
+
+      <!-- ── Financeiro ── -->
       <div style="border-top: 1px solid var(--border); margin: 16px 0 8px; padding-top: 12px;">
         <div style="font-size:15px;font-weight:900;color:#fff;margin-bottom:12px;">💰 Financeiro</div>
 
@@ -165,7 +161,6 @@
       <button class="btn secondary" onclick="location.href='./alunos.html'">Ver Lista de Alunos</button>
       <button class="btn secondary" onclick="location.href='./administrativo.html'">← Voltar ao Portal</button>
     </section>
-
   </main>
 
   <script type="module">
@@ -178,11 +173,8 @@
     function setErr(id, msg)  { document.getElementById(id).textContent = msg; }
     function setInfo(id, msg) { document.getElementById(id).textContent = msg; }
 
-    // ── Auth check ─────────────────────────────────────────────
     onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        location.href = './administrativo.html';
-      }
+      if (!user) location.href = './administrativo.html';
     });
 
     // ── Helpers ────────────────────────────────────────────────
@@ -199,6 +191,51 @@
       if (!isoDate) return '';
       const [y, m, d] = isoDate.split('-');
       return `${d}/${m}/${y}`;
+    }
+    function formatarCep(val) {
+      return val.replace(/\D/g, '').slice(0, 8).replace(/(\d{5})(\d)/, '$1-$2');
+    }
+
+    // ── ViaCEP ─────────────────────────────────────────────────
+    const cepInput   = document.getElementById('fCep');
+    const cepSpinner = document.getElementById('cepSpinner');
+    const cepErr     = document.getElementById('cepErr');
+
+    cepInput.addEventListener('input', function () {
+      this.value = formatarCep(this.value);
+      cepErr.textContent = '';
+      const cepLimpo = this.value.replace(/\D/g, '');
+      if (cepLimpo.length !== 8) {
+        ['fRua', 'fBairro', 'fCidade', 'fEstado'].forEach(id => {
+          document.getElementById(id).value = '';
+        });
+        return;
+      }
+      buscarCep(cepLimpo);
+    });
+
+    async function buscarCep(cep) {
+      cepSpinner.style.display = '';
+      cepErr.textContent = '';
+      try {
+        const resp = await fetch('https://viacep.com.br/ws/' + cep + '/json/');
+        const data = await resp.json();
+        cepSpinner.style.display = 'none';
+        if (data.erro) {
+          cepErr.textContent = 'CEP não encontrado.';
+          ['fRua', 'fBairro', 'fCidade', 'fEstado'].forEach(id => {
+            document.getElementById(id).value = '';
+          });
+          return;
+        }
+        document.getElementById('fRua').value    = data.logradouro || '';
+        document.getElementById('fBairro').value = data.bairro     || '';
+        document.getElementById('fCidade').value = data.localidade || '';
+        document.getElementById('fEstado').value = data.uf         || '';
+      } catch (e) {
+        cepSpinner.style.display = 'none';
+        cepErr.textContent = 'Erro ao buscar CEP. Verifique sua conexão.';
+      }
     }
 
     // ── Cadastrar aluno ────────────────────────────────────────
@@ -217,7 +254,7 @@
       document.getElementById('btnCadastrar').disabled = true;
 
       try {
-        const metaGrau = faixa === 'Branca' ? 36 : 56;
+        const metaGrau    = faixa === 'Branca' ? 36 : 56;
         const aulasNoGrau = parseInt(document.getElementById('fAulasNoGrau').value) || 0;
         await addDoc(collection(db, 'alunos'), {
           nome_aluno:       nome,
@@ -238,6 +275,11 @@
           plano:            document.getElementById('fPlano').value,
           grupo_familiar:   document.getElementById('fGrupoFamiliar').value.trim(),
           data_contrato:    document.getElementById('fDataContrato').value,
+          cep:              document.getElementById('fCep').value.replace(/\D/g, ''),
+          rua:              document.getElementById('fRua').value.trim(),
+          bairro:           document.getElementById('fBairro').value.trim(),
+          cidade:           document.getElementById('fCidade').value.trim(),
+          estado:           document.getElementById('fEstado').value.trim(),
           asaas_id:             '',
           asaas_assinatura_id:  '',
           asaas_cobranca_id:    '',
@@ -247,20 +289,21 @@
         });
 
         setInfo('formInfo', '✅ Aluno cadastrado com sucesso!');
-        document.getElementById('fNome').value           = '';
-        document.getElementById('fEmail').value          = '';
-        document.getElementById('fFaixa').value          = 'Branca';
-        document.getElementById('fGrau').value           = '0';
-        document.getElementById('fAulasNoGrau').value    = '0';
-        document.getElementById('fData').value           = '';
-        document.getElementById('fCategoria').value      = 'Adulto';
-        document.getElementById('fCpf').value            = '';
-        document.getElementById('fDataNasc').value       = '';
-        document.getElementById('fDataInicio').value     = '';
-        document.getElementById('fTelefone').value       = '';
-        document.getElementById('fPlano').value          = '';
-        document.getElementById('fGrupoFamiliar').value  = '';
-        document.getElementById('fDataContrato').value   = '';
+        // Limpar campos
+        ['fNome','fEmail','fAulasNoGrau','fCpf','fTelefone',
+         'fGrupoFamiliar','fCep','fRua','fBairro','fCidade','fEstado'].forEach(id => {
+          document.getElementById(id).value = '';
+        });
+        document.getElementById('fFaixa').value         = 'Branca';
+        document.getElementById('fGrau').value          = '0';
+        document.getElementById('fAulasNoGrau').value   = '0';
+        document.getElementById('fData').value          = '';
+        document.getElementById('fCategoria').value     = 'Adulto';
+        document.getElementById('fDataNasc').value      = '';
+        document.getElementById('fDataInicio').value    = '';
+        document.getElementById('fPlano').value         = '';
+        document.getElementById('fDataContrato').value  = '';
+        cepErr.textContent = '';
         localStorage.removeItem('rv_alunos_cache');
       } catch (e) {
         setErr('formErr', 'Erro ao cadastrar: ' + (e.message || 'tente novamente.'));
