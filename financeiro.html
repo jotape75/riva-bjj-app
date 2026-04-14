@@ -198,13 +198,12 @@
       margin-top: 10px;
     }
     .btn-acao {
-      background: #2a2a2a;
-      border: 1px solid #444;
-      color: #ddd;
-      border-radius: 8px;
-      padding: 7px 12px;
+      border: none;
+      color: #fff;
+      border-radius: 999px;
+      padding: 6px 16px;
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 900;
       cursor: pointer;
       white-space: nowrap;
       text-decoration: none;
@@ -212,10 +211,14 @@
     }
     .btn-acao:active { opacity: .75; }
     .btn-acao:disabled { opacity: .5; cursor: not-allowed; }
-    .btn-acao.blue  { background: rgba(52,152,219,.2);  border-color: #3498db; color: #3498db; }
-    .btn-acao.green { background: rgba(39,174,96,.2);   border-color: #27ae60; color: #2ecc71; }
-    .btn-acao.orange{ background: rgba(243,156,18,.15); border-color: #f39c12; color: #f39c12; }
-    .btn-acao.red   { background: rgba(231,76,60,.15);  border-color: #e74c3c; color: #e74c3c; }
+    .btn-acao.vincular { background: #2980b9; }
+    .btn-acao.sync     { background: #555; }
+    .btn-acao.ver      { background: #1a5276; }
+    .btn-acao.pix      { background: #27ae60; }
+    .btn-acao.boleto   { background: #666; }
+    .btn-acao.cancelar { background: #e74c3c; }
+    .btn-acao.wpp      { background: #25D366; }
+    .btn-acao.manual   { background: #e67e22; }
 
     /* ── Select input ── */
     .select-input {
@@ -506,6 +509,13 @@
           </select>
         </div>
 
+        <div id="vincularPrimeiroPagWrap" style="display:none;">
+          <label class="check-label">
+            <input type="checkbox" id="vincularPrimeiroPix" />
+            Cobrar 1º mês via Pix agora
+          </label>
+        </div>
+
         <label class="label" for="vincularDataContrato">Data de início do contrato</label>
         <input type="date" class="input" id="vincularDataContrato" style="margin-bottom:12px;" />
 
@@ -565,8 +575,6 @@
     import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
     const TOKEN_KEY        = 'rv_prof_token';
-    const CACHE_KEY_FIN    = 'rv_fin_cache';
-    const CACHE_TTL_FIN    = 5 * 60 * 1000; // 5 minutos
     const DIA_VENCIMENTO   = 10;             // dia do mês em que a mensalidade vence
 
     // ── Estado ─────────────────────────────────────────────────────────────
@@ -576,24 +584,6 @@
     let anoSelecionado = new Date().getFullYear();
     // Status live do Asaas (por alunoId), atualizado ao clicar "Sincronizar"
     const asaasStatusMap = {};
-
-    // ── Cache ───────────────────────────────────────────────────────────────
-    function salvarCache(mes, ano, dados) {
-      try {
-        localStorage.setItem(CACHE_KEY_FIN + '_' + mes + '_' + ano,
-          JSON.stringify({ ts: Date.now(), dados }));
-      } catch(e) {}
-    }
-    function lerCache(mes, ano) {
-      try {
-        const c = JSON.parse(localStorage.getItem(CACHE_KEY_FIN + '_' + mes + '_' + ano) || 'null');
-        if (c && Date.now() - c.ts < CACHE_TTL_FIN) return c.dados;
-      } catch(e) {}
-      return null;
-    }
-    function invalidarCache(mes, ano) {
-      try { localStorage.removeItem(CACHE_KEY_FIN + '_' + mes + '_' + ano); } catch(e) {}
-    }
 
     // ── Helpers ─────────────────────────────────────────────────────────────
     function valorDePlano(plano) {
@@ -690,19 +680,10 @@
     }
 
     // ── Carregar dados ───────────────────────────────────────────────────────
-    async function carregarFinanceiro(forcar = false) {
+    async function carregarFinanceiro() {
       const mes = parseInt(document.getElementById('selMes').value);
       const ano = parseInt(document.getElementById('selAno').value);
       mesSelecionado = mes; anoSelecionado = ano;
-
-      if (!forcar) {
-        const cached = lerCache(mes, ano);
-        if (cached) {
-          todosRegistros = cached;
-          document.getElementById('listInfo').textContent = '';
-          renderListaFiltrada(); atualizarResumo(); return;
-        }
-      }
 
       document.getElementById('listInfo').textContent = 'Carregando…';
       document.getElementById('listaAlunos').innerHTML = '';
@@ -745,7 +726,6 @@
           };
         });
 
-        salvarCache(mes, ano, todosRegistros);
         document.getElementById('listInfo').textContent = '';
         renderListaFiltrada(); atualizarResumo();
       } catch(e) {
@@ -813,18 +793,18 @@
       let acoes = '';
 
       if (!a.asaas_id) {
-        acoes += '<button class="btn-acao blue" onclick="window._vincular(\'' + ie + '\')">🔗 Vincular ao Asaas</button>';
+        acoes += '<button class="btn-acao vincular" onclick="window._vincular(\'' + ie + '\')">🔗 Vincular ao Asaas</button>';
       } else {
-        acoes += '<button class="btn-acao" id="btnSync-' + ie + '" onclick="window._sync(\'' + ie + '\')">🔄 Sincronizar</button>';
+        acoes += '<button class="btn-acao sync" id="btnSync-' + ie + '" onclick="window._sync(\'' + ie + '\')">🔄 Sincronizar</button>';
         if (a.asaas_paymentLink) {
-          acoes += '<a class="btn-acao" href="' + escHtml(a.asaas_paymentLink) + '" target="_blank" rel="noopener">🔗 Ver no Asaas</a>';
+          acoes += '<a class="btn-acao ver" href="' + escHtml(a.asaas_paymentLink) + '" target="_blank" rel="noopener">🔗 Ver no Asaas</a>';
         }
         if (a.plano === 'Mensal' && st !== 'pago') {
-          acoes += '<button class="btn-acao blue" onclick="window._cobrar(\'' + ie + '\',\'PIX\')">📲 Gerar Pix</button>';
-          acoes += '<button class="btn-acao" onclick="window._cobrar(\'' + ie + '\',\'BOLETO\')">📄 Gerar Boleto</button>';
+          acoes += '<button class="btn-acao pix" onclick="window._cobrar(\'' + ie + '\',\'PIX\')">📲 Gerar Pix</button>';
+          acoes += '<button class="btn-acao boleto" onclick="window._cobrar(\'' + ie + '\',\'BOLETO\')">📄 Gerar Boleto</button>';
         }
         if (a.plano === 'Recorrente' && a.asaas_assinatura_id) {
-          acoes += '<button class="btn-acao red" onclick="window._cancelar(\'' + ie + '\')">❌ Cancelar Assinatura</button>';
+          acoes += '<button class="btn-acao cancelar" onclick="window._cancelar(\'' + ie + '\')">❌ Cancelar Assinatura</button>';
         }
       }
 
@@ -833,12 +813,12 @@
       const temLink = a.asaas_paymentLink || live.invoiceUrl || live.pixCopiaECola;
       const tel = validarTelefone(a.telefone);
       if (temLink && tel) {
-        acoes += '<button class="btn-acao green" onclick="window._wpp(\'' + ie + '\')">💬 WhatsApp</button>';
+        acoes += '<button class="btn-acao wpp" onclick="window._wpp(\'' + ie + '\')">💬 WhatsApp</button>';
       }
 
       // Registro manual (Mensal sempre)
       if (a.plano === 'Mensal') {
-        acoes += '<button class="btn-acao orange" onclick="window._manual(\'' + ie + '\',\'' + escAttr(a.nome||'') + '\',\'' + escAttr(String(valorFinal||'')) + '\')">💵 Registrar Manual</button>';
+        acoes += '<button class="btn-acao manual" onclick="window._manual(\'' + ie + '\',\'' + escAttr(a.nome||'') + '\',\'' + escAttr(String(valorFinal||'')) + '\')">💵 Registrar Manual</button>';
       }
 
       return '<div class="fin-aluno-card">' +
@@ -928,7 +908,6 @@
           await updateDoc(doc(db,'alunos',alunoId), { asaas_assinatura_id: '', asaas_tipo: 'cancelado' });
           const idx = todosRegistros.findIndex(r => r.id === alunoId);
           if (idx >= 0) { todosRegistros[idx].asaas_assinatura_id = ''; todosRegistros[idx].asaas_tipo = 'cancelado'; }
-          invalidarCache(mesSelecionado, anoSelecionado);
           renderListaFiltrada();
           alert('✅ Assinatura cancelada com sucesso.');
         } else { alert('Erro: ' + (resp.erro || 'desconhecido')); }
@@ -967,7 +946,6 @@
         await updateDoc(doc(db,'alunos',alunoId), upd);
         const idx = todosRegistros.findIndex(r => r.id === alunoId);
         if (idx >= 0) Object.assign(todosRegistros[idx], upd);
-        invalidarCache(mesSelecionado, anoSelecionado);
         if (formaPag === 'PIX' && (resp.pixQrCodeImage || resp.pixCopiaECola)) {
           _mostrarPixModal(a.nome, resp.pixQrCodeImage, resp.pixCopiaECola, resp.paymentLink, todosRegistros.find(r=>r.id===alunoId)||a);
         } else {
@@ -1029,7 +1007,8 @@
     // ── Modal vincular: controles ────────────────────────────────────────────
     function atualizarFormVincular() {
       const plano = document.getElementById('vincularPlano').value;
-      document.getElementById('vincularFormaPagWrap').style.display = plano === 'Mensal' ? '' : 'none';
+      document.getElementById('vincularFormaPagWrap').style.display   = plano === 'Mensal'     ? '' : 'none';
+      document.getElementById('vincularPrimeiroPagWrap').style.display = plano === 'Recorrente' ? '' : 'none';
       const temD   = document.getElementById('vincularDesconto').checked;
       const base   = { Recorrente:200, Semestral:220, Mensal:240 }[plano] || 0;
       const final  = temD ? Math.round(base * 0.9 * 100) / 100 : base;
@@ -1046,6 +1025,7 @@
       const formaPag     = document.getElementById('vincularFormaPag').value;
       const dataContrato = document.getElementById('vincularDataContrato').value;
       const temDesconto  = document.getElementById('vincularDesconto').checked;
+      const primeiroPix  = plano === 'Recorrente' && document.getElementById('vincularPrimeiroPix').checked;
       if (!dataContrato) { document.getElementById('vincularErr').textContent = 'Informe a data de início.'; return; }
       document.getElementById('vincularErr').textContent  = '';
       document.getElementById('vincularInfo').textContent = 'Criando no Asaas…';
@@ -1082,25 +1062,59 @@
         await updateDoc(doc(db,'alunos',alunoId), upd);
         const idx = todosRegistros.findIndex(r => r.id === alunoId);
         if (idx >= 0) Object.assign(todosRegistros[idx], upd);
-        invalidarCache(mesSelecionado, anoSelecionado);
+
+        // Cobrança do 1º mês via Pix (somente Recorrente com checkbox marcado)
+        let respPix = null;
+        if (primeiroPix) {
+          document.getElementById('vincularInfo').textContent = 'Gerando cobrança Pix do 1º mês…';
+          try {
+            respPix = await gasCall('asaasVincular', {
+              alunoId,
+              nome:          a ? a.nome : '',
+              email:         a ? a.email : '',
+              telefone:      a ? a.telefone : '',
+              cpf:           a ? a.cpf : '',
+              plano:         'Mensal',
+              formaPag:      'PIX',
+              grupoFamiliar: a ? a.grupo_familiar : '',
+              temDesconto:   temDesconto ? 'true' : 'false',
+              dataContrato
+            });
+            if (respPix && respPix.ok) {
+              const updPix = {
+                asaas_cobranca_id: respPix.cobranca_id || upd.asaas_cobranca_id,
+                asaas_paymentLink: respPix.paymentLink || upd.asaas_paymentLink
+              };
+              await updateDoc(doc(db,'alunos',alunoId), updPix);
+              const idx2 = todosRegistros.findIndex(r => r.id === alunoId);
+              if (idx2 >= 0) Object.assign(todosRegistros[idx2], updPix);
+              if (respPix.pixCopiaECola) {
+                asaasStatusMap[alunoId] = Object.assign(asaasStatusMap[alunoId]||{}, { pixCopiaECola: respPix.pixCopiaECola, invoiceUrl: respPix.paymentLink||'' });
+              }
+            }
+          } catch(e) {
+            console.error('Erro ao gerar cobrança Pix do 1º mês:', e);
+            /* não crítico: assinatura já foi criada */ }
+        }
 
         // Exibir sucesso
         document.getElementById('vincularFormWrap').style.display    = 'none';
         document.getElementById('vincularSuccessWrap').style.display = '';
-        const qrWrap = document.getElementById('vincularQrWrap');
-        if (resp.pixQrCodeImage || resp.pixCopiaECola) {
+        const qrWrap  = document.getElementById('vincularQrWrap');
+        const pixData = primeiroPix && respPix && respPix.ok ? respPix : resp;
+        if (pixData.pixQrCodeImage || pixData.pixCopiaECola) {
           qrWrap.style.display = '';
           const qrImg = document.getElementById('vincularQrImg');
-          qrImg.src = resp.pixQrCodeImage ? 'data:image/png;base64,' + resp.pixQrCodeImage : '';
-          qrImg.style.display = resp.pixQrCodeImage ? '' : 'none';
-          document.getElementById('vincularPixKey').textContent = resp.pixCopiaECola || '';
+          qrImg.src = pixData.pixQrCodeImage ? 'data:image/png;base64,' + pixData.pixQrCodeImage : '';
+          qrImg.style.display = pixData.pixQrCodeImage ? '' : 'none';
+          document.getElementById('vincularPixKey').textContent = pixData.pixCopiaECola || '';
           document.getElementById('btnCopiarPix').onclick = function() {
-            navigator.clipboard.writeText(resp.pixCopiaECola||'').then(() => {
+            navigator.clipboard.writeText(pixData.pixCopiaECola||'').then(() => {
               this.textContent = '✅ Copiado!';
               setTimeout(() => { this.textContent = '📋 Copiar código Pix'; }, 2000);
-            }).catch(() => { alert('Erro ao copiar. Código Pix: ' + resp.pixCopiaECola); });
+            }).catch(() => { alert('Erro ao copiar. Código Pix: ' + pixData.pixCopiaECola); });
           };
-          if (resp.pixCopiaECola) {
+          if (resp.pixCopiaECola && !primeiroPix) {
             asaasStatusMap[alunoId] = Object.assign(asaasStatusMap[alunoId]||{}, { pixCopiaECola: resp.pixCopiaECola, invoiceUrl: resp.paymentLink||'' });
           }
         } else { qrWrap.style.display = 'none'; }
@@ -1152,8 +1166,7 @@
         });
         document.getElementById('modalInfo').textContent = '';
         fecharModal();
-        invalidarCache(mesSelecionado, anoSelecionado);
-        await carregarFinanceiro(true);
+        await carregarFinanceiro();
       } catch(e) {
         document.getElementById('modalErr').textContent      = 'Erro ao registrar pagamento.';
         document.getElementById('modalInfo').textContent     = '';
@@ -1168,8 +1181,7 @@
     }));
     document.getElementById('searchBox').addEventListener('input', renderListaFiltrada);
     document.getElementById('btnCarregar').addEventListener('click', () => {
-      invalidarCache(parseInt(document.getElementById('selMes').value), parseInt(document.getElementById('selAno').value));
-      carregarFinanceiro(true);
+      carregarFinanceiro();
     });
     document.getElementById('btnHdrSair').addEventListener('click', () => {
       signOut(auth).catch(()=>{});
