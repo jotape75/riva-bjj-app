@@ -313,7 +313,7 @@
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbx7pbyrOuM_2PcRn-epYGByCCuICaSLmS-gR9RVyEfhaRae-iT_8W_H6NnVJPGAJCIC/exec';
 
     import { db, auth } from './firebase-config.js';
-    import { collection, doc, query, where, getDocs, addDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { collection, doc, query, where, getDocs, getDoc, addDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
     import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
     const TOKEN_KEY      = 'rv_prof_token';
@@ -539,7 +539,7 @@
       } catch(e) { alert('Erro ao salvar: '+e.message); }
     };
 
-    window._abrirCartao = function(alunoId) {
+    window._abrirCartao = async function(alunoId) {
       const a = todosRegistros.find(r => r.id === alunoId);
       if (!a) return;
       _cartaoAlunoData = a;
@@ -559,6 +559,20 @@
       document.getElementById('cartaoFormWrap').style.display    = '';
       document.getElementById('cartaoSuccessWrap').style.display = 'none';
       document.getElementById('modalCartao').classList.add('open');
+      // Buscar CEP e número do Firestore silenciosamente
+      try {
+        const alunoDoc = await getDoc(doc(db, 'alunos', alunoId));
+        if (alunoDoc.exists()) {
+          const dados = alunoDoc.data();
+          const cepFirestore = (dados.cep || '').replace(/\D/g, '');
+          if (cepFirestore.length === 8) {
+            document.getElementById('cCartaoCep').value = cepFirestore;
+          }
+          if (dados.numero) {
+            _cartaoAlunoData = Object.assign({}, _cartaoAlunoData, { numero: dados.numero });
+          }
+        }
+      } catch(e) { console.warn('Não foi possível buscar dados do Firestore:', e); }
     };
 
     document.getElementById('cCartaoNumero').addEventListener('input',   function() { this.value = formatarNumeroCartao(this.value); document.getElementById('cCartaoBrand').textContent = detectarBandeira(this.value).emoji; });
@@ -582,7 +596,7 @@
       if (!/^\d{2}\/\d{2}$/.test(validade)) { document.getElementById('cartaoErr').textContent='Validade inválida (MM/AA).'; return; }
       if (cvv.length < 3)                   { document.getElementById('cartaoErr').textContent='CVV inválido.'; return; }
       if (cpf.length !== 11)                { document.getElementById('cartaoErr').textContent='CPF do titular inválido.'; return; }
-      if (cep.length !== 8)                 { document.getElementById('cartaoErr').textContent='CEP inválido.'; return; }
+      if (cep.length !== 8)                 { document.getElementById('cartaoErr').textContent='CEP não encontrado. Adicione o campo "cep" no cadastro do aluno no Firestore.'; return; }
       const [mesVal, anoVal] = validade.split('/');
       document.getElementById('cartaoInfo').textContent   = 'Cadastrando cartão…';
       document.getElementById('btnSalvarCartao').disabled = true;
