@@ -120,26 +120,26 @@
       font-weight: 900;
     }
     .btn-toggle {
-      background: #222;
-      border: 1px solid #333;
+      background: #e67e22;
+      border: none;
       color: #fff;
-      border-radius: 10px;
-      padding: 8px 14px;
-      font-size: 13px;
-      font-weight: 800;
+      border-radius: 999px;
+      padding: 6px 16px;
+      font-size: 12px;
+      font-weight: 900;
       cursor: pointer;
       white-space: nowrap;
       flex-shrink: 0;
     }
     .btn-toggle:active { opacity: .75; }
     .btn-faixa {
-      background: #1a1a2e;
-      border: 1px solid #444;
+      background: #2980b9;
+      border: none;
       color: #fff;
-      border-radius: 10px;
-      padding: 8px 14px;
-      font-size: 13px;
-      font-weight: 800;
+      border-radius: 999px;
+      padding: 6px 16px;
+      font-size: 12px;
+      font-weight: 900;
       cursor: pointer;
       white-space: nowrap;
       flex-shrink: 0;
@@ -187,26 +187,26 @@
     }
     .btn-cancelar-faixa:active { opacity: .75; }
     .btn-editar {
-      background: #1a3a1a;
-      border: 1px solid #2ecc71;
-      color: #2ecc71;
-      border-radius: 10px;
-      padding: 8px 12px;
-      font-size: 13px;
-      font-weight: 800;
+      background: #27ae60;
+      border: none;
+      color: #fff;
+      border-radius: 999px;
+      padding: 6px 16px;
+      font-size: 12px;
+      font-weight: 900;
       cursor: pointer;
       white-space: nowrap;
       flex-shrink: 0;
     }
     .btn-editar:active { opacity: .75; }
     .btn-remover {
-      background: #3a1a1a;
-      border: 1px solid #e74c3c;
-      color: #e74c3c;
-      border-radius: 10px;
-      padding: 8px 12px;
-      font-size: 13px;
-      font-weight: 800;
+      background: #e74c3c;
+      border: none;
+      color: #fff;
+      border-radius: 999px;
+      padding: 6px 16px;
+      font-size: 12px;
+      font-weight: 900;
       cursor: pointer;
       white-space: nowrap;
       flex-shrink: 0;
@@ -689,6 +689,10 @@
                 <option value="Mensal" ${a.plano === 'Mensal' ? 'selected' : ''}>Mensal</option>
               </select>
             </div>
+            <div>
+              <label>Aulas no Grau Atual</label>
+              <input type="number" min="0" id="editAulasNoGrau-${id}" value="${esc(String(a.aulas_no_grau ?? 0))}" />
+            </div>
             <div class="editar-inline-btns">
               <button class="btn-confirmar-faixa btn-salvar-editar" data-id="${id}">💾 Salvar</button>
               <button class="btn-cancelar-faixa btn-cancelar-editar" data-id="${id}">Cancelar</button>
@@ -779,7 +783,10 @@
       if (btnEditar) {
         const id   = btnEditar.dataset.id;
         const area = document.getElementById('editarArea-' + id);
-        if (area) area.style.display = area.style.display === 'none' ? 'flex' : 'none';
+        if (area) {
+          const isHidden = area.style.display === '' || area.style.display === 'none';
+          area.style.display = isHidden ? 'flex' : 'none';
+        }
         return;
       }
 
@@ -876,10 +883,15 @@
           plano:      document.getElementById('editPlano-' + id).value,
         };
 
+        const aulasNoGrau = parseInt(document.getElementById('editAulasNoGrau-' + id).value) || 0;
+        const aluno = todosAlunos.find(a => String(a.id) === String(id));
+        const metaGrau = aluno ? (aluno.meta_grau || (aluno.faixa === 'Branca' ? 36 : 56)) : 56;
+        updates.aulas_no_grau = aulasNoGrau;
+        updates.aulas_restantes = Math.max(0, metaGrau - aulasNoGrau);
+
         await updateDoc(doc(db, 'alunos', id), updates);
 
         // Update local cache
-        const aluno = todosAlunos.find(a => String(a.id) === String(id));
         if (aluno) Object.assign(aluno, updates);
         salvarCacheAlunos(todosAlunos);
 

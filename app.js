@@ -360,11 +360,11 @@ async function fbGraduandos() {
     const data = [];
     snap.forEach(d => {
       const a = d.data();
-      const restantes = (a.meta_grau != null && a.aulas_no_grau != null)
-        ? Math.max(0, (a.meta_grau || 0) - (a.aulas_no_grau || 0))
-        : (a.aulas_restantes ?? null);
+      const aulasNoGrau = a.aulas_no_grau ?? 0;
+      const metaGrau = a.meta_grau ?? (a.faixa === 'Branca' ? 36 : 56);
+      const restantes = Math.max(0, metaGrau - aulasNoGrau);
       const grauAtual = a.grau_atual ?? 0;
-      if (grauAtual === MAX_GRAU_POR_FAIXA && restantes !== null && restantes <= 0) {
+      if (grauAtual === MAX_GRAU_POR_FAIXA && restantes <= 0) {
         data.push({
           nome:      a.nome_aluno || '',
           faixa:     a.faixa || '',
@@ -1502,6 +1502,7 @@ function preencherCard(d) {
 
   // Status badge: INATIVO aparece em vermelho, ATIVO mostra statusExame
   const statusEl = $('aStatus');
+  statusEl.className = 'status';
   if (d.status === 'INATIVO') {
     statusEl.textContent = 'INATIVO';
     statusEl.style.color = '#e74c3c';
