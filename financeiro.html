@@ -821,7 +821,7 @@
         if (primeiroPix) {
           document.getElementById('vincularInfo').textContent='Gerando Pix do 1º mês…';
           try {
-            respPix = await gasCall('asaasVincular', { alunoId, nome:a?a.nome:'', email:a?a.email:'', telefone:a?a.telefone:'', cpf:a?a.cpf:'', plano:'Mensal', formaPag:'PIX', grupoFamiliar:a?a.grupo_familiar:'', temDesconto:temDesconto?'true':'false', dataContrato });
+            respPix = await gasCall('asaasVincular', { alunoId, nome:a?a.nome:'', email:a?a.email:'', telefone:a?a.telefone:'', cpf:a?a.cpf:'', plano, formaPag:'PIX', grupoFamiliar:a?a.grupo_familiar:'', temDesconto:temDesconto?'true':'false', dataContrato });
             if (respPix&&respPix.ok) {
               const updPix={asaas_cobranca_id:respPix.cobranca_id||upd.asaas_cobranca_id,asaas_paymentLink:respPix.paymentLink||upd.asaas_paymentLink};
               await updateDoc(doc(db,'alunos',alunoId),updPix);
