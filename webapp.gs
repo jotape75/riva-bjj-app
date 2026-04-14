@@ -228,6 +228,250 @@ function listarAlunos_() {
 }
 */
 
+// ── ASAAS INTEGRATION ──────────────────────────────────────────────────────
+
+var ASAAS_BASE = 'https://sandbox.asaas.com/api/v3';
+
+function getAsaasKey_() {
+  return PropertiesService.getScriptProperties().getProperty('ASAAS_API_KEY') || '';
+}
+
+function asaasFetch_(method, path, payload) {
+  var key = getAsaasKey_();
+  var options = {
+    method: method,
+    headers: {
+      'access_token': key,
+      'Content-Type': 'application/json'
+    },
+    muteHttpExceptions: true
+  };
+  if (payload) options.payload = JSON.stringify(payload);
+  var resp = UrlFetchApp.fetch(ASAAS_BASE + path, options);
+  try { return JSON.parse(resp.getContentText()); } catch(e) { return { errors: [{ description: resp.getContentText() }] }; }
+}
+
+// Criar ou buscar cliente no Asaas por email
+function asaasUpsertCliente_(nome, email, telefone, cpf) {
+  // Busca por email
+  var busca = asaasFetch_('get', '/customers?email=' + encodeURIComponent(email));
+  if (busca.data && busca.data.length > 0) {
+    return { ok: true, customerId: busca.data[0].id };
+  }
+  // Cria novo
+  var body = { name: nome, email: email };
+  if (telefone) body.mobilePhone = telefone.replace(/\D/g, '');
+  if (cpf) body.cpfCnpj = cpf.replace(/\D/g, '');
+  var resp = asaasFetch_('post', '/customers', body);
+  if (resp.id) return { ok: true, customerId: resp.id };
+  var erro = (resp.errors && resp.errors[0]) ? resp.errors[0].description : JSON.stringify(resp);
+  return { ok: false, erro: erro };
+}
+
+// ── Action: asaasVincular ──────────────────────────────────────────────────
+// Cria cliente no Asaas e a cobrança/assinatura adequada ao plano
+// Parâmetros esperados: alunoId, nome, email, telefone, cpf, plano, grupoFamiliar, temDesconto, dataContrato
+function asaasVincular_(params) {
+  try {
+    var nome         = params.nome || '';
+    var email        = params.email || '';
+    var telefone     = params.telefone || '';
+    var cpf          = params.cpf || '';
+    var plano        = params.plano || '';
+    var temDesconto  = params.temDesconto === 'true' || params.temDesconto === true;
+    var dataContrato = params.dataContrato || new Date().toISOString().slice(0, 10);
+
+    // Valores base
+    var valores = { Recorrente: 200, Semestral: 220, Mensal: 240 };
+    var valorBase = valores[plano] || 0;
+    var valor = temDesconto ? Math.round(valorBase * 0.9 * 100) / 100 : valorBase;
+
+    // Criar/buscar cliente
+    var clienteResp = asaasUpsertCliente_(nome, email, telefone, cpf);
+    if (!clienteResp.ok) return { ok: false, erro: 'Erro ao criar cliente: ' + clienteResp.erro };
+    var customerId = clienteResp.customerId;
+
+    var resultado = {};
+
+    if (plano === 'Recorrente') {
+      // Assinatura mensal recorrente no cartão
+      var dueDate = dataContrato; // YYYY-MM-DD
+      var sub = asaasFetch_('post', '/subscriptions', {
+        customer: customerId,
+        billingType: 'CREDIT_CARD',
+        value: valor,
+        nextDueDate: dueDate,
+        cycle: 'MONTHLY',
+        description: 'Mensalidade Recorrente – Riva BJJ'
+      });
+      if (sub.id) {
+        resultado = { ok: true, customerId: customerId, assinatura_id: sub.id, tipo: 'assinatura', paymentLink: sub.invoiceUrl || '' };
+      } else {
+        var erro = (sub.errors && sub.errors[0]) ? sub.errors[0].description : JSON.stringify(sub);
+        return { ok: false, erro: 'Erro ao criar assinatura: ' + erro };
+      }
+
+    } else if (plano === 'Semestral') {
+      // Parcelamento em 6x no cartão
+      var dueDate = dataContrato;
+      var cobranca = asaasFetch_('post', '/payments', {
+        customer: customerId,
+        billingType: 'CREDIT_CARD',
+        value: valor * 6,
+        dueDate: dueDate,
+        description: 'Semestral (6x) – Riva BJJ',
+        installmentCount: 6,
+        installmentValue: valor
+      });
+      if (cobranca.id) {
+        resultado = { ok: true, customerId: customerId, cobranca_id: cobranca.id, tipo: 'parcelamento', paymentLink: cobranca.invoiceUrl || '' };
+      } else {
+        var erro = (cobranca.errors && cobranca.errors[0]) ? cobranca.errors[0].description : JSON.stringify(cobranca);
+        return { ok: false, erro: 'Erro ao criar parcelamento: ' + erro };
+      }
+
+    } else if (plano === 'Mensal') {
+      // Cobrança única — Pix ou Boleto conforme parâmetro formaPag
+      var formaPag = params.formaPag || 'PIX'; // PIX ou BOLETO
+      var billingType = formaPag.toUpperCase() === 'BOLETO' ? 'BOLETO' : 'PIX';
+      var dueDate = dataContrato;
+      var cobranca = asaasFetch_('post', '/payments', {
+        customer: customerId,
+        billingType: billingType,
+        value: valor,
+        dueDate: dueDate,
+        description: 'Mensalidade Mensal – Riva BJJ'
+      });
+      if (cobranca.id) {
+        var paymentLink = cobranca.invoiceUrl || cobranca.bankSlipUrl || '';
+        if (billingType === 'PIX') {
+          // Buscar QR Code do Pix
+          var pixResp = asaasFetch_('get', '/payments/' + cobranca.id + '/pixQrCode');
+          resultado = {
+            ok: true,
+            customerId: customerId,
+            cobranca_id: cobranca.id,
+            tipo: 'avista',
+            paymentLink: paymentLink,
+            pixCopiaECola: pixResp.payload || '',
+            pixQrCodeImage: pixResp.encodedImage || ''
+          };
+        } else {
+          resultado = { ok: true, customerId: customerId, cobranca_id: cobranca.id, tipo: 'avista', paymentLink: paymentLink };
+        }
+      } else {
+        var erro = (cobranca.errors && cobranca.errors[0]) ? cobranca.errors[0].description : JSON.stringify(cobranca);
+        return { ok: false, erro: 'Erro ao criar cobrança: ' + erro };
+      }
+    } else {
+      return { ok: false, erro: 'Plano não reconhecido: ' + plano };
+    }
+
+    return resultado;
+  } catch(err) {
+    return { ok: false, erro: err.message };
+  }
+}
+
+// ── Action: asaasStatus ────────────────────────────────────────────────────
+// Consulta status da assinatura ou cobrança no Asaas
+// Parâmetros: asaasId (pode ser customerId, assinatura_id ou cobranca_id), tipo (assinatura|cobranca|customer)
+function asaasStatus_(params) {
+  try {
+    var tipo    = params.tipo || 'customer';
+    var asaasId = params.asaasId || '';
+    if (!asaasId) return { ok: false, erro: 'asaasId obrigatório' };
+
+    if (tipo === 'assinatura') {
+      // Buscar pagamentos da assinatura no mês/ano
+      var mes = parseInt(params.mes || new Date().getMonth() + 1);
+      var ano = parseInt(params.ano || new Date().getFullYear());
+      var resp = asaasFetch_('get', '/payments?subscription=' + asaasId);
+      if (!resp.data) return { ok: false, erro: 'Erro ao consultar Asaas' };
+      // Filtrar pelo mês/ano
+      var pagamento = null;
+      for (var i = 0; i < resp.data.length; i++) {
+        var p = resp.data[i];
+        if (p.dueDate) {
+          var d = new Date(p.dueDate);
+          if (d.getMonth() + 1 === mes && d.getFullYear() === ano) {
+            pagamento = p;
+            break;
+          }
+        }
+      }
+      if (!pagamento) return { ok: true, status: 'PENDING', valor: 0, dataPagamento: '' };
+      return {
+        ok: true,
+        status: pagamento.status, // CONFIRMED, PENDING, OVERDUE, RECEIVED
+        valor: pagamento.value || 0,
+        dataPagamento: pagamento.paymentDate || pagamento.clientPaymentDate || '',
+        invoiceUrl: pagamento.invoiceUrl || ''
+      };
+
+    } else if (tipo === 'cobranca') {
+      var resp = asaasFetch_('get', '/payments/' + asaasId);
+      if (!resp.id) return { ok: false, erro: 'Cobrança não encontrada' };
+      return {
+        ok: true,
+        status: resp.status,
+        valor: resp.value || 0,
+        dataPagamento: resp.paymentDate || resp.clientPaymentDate || '',
+        invoiceUrl: resp.invoiceUrl || resp.bankSlipUrl || '',
+        pixCopiaECola: resp.pixTransaction ? resp.pixTransaction.qrCode : ''
+      };
+
+    } else {
+      // customer: buscar pagamentos do cliente no mês
+      var mes = parseInt(params.mes || new Date().getMonth() + 1);
+      var ano = parseInt(params.ano || new Date().getFullYear());
+      var resp = asaasFetch_('get', '/payments?customer=' + asaasId + '&status=RECEIVED,CONFIRMED,PENDING,OVERDUE');
+      if (!resp.data) return { ok: false, erro: 'Erro ao consultar Asaas' };
+      var pagamento = null;
+      for (var i = 0; i < resp.data.length; i++) {
+        var p = resp.data[i];
+        if (p.dueDate) {
+          var d = new Date(p.dueDate);
+          if (d.getMonth() + 1 === mes && d.getFullYear() === ano) {
+            pagamento = p;
+            break;
+          }
+        }
+      }
+      if (!pagamento) return { ok: true, status: 'PENDING', valor: 0 };
+      return { ok: true, status: pagamento.status, valor: pagamento.value || 0, dataPagamento: pagamento.paymentDate || '' };
+    }
+  } catch(err) {
+    return { ok: false, erro: err.message };
+  }
+}
+
+// ── Action: asaasCancelarAssinatura ───────────────────────────────────────
+function asaasCancelarAssinatura_(params) {
+  try {
+    var assinatura_id = params.assinatura_id || '';
+    if (!assinatura_id) return { ok: false, erro: 'assinatura_id obrigatório' };
+    asaasFetch_('delete', '/subscriptions/' + assinatura_id, null);
+    // DELETE retorna 200 com body vazio ou { deleted: true }
+    return { ok: true };
+  } catch(err) {
+    return { ok: false, erro: err.message };
+  }
+}
+
+/*
+  ── REGISTRAR NO routeAction_ DO ARQUIVO PRINCIPAL (código.gs / main.gs) ──
+  Localizar a função routeAction_ (ou doPost/doGet) que roteie actions e
+  adicionar os cases abaixo antes do "return { ok:false, erro:'Ação desconhecida' }":
+
+  case 'asaasVincular':             result = asaasVincular_(params); break;
+  case 'asaasStatus':               result = asaasStatus_(params); break;
+  case 'asaasCancelarAssinatura':   result = asaasCancelarAssinatura_(params); break;
+
+  Além disso, configurar a API key no Apps Script via:
+  Arquivo → Propriedades do script → Propriedades → Adicionar: ASAAS_API_KEY = <sua_chave>
+*/
+
 // ── trocarFaixa_: troca a faixa do aluno e zera aulas/grau
 // Adicionar no arquivo principal do projeto + registrar no routeAction_:
 //   case 'trocarFaixa': result = trocarFaixa_(params); break;
