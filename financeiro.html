@@ -806,16 +806,19 @@
 
     // ── GAS helper ──────────────────────────────────────────────────────────
     async function gasCall(action, params) {
-      if (!GAS_URL || GAS_URL.includes('SUA_URL')) {
-        throw new Error('GAS_URL não configurada.');
-      }
-      const qs = Object.entries(Object.assign({ action }, params || {}))
-        .map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(String(v)))
-        .join('&');
-      const resp = await fetch(GAS_URL + '?' + qs);
-      if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      return resp.json();
-    }
+  if (!GAS_URL || GAS_URL.includes('SUA_URL')) {
+    throw new Error('GAS_URL não configurada.');
+  }
+  const qs = Object.entries(Object.assign({ action }, params || {}))
+    .map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(String(v)))
+    .join('&');
+  const resp = await fetch(GAS_URL + '?' + qs, {
+    redirect: 'follow',
+    method: 'GET'
+  });
+  if (!resp.ok) throw new Error('HTTP ' + resp.status);
+  return resp.json();
+}
 
     // ── Auth ────────────────────────────────────────────────────────────────
     onAuthStateChanged(auth, user => {
