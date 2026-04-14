@@ -271,8 +271,7 @@
         <div style="height:12px;"></div>
         <label class="label">CPF do titular</label>
         <input id="cCartaoCpf" class="input" type="tel" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" autocomplete="off" />
-        <label class="label">CEP do titular</label>
-        <input id="cCartaoCep" class="input" type="tel" inputmode="numeric" maxlength="9" placeholder="00000-000" autocomplete="off" />
+        <input id="cCartaoCep" type="hidden" />
         <p class="msg err" id="cartaoErr"></p>
         <p class="msg info" id="cartaoInfo"></p>
         <div class="modal-btns">
@@ -519,6 +518,17 @@
           if (a) {
             const formaPagMap = { pix_pago:'pix', debito:'debito', dinheiro:'dinheiro' };
             const formaPag = formaPagMap[valor] || 'dinheiro';
+            // Se pix_pago, dar baixa no Asaas
+            if (valor === 'pix_pago' && a.asaas_cobranca_id) {
+              try {
+                const respAsaas = await gasCall('asaasConfirmarPix', {
+                  cobrancaId: a.asaas_cobranca_id,
+                  valor: calcularValorFinal(a)
+                });
+                if (!respAsaas.ok) console.warn('Aviso Asaas:', respAsaas.erro);
+              } catch(e) { console.warn('Erro ao confirmar Pix no Asaas:', e); }
+            }
+            // Registrar pagamento local se ainda não existir
             const jaTemPag = await getDocs(query(collection(db,'pagamentos'), where('alunoId','==',alunoId), where('mes','==',mesSelecionado), where('ano','==',anoSelecionado)));
             if (jaTemPag.empty) {
               await addDoc(collection(db,'pagamentos'), { alunoId, nome:a.nome||'', valor:calcularValorFinal(a), data:new Date().toISOString().slice(0,10), formaPagamento:formaPag, mes:mesSelecionado, ano:anoSelecionado, criadoEm:serverTimestamp() });
@@ -556,7 +566,6 @@
     document.getElementById('cCartaoValidade').addEventListener('input', function() { this.value = formatarValidade(this.value); });
     document.getElementById('cCartaoCvv').addEventListener('input',      function() { this.value = this.value.replace(/\D/g,'').slice(0,4); });
     document.getElementById('cCartaoCpf').addEventListener('input',      function() { this.value = formatarCpf(this.value); });
-    document.getElementById('cCartaoCep').addEventListener('input',      function() { this.value = formatarCep(this.value); });
 
     document.getElementById('btnSalvarCartao').addEventListener('click', async () => {
       const alunoId    = document.getElementById('cartaoAlunoId').value;
