@@ -444,22 +444,6 @@
       container.innerHTML = lista.map(buildCardHtml).join('');
     }
 
-    function primeiroPagHtml(a) {
-      const val = a.primeiro_pagamento || '';
-      const isPago = val && val !== 'pendente';
-      const cls = isPago ? 'pago' : 'pendente';
-      const ie = escAttr(a.id);
-      return '<div class="primeiro-pag-wrap">' +
-        '<span class="primeiro-pag-label">1º mês:</span>' +
-        '<select class="primeiro-pag-select '+cls+'" onchange="window._salvarPrimeiroPag(\''+ie+'\',this.value)">' +
-          '<option value=""'+(val===''?' selected':'')+'>⏳ Aguardando pagamento</option>' +
-          '<option value="pix_pago"'+(val==='pix_pago'?' selected':'')+'>✅ Pix pago</option>' +
-          '<option value="debito"'+(val==='debito'?' selected':'')+'>✅ Débito pago</option>' +
-          '<option value="dinheiro"'+(val==='dinheiro'?' selected':'')+'>✅ Dinheiro pago</option>' +
-        '</select>' +
-      '</div>';
-    }
-
     function buildCardHtml(a) {
       const st = getEffectiveStatus(a);
       let badgeClass='status-pendente', badgeText='⏳ Pendente';
