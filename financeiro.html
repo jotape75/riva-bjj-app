@@ -554,6 +554,7 @@
           <button class="btn-copiar" id="btnCopiarPix">📋 Copiar código Pix</button>
         </div>
 
+        <button class="btn" id="btnCadastrarCartao" style="display:none;background:#2980b9;color:#fff;margin-top:12px;">💳 Cadastrar cartão agora</button>
         <button class="btn primary" id="btnVincularWhatsapp" style="display:none;background:#25D366;margin-top:12px;">💬 Enviar via WhatsApp</button>
         <button class="btn secondary" style="margin-top:8px;" id="btnFecharVincular">Fechar</button>
       </div>
@@ -584,6 +585,7 @@
     let anoSelecionado = new Date().getFullYear();
     // Status live do Asaas (por alunoId), atualizado ao clicar "Sincronizar"
     const asaasStatusMap = {};
+    let _lastPaymentLink = '';
 
     // ── Helpers ─────────────────────────────────────────────────────────────
     function valorDePlano(plano) {
@@ -1128,6 +1130,16 @@
             btnWa.onclick = function() { const u = buildWhatsAppUrl(aAtual); if (u) window.open(u,'_blank'); };
           } else { btnWa.style.display = 'none'; }
         }
+
+        const btnCartao = document.getElementById('btnCadastrarCartao');
+        const payLink = resp.paymentLink || '';
+        if (plano === 'Recorrente' && payLink) {
+          _lastPaymentLink = payLink;
+          btnCartao.style.display = '';
+        } else {
+          _lastPaymentLink = '';
+          btnCartao.style.display = 'none';
+        }
       } catch(e) {
         document.getElementById('vincularErr').textContent  = 'Erro: ' + e.message;
         document.getElementById('vincularInfo').textContent = '';
@@ -1135,9 +1147,19 @@
       }
     });
 
+    document.getElementById('btnCadastrarCartao').addEventListener('click', () => {
+      if (_lastPaymentLink && _lastPaymentLink.startsWith('https://')) window.open(_lastPaymentLink, '_blank');
+    });
+
     function fecharModalVincular() { document.getElementById('modalVincular').classList.remove('open'); }
     document.getElementById('btnCancelarVincular').addEventListener('click', fecharModalVincular);
-    document.getElementById('btnFecharVincular').addEventListener('click', () => { fecharModalVincular(); renderListaFiltrada(); atualizarResumo(); });
+    document.getElementById('btnFecharVincular').addEventListener('click', () => {
+      document.getElementById('btnCadastrarCartao').style.display = 'none';
+      _lastPaymentLink = '';
+      fecharModalVincular();
+      renderListaFiltrada();
+      atualizarResumo();
+    });
     document.getElementById('modalVincular').addEventListener('click', function(e) { if (e.target === this) fecharModalVincular(); });
 
     // ── Modal pagamento manual ───────────────────────────────────────────────
