@@ -103,6 +103,12 @@
     .cartao-sucesso-icon { font-size: 36px; }
     .cartao-sucesso-text { font-size: 16px; font-weight: 700; color: #2ecc71; margin-top: 8px; }
     .cartao-final-4 { font-size: 13px; color: #aaa; margin-top: 4px; }
+    .status-recorrente-pendente { background: rgba(142,68,173,.2); color: #9b59b6; border: 1px solid #9b59b6; }
+    .primeiro-pag-wrap { margin-top: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .primeiro-pag-label { font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+    .primeiro-pag-select { background: #222; border: 1px solid #555; color: #fff; border-radius: 8px; padding: 5px 10px; font-size: 12px; font-weight: 700; cursor: pointer; flex: 1; min-width: 140px; }
+    .primeiro-pag-select.pago { border-color: #2ecc71; color: #2ecc71; }
+    .primeiro-pag-select.pendente { border-color: #f39c12; color: #f39c12; }
   </style>
 </head>
 <body>
@@ -265,7 +271,8 @@
         <div style="height:12px;"></div>
         <label class="label">CPF do titular</label>
         <input id="cCartaoCpf" class="input" type="tel" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" autocomplete="off" />
-        <input id="cCartaoCep" type="hidden" />
+        <label class="label">CEP do titular</label>
+        <input id="cCartaoCep" class="input" type="tel" inputmode="numeric" maxlength="9" placeholder="00000-000" autocomplete="off" />
         <p class="msg err" id="cartaoErr"></p>
         <p class="msg info" id="cartaoInfo"></p>
         <div class="modal-btns">
@@ -307,7 +314,7 @@
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbx7pbyrOuM_2PcRn-epYGByCCuICaSLmS-gR9RVyEfhaRae-iT_8W_H6NnVJPGAJCIC/exec';
 
     import { db, auth } from './firebase-config.js';
-    import { collection, doc, query, where, getDocs, getDoc, addDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { collection, doc, query, where, getDocs, addDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
     import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
     const TOKEN_KEY      = 'rv_prof_token';
@@ -410,7 +417,7 @@
         const isPast = (ano < agora.getFullYear()) || (ano === agora.getFullYear() && mes < agora.getMonth()+1);
         todosRegistros = alunosSnap.docs.map(d => {
           const a=d.data(); const id=d.id; const pag=pagByAluno[id];
-          return { id, nome:a.nome_aluno||'', plano:a.plano||'', email:a.email||'', telefone:a.telefone||'', cpf:a.cpf||'', grupo_familiar:a.grupo_familiar||'', data_contrato:a.data_contrato||'', asaas_id:a.asaas_id||'', asaas_assinatura_id:a.asaas_assinatura_id||'', asaas_cobranca_id:a.asaas_cobranca_id||'', asaas_tipo:a.asaas_tipo||'', asaas_paymentLink:a.asaas_paymentLink||'', numero:a.numero||'', valorMensalidade:valorDePlano(a.plano), statusPagamento:pag?'pago':(isPast?'vencido':'pendente'), valor:pag?(pag.valor||0):0, dataPagamento:pag?(pag.data||''):'', formaPagamento:pag?(pag.formaPagamento||''):'', };
+          return { id, nome:a.nome_aluno||'', plano:a.plano||'', email:a.email||'', telefone:a.telefone||'', cpf:a.cpf||'', grupo_familiar:a.grupo_familiar||'', data_contrato:a.data_contrato||'', asaas_id:a.asaas_id||'', asaas_assinatura_id:a.asaas_assinatura_id||'', asaas_cobranca_id:a.asaas_cobranca_id||'', asaas_tipo:a.asaas_tipo||'', asaas_paymentLink:a.asaas_paymentLink||'', numero:a.numero||'', primeiro_pagamento:a.primeiro_pagamento||'', valorMensalidade:valorDePlano(a.plano), statusPagamento:pag?'pago':(isPast?'vencido':'pendente'), valor:pag?(pag.valor||0):0, dataPagamento:pag?(pag.data||''):'', formaPagamento:pag?(pag.formaPagamento||''):'', };
         });
         document.getElementById('listInfo').textContent = '';
         renderListaFiltrada(); atualizarResumo();
@@ -437,11 +444,31 @@
       container.innerHTML = lista.map(buildCardHtml).join('');
     }
 
+    function primeiroPagHtml(a) {
+      const val = a.primeiro_pagamento || '';
+      const isPago = val && val !== 'pendente';
+      const cls = isPago ? 'pago' : 'pendente';
+      const ie = escAttr(a.id);
+      return '<div class="primeiro-pag-wrap">' +
+        '<span class="primeiro-pag-label">1º mês:</span>' +
+        '<select class="primeiro-pag-select '+cls+'" onchange="window._salvarPrimeiroPag(\''+ie+'\',this.value)">' +
+          '<option value=""'+(val===''?' selected':'')+'>⏳ Aguardando pagamento</option>' +
+          '<option value="pix_pago"'+(val==='pix_pago'?' selected':'')+'>✅ Pix pago</option>' +
+          '<option value="debito"'+(val==='debito'?' selected':'')+'>✅ Débito pago</option>' +
+          '<option value="dinheiro"'+(val==='dinheiro'?' selected':'')+'>✅ Dinheiro pago</option>' +
+        '</select>' +
+      '</div>';
+    }
+
     function buildCardHtml(a) {
       const st = getEffectiveStatus(a);
       let badgeClass='status-pendente', badgeText='⏳ Pendente';
       if (st==='pago')    { badgeClass='status-pago';    badgeText='✅ Pago'; }
       if (st==='vencido') { badgeClass='status-vencido'; badgeText='❌ Vencido'; }
+      // Badge especial para Recorrente pendente
+      if (a.plano==='Recorrente' && st!=='pago' && a.asaas_id) {
+        badgeClass='status-recorrente-pendente'; badgeText='⏳ Recorrente Pendente';
+      }
       const temDesconto = detectarDesconto(a);
       const valorFinal  = calcularValorFinal(a);
       const valorDisp   = valorFinal>0 ? 'R$\u00a0'+valorFinal.toFixed(2).replace('.',',')+(temDesconto?' <span class="desconto-tag">10%\u00a0desc.</span>':'') : '—';
@@ -466,18 +493,59 @@
           acoes += '<button class="btn-acao boleto" onclick="window._cobrar(\''+ie+'\',\'BOLETO\')">📄 Gerar Boleto</button>';
         }
         if (a.plano==='Recorrente' && a.asaas_assinatura_id) acoes += '<button class="btn-acao cancelar" onclick="window._cancelar(\''+ie+'\')">❌ Cancelar Assinatura</button>';
-        if (a.plano==='Recorrente') acoes += '<button class="btn-acao cartao" onclick="window._abrirCartao(\''+ie+'\')">💳 Cartão</button>';
+        acoes += '<button class="btn-acao cartao" onclick="window._abrirCartao(\''+ie+'\')">💳 Cartão</button>';
       }
       const tel = validarTelefone(a.telefone);
-      if (a.asaas_id && tel) acoes += '<button class="btn-acao wpp" onclick="window._wppPix(\''+ie+'\')">💬 WhatsApp Pix</button>';
-      const live = asaasStatusMap[a.id]||{};
-      const temLink = a.asaas_paymentLink||live.invoiceUrl||live.pixCopiaECola;
-      if (temLink && tel) acoes += '<button class="btn-acao wpp" style="background:#128c7e;" onclick="window._wpp(\''+ie+'\')">💬 WhatsApp</button>';
-      if (a.plano==='Mensal') acoes += '<button class="btn-acao manual" onclick="window._manual(\''+ie+'\',\''+escAttr(a.nome||'')+'\',\''+escAttr(String(valorFinal||''))+'\')">💵 Registrar Manual</button>';
-      return '<div class="fin-aluno-card"><div class="fin-aluno-header"><div class="fin-aluno-nome">'+escHtml(a.nome||'—')+'</div><span class="status-badge '+badgeClass+'">'+badgeText+'</span></div>'+(extras?'<div style="margin-top:6px;">'+extras+'</div>':'')+'<div class="fin-aluno-info"><div class="fin-info-item"><span class="fin-info-label">Plano</span><span class="fin-info-valor">'+escHtml(a.plano||'—')+'</span></div><div class="fin-info-item"><span class="fin-info-label">Valor</span><span class="fin-info-valor">'+valorDisp+'</span></div><div class="fin-info-item"><span class="fin-info-label">Contrato</span><span class="fin-info-valor">'+contratoDisp+'</span></div><div class="fin-info-item"><span class="fin-info-label">Vencimento</span><span class="fin-info-valor">'+(st==='pago'?dataPagDisp:vencimento)+'</span></div>'+(st==='pago'?'<div class="fin-info-item"><span class="fin-info-label">Forma</span><span class="fin-info-valor">'+formatFormaPag(a.formaPagamento)+'</span></div>':'')+'</div><div class="btns-acao">'+acoes+'</div></div>';
+      // Pix 1º mês: só para Recorrente vinculado e 1º pagamento ainda não confirmado
+      const primPag = a.primeiro_pagamento || '';
+      const primPagConfirmado = primPag === 'pix_pago' || primPag === 'debito' || primPag === 'dinheiro';
+      if (a.plano==='Recorrente' && a.asaas_id && !primPagConfirmado && tel) {
+        acoes += '<button class="btn-acao wpp" onclick="window._wppPix(\''+ie+'\')">📲 Pix 1º mês</button>';
+      }
+      // Registrar Manual: Mensal e Recorrente (débito/dinheiro)
+      if (a.plano==='Mensal' || (a.plano==='Recorrente' && a.asaas_id)) {
+        acoes += '<button class="btn-acao manual" onclick="window._manual(\''+ie+'\',\''+escAttr(a.nome||'')+'\',\''+escAttr(String(valorFinal||''))+'\')">💵 Registrar Manual</button>';
+      }
+      return '<div class="fin-aluno-card"><div class="fin-aluno-header"><div class="fin-aluno-nome">'+escHtml(a.nome||'—')+'</div><span class="status-badge '+badgeClass+'">'+badgeText+'</span></div>'+(extras?'<div style="margin-top:6px;">'+extras+'</div>':'')+'<div class="fin-aluno-info"><div class="fin-info-item"><span class="fin-info-label">Plano</span><span class="fin-info-valor">'+escHtml(a.plano||'—')+'</span></div><div class="fin-info-item"><span class="fin-info-label">Valor</span><span class="fin-info-valor">'+valorDisp+'</span></div><div class="fin-info-item"><span class="fin-info-label">Contrato</span><span class="fin-info-valor">'+contratoDisp+'</span></div><div class="fin-info-item"><span class="fin-info-label">Vencimento</span><span class="fin-info-valor">'+(st==='pago'?dataPagDisp:vencimento)+'</span></div>'+(st==='pago'?'<div class="fin-info-item"><span class="fin-info-label">Forma</span><span class="fin-info-valor">'+formatFormaPag(a.formaPagamento)+'</span></div>':'')+'</div><div class="btns-acao">'+acoes+'</div>'+(a.plano==='Recorrente'&&a.asaas_id&&st!=='pago'?primeiroPagHtml(a):'')+  '</div>';
     }
 
-    window._abrirCartao = async function(alunoId) {
+    function primeiroPagHtml(a) {
+      const val = a.primeiro_pagamento || '';
+      const isPago = val === 'pix_pago' || val === 'debito' || val === 'dinheiro';
+      const cls = isPago ? 'pago' : 'pendente';
+      const ie = escAttr(a.id);
+      return '<div class="primeiro-pag-wrap">' +
+        '<span class="primeiro-pag-label">1º mês:</span>' +
+        '<select class="primeiro-pag-select ' + cls + '" onchange="window._salvarPrimeiroPag(\'' + ie + '\',this.value)">' +
+          '<option value=""' + (val===''?' selected':'') + '>⏳ Aguardando pagamento</option>' +
+          '<option value="pix_pago"' + (val==='pix_pago'?' selected':'') + '>✅ Pix pago</option>' +
+          '<option value="debito"' + (val==='debito'?' selected':'') + '>✅ Débito pago</option>' +
+          '<option value="dinheiro"' + (val==='dinheiro'?' selected':'') + '>✅ Dinheiro pago</option>' +
+        '</select>' +
+      '</div>';
+    }
+
+    window._salvarPrimeiroPag = async function(alunoId, valor) {
+      try {
+        await updateDoc(doc(db,'alunos',alunoId), { primeiro_pagamento: valor });
+        const idx = todosRegistros.findIndex(r => r.id === alunoId);
+        if (idx >= 0) todosRegistros[idx].primeiro_pagamento = valor;
+        if (valor && valor !== '') {
+          const a = todosRegistros.find(r => r.id === alunoId);
+          if (a) {
+            const formaPagMap = { pix_pago:'pix', debito:'debito', dinheiro:'dinheiro' };
+            const formaPag = formaPagMap[valor] || 'dinheiro';
+            const jaTemPag = await getDocs(query(collection(db,'pagamentos'), where('alunoId','==',alunoId), where('mes','==',mesSelecionado), where('ano','==',anoSelecionado)));
+            if (jaTemPag.empty) {
+              await addDoc(collection(db,'pagamentos'), { alunoId, nome:a.nome||'', valor:calcularValorFinal(a), data:new Date().toISOString().slice(0,10), formaPagamento:formaPag, mes:mesSelecionado, ano:anoSelecionado, criadoEm:serverTimestamp() });
+            }
+          }
+        }
+        renderListaFiltrada(); atualizarResumo();
+      } catch(e) { alert('Erro ao salvar: '+e.message); }
+    };
+
+    window._abrirCartao = function(alunoId) {
       const a = todosRegistros.find(r => r.id === alunoId);
       if (!a) return;
       _cartaoAlunoData = a;
@@ -497,20 +565,6 @@
       document.getElementById('cartaoFormWrap').style.display    = '';
       document.getElementById('cartaoSuccessWrap').style.display = 'none';
       document.getElementById('modalCartao').classList.add('open');
-      // Buscar CEP do Firestore silenciosamente
-      try {
-        const alunoDoc = await getDoc(doc(db, 'alunos', alunoId));
-        if (alunoDoc.exists()) {
-          const dados = alunoDoc.data();
-          const cepFirestore = (dados.cep || '').replace(/\D/g, '');
-          if (cepFirestore.length === 8) {
-            document.getElementById('cCartaoCep').value = cepFirestore;
-          }
-          if (dados.numero) {
-            _cartaoAlunoData = Object.assign({}, _cartaoAlunoData, { numero: dados.numero });
-          }
-        }
-      } catch(e) { console.warn('Não foi possível buscar CEP do Firestore:', e); }
     };
 
     document.getElementById('cCartaoNumero').addEventListener('input',   function() { this.value = formatarNumeroCartao(this.value); document.getElementById('cCartaoBrand').textContent = detectarBandeira(this.value).emoji; });
@@ -518,6 +572,7 @@
     document.getElementById('cCartaoValidade').addEventListener('input', function() { this.value = formatarValidade(this.value); });
     document.getElementById('cCartaoCvv').addEventListener('input',      function() { this.value = this.value.replace(/\D/g,'').slice(0,4); });
     document.getElementById('cCartaoCpf').addEventListener('input',      function() { this.value = formatarCpf(this.value); });
+    document.getElementById('cCartaoCep').addEventListener('input',      function() { this.value = formatarCep(this.value); });
 
     document.getElementById('btnSalvarCartao').addEventListener('click', async () => {
       const alunoId    = document.getElementById('cartaoAlunoId').value;
@@ -534,7 +589,7 @@
       if (!/^\d{2}\/\d{2}$/.test(validade)) { document.getElementById('cartaoErr').textContent='Validade inválida (MM/AA).'; return; }
       if (cvv.length < 3)                   { document.getElementById('cartaoErr').textContent='CVV inválido.'; return; }
       if (cpf.length !== 11)                { document.getElementById('cartaoErr').textContent='CPF do titular inválido.'; return; }
-      if (cep.length !== 8)                 { document.getElementById('cartaoErr').textContent='CEP do aluno não encontrado. Cadastre o CEP no perfil do aluno antes de adicionar o cartão.'; return; }
+      if (cep.length !== 8)                 { document.getElementById('cartaoErr').textContent='CEP inválido.'; return; }
       const [mesVal, anoVal] = validade.split('/');
       document.getElementById('cartaoInfo').textContent   = 'Cadastrando cartão…';
       document.getElementById('btnSalvarCartao').disabled = true;
@@ -543,10 +598,9 @@
           customerId, alunoId, numero, nome,
           mesValidade: mesVal, anoValidade: '20'+anoVal, cvv,
           cpfTitular:  cpf,
-          email:         _cartaoAlunoData ? (_cartaoAlunoData.email    || '') : '',
-          telefone:      _cartaoAlunoData ? (_cartaoAlunoData.telefone || '') : '',
-          cep:           cep,
-          addressNumber: _cartaoAlunoData ? (_cartaoAlunoData.numero   || 'S/N') : 'S/N'
+          email:       _cartaoAlunoData ? (_cartaoAlunoData.email    || '') : '',
+          telefone:    _cartaoAlunoData ? (_cartaoAlunoData.telefone || '') : '',
+          cep:         cep
         });
         document.getElementById('cartaoInfo').textContent = '';
         if (!resp.ok) { document.getElementById('cartaoErr').textContent='Erro: '+(resp.erro||'desconhecido'); document.getElementById('btnSalvarCartao').disabled=false; return; }
