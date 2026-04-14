@@ -410,7 +410,7 @@
         const isPast = (ano < agora.getFullYear()) || (ano === agora.getFullYear() && mes < agora.getMonth()+1);
         todosRegistros = alunosSnap.docs.map(d => {
           const a=d.data(); const id=d.id; const pag=pagByAluno[id];
-          return { id, nome:a.nome_aluno||'', plano:a.plano||'', email:a.email||'', telefone:a.telefone||'', cpf:a.cpf||'', grupo_familiar:a.grupo_familiar||'', data_contrato:a.data_contrato||'', asaas_id:a.asaas_id||'', asaas_assinatura_id:a.asaas_assinatura_id||'', asaas_cobranca_id:a.asaas_cobranca_id||'', asaas_tipo:a.asaas_tipo||'', asaas_paymentLink:a.asaas_paymentLink||'', valorMensalidade:valorDePlano(a.plano), statusPagamento:pag?'pago':(isPast?'vencido':'pendente'), valor:pag?(pag.valor||0):0, dataPagamento:pag?(pag.data||''):'', formaPagamento:pag?(pag.formaPagamento||''):'', };
+          return { id, nome:a.nome_aluno||'', plano:a.plano||'', email:a.email||'', telefone:a.telefone||'', cpf:a.cpf||'', grupo_familiar:a.grupo_familiar||'', data_contrato:a.data_contrato||'', asaas_id:a.asaas_id||'', asaas_assinatura_id:a.asaas_assinatura_id||'', asaas_cobranca_id:a.asaas_cobranca_id||'', asaas_tipo:a.asaas_tipo||'', asaas_paymentLink:a.asaas_paymentLink||'', numero:a.numero||'', valorMensalidade:valorDePlano(a.plano), statusPagamento:pag?'pago':(isPast?'vencido':'pendente'), valor:pag?(pag.valor||0):0, dataPagamento:pag?(pag.data||''):'', formaPagamento:pag?(pag.formaPagamento||''):'', };
         });
         document.getElementById('listInfo').textContent = '';
         renderListaFiltrada(); atualizarResumo();
@@ -506,6 +506,9 @@
           if (cepFirestore.length === 8) {
             document.getElementById('cCartaoCep').value = cepFirestore;
           }
+          if (dados.numero) {
+            _cartaoAlunoData = Object.assign({}, _cartaoAlunoData, { numero: dados.numero });
+          }
         }
       } catch(e) { console.warn('Não foi possível buscar CEP do Firestore:', e); }
     };
@@ -540,9 +543,10 @@
           customerId, alunoId, numero, nome,
           mesValidade: mesVal, anoValidade: '20'+anoVal, cvv,
           cpfTitular:  cpf,
-          email:       _cartaoAlunoData ? (_cartaoAlunoData.email    || '') : '',
-          telefone:    _cartaoAlunoData ? (_cartaoAlunoData.telefone || '') : '',
-          cep:         cep
+          email:         _cartaoAlunoData ? (_cartaoAlunoData.email    || '') : '',
+          telefone:      _cartaoAlunoData ? (_cartaoAlunoData.telefone || '') : '',
+          cep:           cep,
+          addressNumber: _cartaoAlunoData ? (_cartaoAlunoData.numero   || 'S/N') : 'S/N'
         });
         document.getElementById('cartaoInfo').textContent = '';
         if (!resp.ok) { document.getElementById('cartaoErr').textContent='Erro: '+(resp.erro||'desconhecido'); document.getElementById('btnSalvarCartao').disabled=false; return; }
