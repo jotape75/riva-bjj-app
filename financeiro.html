@@ -510,32 +510,12 @@
 
     window._salvarPrimeiroPag = async function(alunoId, valor) {
       try {
+        // Só salva o status do 1º pagamento no Firestore — controle interno
+        // O badge muda apenas via Sincronizar (quando Asaas confirmar cobrança do cartão)
         await updateDoc(doc(db,'alunos',alunoId), { primeiro_pagamento: valor });
         const idx = todosRegistros.findIndex(r => r.id === alunoId);
         if (idx >= 0) todosRegistros[idx].primeiro_pagamento = valor;
-        if (valor && valor !== '') {
-          const a = todosRegistros.find(r => r.id === alunoId);
-          if (a) {
-            const formaPagMap = { pix_pago:'pix', debito:'debito', dinheiro:'dinheiro' };
-            const formaPag = formaPagMap[valor] || 'dinheiro';
-            // Se pix_pago, dar baixa no Asaas
-            if (valor === 'pix_pago' && a.asaas_cobranca_id) {
-              try {
-                const respAsaas = await gasCall('asaasConfirmarPix', {
-                  cobrancaId: a.asaas_cobranca_id,
-                  valor: calcularValorFinal(a)
-                });
-                if (!respAsaas.ok) console.warn('Aviso Asaas:', respAsaas.erro);
-              } catch(e) { console.warn('Erro ao confirmar Pix no Asaas:', e); }
-            }
-            // Registrar pagamento local se ainda não existir
-            const jaTemPag = await getDocs(query(collection(db,'pagamentos'), where('alunoId','==',alunoId), where('mes','==',mesSelecionado), where('ano','==',anoSelecionado)));
-            if (jaTemPag.empty) {
-              await addDoc(collection(db,'pagamentos'), { alunoId, nome:a.nome||'', valor:calcularValorFinal(a), data:new Date().toISOString().slice(0,10), formaPagamento:formaPag, mes:mesSelecionado, ano:anoSelecionado, criadoEm:serverTimestamp() });
-            }
-          }
-        }
-        renderListaFiltrada(); atualizarResumo();
+        renderListaFiltrada();
       } catch(e) { alert('Erro ao salvar: '+e.message); }
     };
 
@@ -652,7 +632,7 @@
       try {
         const temDesc      = detectarDesconto(a);
         const dataContrato = a.data_contrato || new Date().toISOString().slice(0,10);
-        const resp = await gasCall('asaasVincular', { alunoId:a.id, nome:a.nome, email:a.email, telefone:a.telefone, cpf:a.cpf, plano:'Mensal', formaPag:'PIX', grupoFamiliar:a.grupo_familiar, temDesconto:temDesc?'true':'false', dataContrato });
+        const resp = await gasCall('asaasVincular', { alunoId:a.id, nome:a.nome, email:a.email, telefone:a.telefone, cpf:a.cpf, plano:a.plano, formaPag:'PIX', grupoFamiliar:a.grupo_familiar, temDesconto:temDesc?'true':'false', dataContrato });
         document.getElementById('pixWppInfo').style.display = 'none';
         if (!resp.ok) { document.getElementById('pixWppErr').textContent='Erro: '+(resp.erro||'desconhecido'); return; }
         const upd = { asaas_cobranca_id:resp.cobranca_id||'', asaas_paymentLink:resp.paymentLink||'' };
