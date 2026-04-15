@@ -253,20 +253,20 @@
             <div class="detalhe-row"><span class="detalhe-label">Aulas no Grau</span><span class="detalhe-valor">${esc(a.aulas_no_grau)}</span></div>
             <div class="detalhe-row"><span class="detalhe-label">Aulas Restantes</span><span class="detalhe-valor">${esc(a.aulas_restantes)}</span></div>
             <div class="detalhe-row"><span class="detalhe-label">Meta Grau</span><span class="detalhe-valor">${esc(a.meta_grau)}</span></div>
-            <div class="detalhe-row"><span class="detalhe-label">Data Último Grau</span><span class="detalhe-valor">${esc(a.data_ultimo_grau)}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Data Último Grau</span><span class="detalhe-valor">${esc(formatarData(a.data_ultimo_grau))}</span></div>
             <div class="detalhe-row"><span class="detalhe-label">Telefone</span><span class="detalhe-valor">${esc(a.telefone)}</span></div>
             <div class="detalhe-row"><span class="detalhe-label">CPF</span><span class="detalhe-valor">${esc(a.cpf)}</span></div>
-            <div class="detalhe-row"><span class="detalhe-label">Data Nasc.</span><span class="detalhe-valor">${esc(a.data_nasc)}</span></div>
-            <div class="detalhe-row"><span class="detalhe-label">Data de Início</span><span class="detalhe-valor">${esc(a.data_inicio)}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Data Nasc.</span><span class="detalhe-valor">${esc(formatarData(a.data_nasc))}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Data de Início</span><span class="detalhe-valor">${esc(formatarData(a.data_inicio))}</span></div>
             <div class="detalhe-row"><span class="detalhe-label">Categoria</span><span class="detalhe-valor">${esc(a.categoria)}</span></div>
             <div class="detalhe-row"><span class="detalhe-label">Plano</span><span class="detalhe-valor">${esc(a.plano)}</span></div>
             <div class="detalhe-row"><span class="detalhe-label">Grupo Familiar</span><span class="detalhe-valor">${esc(a.grupo_familiar)}</span></div>
-            <div class="detalhe-row"><span class="detalhe-label">Data Contrato</span><span class="detalhe-valor">${esc(a.data_contrato)}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Data Contrato</span><span class="detalhe-valor">${esc(formatarData(a.data_contrato))}</span></div>
             <div class="detalhe-row"><span class="detalhe-label">CEP</span><span class="detalhe-valor">${esc(a.cep)}</span></div>
             <div class="detalhe-row"><span class="detalhe-label">Endereço</span>
               <span class="detalhe-valor">${esc(a.rua)}, ${esc(a.numero)} - ${esc(a.bairro)}, ${esc(a.cidade)} / ${esc(a.estado)}</span>
             </div>
-            <div class="detalhe-row"><span class="detalhe-label">Data de Cadastro</span><span class="detalhe-valor">${esc(String(a.criadoEm||'—'))}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Data de Cadastro</span><span class="detalhe-valor">${esc(formatarTimestamp(a.criadoEm))}</span></div>
           </div>
 
           <!-- ── Trocar Faixa ── -->
@@ -621,6 +621,20 @@
       if (!val) return '';
       if (/^\d{4}-\d{2}-\d{2}/.test(val)) { const p=val.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
       return val;
+    }
+    function formatarTimestamp(ts) {
+      if (!ts) return '—';
+      let d;
+      if (ts && typeof ts.toDate === 'function') d = ts.toDate();
+      else if (ts instanceof Date) d = ts;
+      else d = new Date(ts);
+      if (isNaN(d.getTime())) return '—';
+      const dd  = String(d.getDate()).padStart(2,'0');
+      const mm  = String(d.getMonth()+1).padStart(2,'0');
+      const aa  = d.getFullYear();
+      const hh  = String(d.getHours()).padStart(2,'0');
+      const min = String(d.getMinutes()).padStart(2,'0');
+      return `${dd}/${mm}/${aa} • ${hh}:${min}`;
     }
 
     document.getElementById('btnHdrSair').addEventListener('click', () => {
