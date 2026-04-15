@@ -688,8 +688,7 @@
         '<div class="btns-acao">'+acoes+'</div>' +
         (a.plano==='Recorrente' && a.asaas_id && st!=='pago' ? primeiroPagHtml(a) : '') +
         '</div>';
-    }
-
+    
     function primeiroPagHtml(a) {
       const val = a.primeiro_pagamento || '';
       const isPago = val === 'pix_pago' || val === 'debito' || val === 'dinheiro';
