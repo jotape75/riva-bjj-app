@@ -7,397 +7,77 @@
   <title>Alunos – Riva BJJ</title>
   <link rel="stylesheet" href="./styles.css" />
   <style>
-    /* ── Header desktop compacto ── */
-    .admin-hdr-left {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
+    .admin-hdr-left { display: flex; align-items: center; gap: 14px; }
     .admin-hdr-titulo { display: none; }
     .admin-hdr-sair { display: none; }
-    .btn-logout {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: #fff;
-      border-radius: 10px;
-      padding: 8px 14px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
+    .btn-logout { background: transparent; border: 1px solid var(--border); color: #fff; border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
     .btn-logout:active { opacity: .75; }
-    /* ── Logo maior ── */
-    .admin-logo {
-      width: 56px !important;
-      height: 56px !important;
-      margin-top: 0 !important;
-    }
+    .admin-logo { width: 56px !important; height: 56px !important; margin-top: 0 !important; }
     @media (min-width: 769px) {
-      .admin-hdr-inner {
-        max-width: 1100px;
-        justify-content: space-between;
-        padding: 0 24px;
-      }
-      .admin-logo {
-        width: 64px !important;
-        height: 64px !important;
-        margin-top: 0 !important;
-      }
-      .admin-hdr-titulo {
-        display: inline;
-        font-size: 20px;
-        font-weight: 900;
-        color: #fff;
-        letter-spacing: 0.5px;
-      }
+      .admin-hdr-inner { max-width: 1100px; justify-content: space-between; padding: 0 24px; }
+      .admin-logo { width: 64px !important; height: 64px !important; margin-top: 0 !important; }
+      .admin-hdr-titulo { display: inline; font-size: 20px; font-weight: 900; color: #fff; letter-spacing: 0.5px; }
       .admin-hdr-sair { display: inline-block; }
       .admin-page { max-width: 1100px; padding: 32px 32px 64px; }
     }
-    @media (max-width: 768px) {
-      .admin-hdr-inner { justify-content: center; }
-    }
+    @media (max-width: 768px) { .admin-hdr-inner { justify-content: center; } }
 
-    .aluno-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 14px 16px;
-      margin-bottom: 10px;
-    }
-    .aluno-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 10px;
-    }
-    .aluno-nome {
-      font-size: 17px;
-      font-weight: 900;
-      color: #fff;
-      flex: 1;
-      min-width: 0;
-      word-break: break-word;
-    }
-    .aluno-email {
-      font-size: 13px;
-      color: #aaa;
-      margin-top: 2px;
-      word-break: break-all;
-    }
-    .aluno-meta {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 8px;
-      flex-wrap: wrap;
-    }
-    .aluno-faixa {
-      font-size: 13px;
-      font-weight: 700;
-      color: #fff;
-      background: #2a2a2a;
-      border-radius: 8px;
-      padding: 3px 10px;
-    }
-    .badge-ativo {
-      display: inline-block;
-      padding: 3px 12px;
-      border-radius: 999px;
-      background: var(--green);
-      color: #fff;
-      font-size: 11px;
-      font-weight: 900;
-    }
-    .badge-inativo {
-      display: inline-block;
-      padding: 3px 12px;
-      border-radius: 999px;
-      background: var(--red);
-      color: #fff;
-      font-size: 11px;
-      font-weight: 900;
-    }
-    .btn-toggle {
-      background: #e67e22;
-      border: none;
-      color: #fff;
-      border-radius: 999px;
-      padding: 6px 16px;
-      font-size: 12px;
-      font-weight: 900;
-      cursor: pointer;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
+    .aluno-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; }
+    .aluno-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .aluno-nome { font-size: 17px; font-weight: 900; color: #fff; flex: 1; min-width: 0; word-break: break-word; }
+    .aluno-email { font-size: 13px; color: #aaa; margin-top: 2px; word-break: break-all; }
+    .aluno-meta { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+    .aluno-faixa { font-size: 13px; font-weight: 700; color: #fff; background: #2a2a2a; border-radius: 8px; padding: 3px 10px; }
+    .badge-ativo   { display: inline-block; padding: 3px 12px; border-radius: 999px; background: var(--green); color: #fff; font-size: 11px; font-weight: 900; }
+    .badge-inativo { display: inline-block; padding: 3px 12px; border-radius: 999px; background: var(--red);   color: #fff; font-size: 11px; font-weight: 900; }
+    .btn-toggle { background: #e67e22; border: none; color: #fff; border-radius: 999px; padding: 6px 16px; font-size: 12px; font-weight: 900; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
     .btn-toggle:active { opacity: .75; }
-    .btn-faixa {
-      background: #2980b9;
-      border: none;
-      color: #fff;
-      border-radius: 999px;
-      padding: 6px 16px;
-      font-size: 12px;
-      font-weight: 900;
-      cursor: pointer;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
+    .btn-faixa  { background: #2980b9; border: none; color: #fff; border-radius: 999px; padding: 6px 16px; font-size: 12px; font-weight: 900; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
     .btn-faixa:active { opacity: .75; }
-    .trocar-faixa-inline {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 10px;
-      flex-wrap: wrap;
-    }
-    .trocar-faixa-inline select {
-      background: #222;
-      border: 1px solid #555;
-      color: #fff;
-      border-radius: 8px;
-      padding: 7px 10px;
-      font-size: 13px;
-      flex: 1;
-      min-width: 100px;
-    }
-    .btn-confirmar-faixa {
-      background: var(--red);
-      border: none;
-      color: #fff;
-      border-radius: 10px;
-      padding: 8px 14px;
-      font-size: 13px;
-      font-weight: 800;
-      cursor: pointer;
-      white-space: nowrap;
-    }
+    .trocar-faixa-inline { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .trocar-faixa-inline select { background: #222; border: 1px solid #555; color: #fff; border-radius: 8px; padding: 7px 10px; font-size: 13px; flex: 1; min-width: 100px; }
+    .btn-confirmar-faixa { background: var(--red); border: none; color: #fff; border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap; }
     .btn-confirmar-faixa:active { opacity: .75; }
-    .btn-cancelar-faixa {
-      background: #333;
-      border: 1px solid #555;
-      color: #aaa;
-      border-radius: 10px;
-      padding: 8px 12px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      white-space: nowrap;
-    }
+    .btn-cancelar-faixa { background: #333; border: 1px solid #555; color: #aaa; border-radius: 10px; padding: 8px 12px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
     .btn-cancelar-faixa:active { opacity: .75; }
-    .btn-editar {
-      background: #27ae60;
-      border: none;
-      color: #fff;
-      border-radius: 999px;
-      padding: 6px 16px;
-      font-size: 12px;
-      font-weight: 900;
-      cursor: pointer;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
+    .btn-editar  { background: #27ae60; border: none; color: #fff; border-radius: 999px; padding: 6px 16px; font-size: 12px; font-weight: 900; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
     .btn-editar:active { opacity: .75; }
-    .btn-remover {
-      background: #e74c3c;
-      border: none;
-      color: #fff;
-      border-radius: 999px;
-      padding: 6px 16px;
-      font-size: 12px;
-      font-weight: 900;
-      cursor: pointer;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
+    .btn-remover { background: #e74c3c; border: none; color: #fff; border-radius: 999px; padding: 6px 16px; font-size: 12px; font-weight: 900; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
     .btn-remover:active { opacity: .75; }
-    .editar-inline {
-      display: none;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 10px;
-      border-top: 1px solid var(--border);
-      padding-top: 10px;
-    }
-    .editar-inline label {
-      font-size: 12px;
-      color: #aaa;
-      margin-bottom: 2px;
-      display: block;
-    }
-    .editar-inline input,
-    .editar-inline select {
-      background: #222;
-      border: 1px solid #555;
-      color: #fff;
-      border-radius: 8px;
-      padding: 7px 10px;
-      font-size: 13px;
-      width: 100%;
-      box-sizing: border-box;
-    }
-    .editar-inline-btns {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .aluno-detalhes {
-      border-top: 1px solid var(--border);
-      padding-top: 10px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px 16px;
-    }
-    .detalhe-row {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .detalhe-row.full-width {
-      grid-column: 1 / -1;
-    }
-    .detalhe-label {
-      font-size: 12px;
-      color: #aaa;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .detalhe-valor {
-      font-size: 15px;
-      color: #fff;
-      font-weight: 700;
-      word-break: break-word;
-    }
-    #searchBox {
-      margin-bottom: 8px;
-    }
-    .lista-vazia {
-      color: #aaa;
-      text-align: center;
-      padding: 24px 0;
-      font-size: 15px;
-    }
-    .aluno-financeiro {
-      margin-top: 12px;
-      border-top: 1px solid var(--border);
-      padding-top: 12px;
-    }
-    .fin-header {
-      font-size: 15px;
-      font-weight: 900;
-      color: #fff;
-      margin-bottom: 10px;
-    }
-    .fin-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px 16px;
-      margin-bottom: 12px;
-    }
-    .fin-item {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .fin-label {
-      font-size: 12px;
-      color: #aaa;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .fin-valor {
-      font-size: 15px;
-      color: #fff;
-      font-weight: 700;
-    }
-    .fin-status-pago   { color: #2ecc71; }
-    .fin-status-aberto { color: #f39c12; }
-    .fin-status-vencido { color: #e74c3c; }
-    .fin-acoes {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .btn-fin {
-      border-radius: 10px;
-      padding: 8px 14px;
-      font-size: 13px;
-      font-weight: 800;
-      cursor: pointer;
-      white-space: nowrap;
-      border: none;
-    }
-    .btn-fin.primary {
-      background: var(--red);
-      color: #fff;
-    }
-    .btn-fin.secondary {
-      background: #2a2a2a;
-      border: 1px solid #444;
-      color: #fff;
-    }
-    .btn-fin:active { opacity: .75; }
-    .fin-msg {
-      font-size: 13px;
-      margin-top: 8px;
-      min-height: 18px;
-    }
 
-    /* ── Barra de busca sticky ── */
-    .busca-fixa {
-      position: sticky;
-      top: 72px;
-      z-index: 9;
-      background: var(--bg);
-      padding: 12px 0 4px;
-      margin-bottom: 8px;
-    }
-    @media (max-width: 768px) {
-      .busca-fixa { top: 68px; }
-    }
+    /* ── Editar inline ── */
+    .editar-inline { display: none; flex-direction: column; gap: 10px; margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px; }
+    .editar-inline label { font-size: 12px; color: #aaa; margin-bottom: 2px; display: block; }
+    .editar-inline input, .editar-inline select { background: #222; border: 1px solid #555; color: #fff; border-radius: 8px; padding: 7px 10px; font-size: 13px; width: 100%; box-sizing: border-box; }
+    .editar-inline input[readonly] { background: #1a1a1a; color: #777; }
+    .editar-inline-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    .editar-secao { font-size: 13px; font-weight: 900; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; padding: 6px 0 2px; border-top: 1px solid #2a2a2a; margin-top: 4px; }
+    .editar-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .cep-wrap-edit { position: relative; }
+    .cep-wrap-edit input { padding-right: 36px; }
+    .cep-spinner-edit { display: none; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 13px; color: #aaa; pointer-events: none; }
+
+    .aluno-detalhes { border-top: 1px solid var(--border); padding-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
+    .detalhe-row { display: flex; flex-direction: column; gap: 2px; }
+    .detalhe-row.full-width { grid-column: 1 / -1; }
+    .detalhe-label { font-size: 12px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; }
+    .detalhe-valor { font-size: 15px; color: #fff; font-weight: 700; word-break: break-word; }
+    #searchBox { margin-bottom: 8px; }
+    .lista-vazia { color: #aaa; text-align: center; padding: 24px 0; font-size: 15px; }
+
+    .busca-fixa { position: sticky; top: 72px; z-index: 9; background: var(--bg); padding: 12px 0 4px; margin-bottom: 8px; }
+    @media (max-width: 768px) { .busca-fixa { top: 68px; } }
     .busca-fixa .input { margin-bottom: 8px; }
-    .busca-btns {
-      display: flex;
-      gap: 8px;
-    }
-    .busca-btns .btn {
-      margin-top: 0;
-      padding: 12px 14px;
-      font-size: 15px;
-      font-weight: 800;
-    }
+    .busca-btns { display: flex; gap: 8px; }
+    .busca-btns .btn { margin-top: 0; padding: 12px 14px; font-size: 15px; font-weight: 800; }
     .busca-btns .btn:first-child { flex: 1; }
-    .busca-btns .btn-atualizar {
-      flex-shrink: 0;
-      width: auto;
-      padding: 12px 18px;
-    }
+    .busca-btns .btn-atualizar { flex-shrink: 0; width: auto; padding: 12px 18px; }
 
-    /* ── Rodapé fixo ── */
-    .rodape-fixo {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 20;
-      background: var(--bg);
-      border-top: 1px solid var(--border);
-      padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
-    }
-    .rodape-fixo .btn {
-      margin-top: 0;
-      max-width: 520px;
-      margin-left: auto;
-      margin-right: auto;
-      display: block;
-    }
-    @media (min-width: 769px) {
-      .rodape-fixo .btn { max-width: 1100px; }
-    }
-
-    /* ── Lista com padding-bottom para não ficar atrás do rodapé ── */
+    .rodape-fixo { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--bg); border-top: 1px solid var(--border); padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); }
+    .rodape-fixo .btn { margin-top: 0; max-width: 520px; margin-left: auto; margin-right: auto; display: block; }
+    @media (min-width: 769px) { .rodape-fixo .btn { max-width: 1100px; } }
     .lista-scroll { padding-bottom: 90px; }
+    .fin-msg { font-size: 13px; margin-top: 8px; min-height: 18px; }
   </style>
 </head>
 <body>
@@ -412,8 +92,6 @@
   </header>
 
   <main class="page admin-page">
-
-    <!-- ── LISTA ──────────────────────────────────────────────── -->
     <section class="hidden" id="sectionAlunos">
       <div class="busca-fixa">
         <h1 class="title" style="margin-bottom:10px;">Alunos</h1>
@@ -424,31 +102,25 @@
         </div>
         <p class="msg info" id="listInfo"></p>
       </div>
-
       <div id="listaAlunos" class="lista-scroll"></div>
-
       <div class="rodape-fixo">
         <button class="btn secondary" onclick="location.href='./administrativo.html'">← Voltar ao Portal</button>
       </div>
     </section>
-
   </main>
 
   <script type="module">
     import { db, auth } from './firebase-config.js';
-    import { collection, doc, query, orderBy, getDocs, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { collection, doc, query, orderBy, getDocs, getDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
     import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
-    const TOKEN_KEY = 'rv_prof_token';
+    const TOKEN_KEY        = 'rv_prof_token';
     const CACHE_KEY_ALUNOS = 'rv_alunos_cache';
-    const CACHE_TTL_ALUNOS = 60 * 60 * 1000; // 1 hora
+    const CACHE_TTL_ALUNOS = 60 * 60 * 1000;
 
     function salvarCacheAlunos(alunos) {
-      try {
-        localStorage.setItem(CACHE_KEY_ALUNOS, JSON.stringify({ ts: Date.now(), alunos }));
-      } catch(e) {}
+      try { localStorage.setItem(CACHE_KEY_ALUNOS, JSON.stringify({ ts: Date.now(), alunos })); } catch(e) {}
     }
-
     function lerCacheAlunos() {
       try {
         const c = JSON.parse(localStorage.getItem(CACHE_KEY_ALUNOS) || 'null');
@@ -456,43 +128,41 @@
       } catch(e) {}
       return null;
     }
+    function invalidarCacheAlunos() { localStorage.removeItem(CACHE_KEY_ALUNOS); }
 
-    function invalidarCacheAlunos() {
-      localStorage.removeItem(CACHE_KEY_ALUNOS);
-    }
-
-    let todosAlunos = [];
+    let todosAlunos    = [];
     let listaCarregada = false;
 
     function show(id) { document.getElementById(id).classList.remove('hidden'); }
-    function hide(id) { document.getElementById(id).classList.add('hidden'); }
-    function setErr(id, msg)  { document.getElementById(id).textContent = msg; }
     function setInfo(id, msg) { document.getElementById(id).textContent = msg; }
 
-    // ── Auth check ─────────────────────────────────────────────
+    // Máscaras
+    function formatarCpf(val) {
+      return val.replace(/\D/g,'').slice(0,11)
+        .replace(/(\d{3})(\d)/,'$1.$2')
+        .replace(/(\d{3})(\d)/,'$1.$2')
+        .replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+    }
+    function formatarCep(val) {
+      return val.replace(/\D/g,'').slice(0,8).replace(/(\d{5})(\d)/,'$1-$2');
+    }
+
+    // ── Auth ───────────────────────────────────────────────────
     onAuthStateChanged(auth, (user) => {
-      if (user) {
-        show('sectionAlunos');
-      } else {
-        location.href = './administrativo.html';
-      }
+      if (user) show('sectionAlunos');
+      else location.href = './administrativo.html';
     });
 
     // ── Carregar alunos ────────────────────────────────────────
     async function carregarAlunos(forcar = false) {
       if (!forcar) {
         const cached = lerCacheAlunos();
-        if (cached) {
-          todosAlunos = cached;
-          setInfo('listInfo', '');
-          renderListaFiltrada();
-          return;
-        }
+        if (cached) { todosAlunos = cached; setInfo('listInfo',''); renderListaFiltrada(); return; }
       }
-      setInfo('listInfo', 'Carregando alunos…');
+      setInfo('listInfo','Carregando alunos…');
       document.getElementById('listaAlunos').innerHTML = '';
       try {
-        const q = query(collection(db, 'alunos'), orderBy('nome_aluno'));
+        const q    = query(collection(db,'alunos'), orderBy('nome_aluno'));
         const snap = await getDocs(q);
         todosAlunos = snap.docs.map(d => {
           const a = d.data();
@@ -506,42 +176,42 @@
             aulas_no_grau:   a.aulas_no_grau ?? 0,
             aulas_restantes: a.aulas_restantes ?? 0,
             meta_grau:       a.meta_grau ?? 0,
-            data_ultimo_grau: a.data_ultimo_grau || '',
+            data_ultimo_grau:a.data_ultimo_grau || '',
             telefone:        a.telefone || '',
             cpf:             a.cpf || '',
             data_nasc:       a.data_nasc || '',
+            data_inicio:     a.data_inicio || '',
             categoria:       a.categoria || '',
             plano:           a.plano || '',
+            grupo_familiar:  a.grupo_familiar || '',
+            data_contrato:   a.data_contrato || '',
+            cep:             a.cep || '',
+            numero:          a.numero || '',
+            rua:             a.rua || '',
+            bairro:          a.bairro || '',
+            cidade:          a.cidade || '',
+            estado:          a.estado || '',
           };
         });
         salvarCacheAlunos(todosAlunos);
-        setInfo('listInfo', '');
+        setInfo('listInfo','');
         renderListaFiltrada();
-      } catch (e) {
-        setInfo('listInfo', 'Erro de conexão. Tente novamente.');
-      }
+      } catch(e) { setInfo('listInfo','Erro de conexão. Tente novamente.'); }
     }
 
     // ── Renderizar lista filtrada ──────────────────────────────
     function renderListaFiltrada() {
       const q = document.getElementById('searchBox').value.trim().toLowerCase();
-      if (!q) {
-        renderLista(todosAlunos);
-      } else {
-        renderLista(todosAlunos.filter(a =>
-          (a.nome_aluno || '').toLowerCase().includes(q) ||
-          (a.cpf || '').includes(q)
-        ));
-      }
+      if (!q) renderLista(todosAlunos);
+      else renderLista(todosAlunos.filter(a =>
+        (a.nome_aluno||'').toLowerCase().includes(q) || (a.cpf||'').includes(q)
+      ));
     }
 
     // ── Renderizar lista ───────────────────────────────────────
     function renderLista(alunos) {
       const container = document.getElementById('listaAlunos');
-      if (!alunos.length) {
-        container.innerHTML = '<p class="lista-vazia">Nenhum aluno encontrado.</p>';
-        return;
-      }
+      if (!alunos.length) { container.innerHTML='<p class="lista-vazia">Nenhum aluno encontrado.</p>'; return; }
       container.innerHTML = alunos.map(a => {
         const id        = esc(String(a.id));
         const cat       = esc(a.categoria || '—');
@@ -550,7 +220,8 @@
         const dataGrau  = esc(formatarData(a.data_ultimo_grau));
         const tel       = esc(a.telefone || '—');
         const cpf       = esc(a.cpf || '—');
-        const nasc      = esc(formatarData(a.data_nasc));
+        const nasc      = esc(formatarDataInput(a.data_nasc));
+        const cepDisp   = a.cep ? esc(a.cep.replace(/(\d{5})(\d{3})/,'$1-$2')) : '—';
         return `
         <div class="aluno-card" id="card-${id}">
           <div class="aluno-header">
@@ -559,34 +230,17 @@
               <div class="aluno-email">${esc(a.email || '—')}</div>
             </div>
             <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;">
-              <button class="btn-editar"
-                data-id="${id}"
-                id="btnEditar-${id}">
-                ✏️ Editar
-              </button>
-              <button class="btn-remover"
-                data-id="${id}"
-                id="btnRemover-${id}">
-                🗑️ Remover
-              </button>
-              <button class="btn-faixa"
-                data-id="${id}"
-                id="btnFaixa-${id}">
-                Trocar Faixa
-              </button>
-              <button class="btn-toggle"
-                data-id="${id}"
-                data-status="${esc(a.status)}"
-                id="btn-${id}">
+              <button class="btn-editar"  data-id="${id}" id="btnEditar-${id}">✏️ Editar</button>
+              <button class="btn-remover" data-id="${id}" id="btnRemover-${id}">🗑️ Remover</button>
+              <button class="btn-faixa"   data-id="${id}" id="btnFaixa-${id}">Trocar Faixa</button>
+              <button class="btn-toggle"  data-id="${id}" data-status="${esc(a.status)}" id="btn-${id}">
                 ${a.status === 'ATIVO' ? 'Desativar' : 'Ativar'}
               </button>
             </div>
           </div>
           <div class="aluno-meta">
-            <span class="aluno-faixa" id="faixaLabel-${id}">${esc(a.faixa || '—')} G${esc(String(a.grau_atual ?? '—'))}</span>
-            <span class="${a.status === 'ATIVO' ? 'badge-ativo' : 'badge-inativo'}" id="badge-${id}">
-              ${esc(a.status || '—')}
-            </span>
+            <span class="aluno-faixa" id="faixaLabel-${id}">${esc(a.faixa||'—')} G${esc(String(a.grau_atual??'—'))}</span>
+            <span class="${a.status==='ATIVO'?'badge-ativo':'badge-inativo'}" id="badge-${id}">${esc(a.status||'—')}</span>
           </div>
           <div class="aluno-detalhes" id="detalhes-${id}">
             <div class="detalhe-row"><span class="detalhe-label">Categoria</span><span class="detalhe-valor">${cat}</span></div>
@@ -595,107 +249,137 @@
             <div class="detalhe-row"><span class="detalhe-label">Último Grau</span><span class="detalhe-valor">${dataGrau}</span></div>
             <div class="detalhe-row"><span class="detalhe-label">Telefone</span><span class="detalhe-valor">${tel}</span></div>
             <div class="detalhe-row"><span class="detalhe-label">CPF</span><span class="detalhe-valor">${cpf}</span></div>
-            <div class="detalhe-row full-width"><span class="detalhe-label">Nascimento</span><span class="detalhe-valor">${nasc}</span></div>
+            <div class="detalhe-row full-width"><span class="detalhe-label">Nascimento</span><span class="detalhe-valor">${nasc||'—'}</span></div>
           </div>
-          <div class="aluno-financeiro" id="fin-${id}">
-            <div class="fin-header">💰 Financeiro</div>
-            <div class="fin-grid">
-              <div class="fin-item">
-                <span class="fin-label">PLANO</span>
-                <span class="fin-valor" id="finPlano-${id}">${esc(a.plano || '—')}</span>
-              </div>
-              <div class="fin-item">
-                <span class="fin-label">STATUS</span>
-                <span class="fin-valor fin-status" id="finStatus-${id}">—</span>
-              </div>
-              <div class="fin-item">
-                <span class="fin-label">PRÓX. VENCIMENTO</span>
-                <span class="fin-valor" id="finVenc-${id}">—</span>
-              </div>
-              <div class="fin-item">
-                <span class="fin-label">VALOR</span>
-                <span class="fin-valor" id="finValor-${id}">—</span>
-              </div>
-            </div>
-            <div class="fin-acoes">
-              <button class="btn-fin primary" data-id="${id}">+ Registrar Pagamento</button>
-              <button class="btn-fin secondary" data-id="${id}">📋 Histórico</button>
-            </div>
-            <p class="fin-msg" id="finMsg-${id}"></p>
-          </div>
+
+          <!-- ── Trocar Faixa ── -->
           <div class="trocar-faixa-inline" id="trocaFaixaArea-${id}" style="display:none;">
             <select id="selectFaixa-${id}">
               <optgroup label="── Adulto ──">
-                <option value="Branca">Branca</option>
-                <option value="Azul">Azul</option>
-                <option value="Roxa">Roxa</option>
-                <option value="Marrom">Marrom</option>
-                <option value="Preta">Preta</option>
+                <option value="Branca">Branca</option><option value="Azul">Azul</option>
+                <option value="Roxa">Roxa</option><option value="Marrom">Marrom</option><option value="Preta">Preta</option>
               </optgroup>
               <optgroup label="── Kids / Infantil / Juvenil ──">
-                <option value="Cinza e Branca">Cinza e Branca</option>
-                <option value="Cinza">Cinza</option>
-                <option value="Cinza e Preta">Cinza e Preta</option>
-                <option value="Amarela e Branca">Amarela e Branca</option>
-                <option value="Amarela">Amarela</option>
-                <option value="Amarela e Preta">Amarela e Preta</option>
-                <option value="Laranja e Branca">Laranja e Branca</option>
-                <option value="Laranja">Laranja</option>
-                <option value="Laranja e Preta">Laranja e Preta</option>
-                <option value="Verde e Branca">Verde e Branca</option>
-                <option value="Verde">Verde</option>
-                <option value="Verde e Preta">Verde e Preta</option>
+                <option value="Cinza e Branca">Cinza e Branca</option><option value="Cinza">Cinza</option>
+                <option value="Cinza e Preta">Cinza e Preta</option><option value="Amarela e Branca">Amarela e Branca</option>
+                <option value="Amarela">Amarela</option><option value="Amarela e Preta">Amarela e Preta</option>
+                <option value="Laranja e Branca">Laranja e Branca</option><option value="Laranja">Laranja</option>
+                <option value="Laranja e Preta">Laranja e Preta</option><option value="Verde e Branca">Verde e Branca</option>
+                <option value="Verde">Verde</option><option value="Verde e Preta">Verde e Preta</option>
               </optgroup>
             </select>
             <button class="btn-confirmar-faixa" data-id="${id}">Confirmar</button>
-            <button class="btn-cancelar-faixa" data-id="${id}">Cancelar</button>
+            <button class="btn-cancelar-faixa"  data-id="${id}">Cancelar</button>
           </div>
+
+          <!-- ── Editar Inline (todos os campos) ── -->
           <div class="editar-inline" id="editarArea-${id}">
+
+            <div class="editar-secao" style="border-top:none;margin-top:0;">👤 Dados Pessoais</div>
+
             <div>
               <label>Nome</label>
-              <input type="text" id="editNome-${id}" value="${esc(a.nome_aluno || '')}" />
+              <input type="text" id="editNome-${id}" value="${esc(a.nome_aluno||'')}" />
             </div>
             <div>
               <label>Email</label>
-              <input type="email" id="editEmail-${id}" value="${esc(a.email || '')}" />
+              <input type="email" id="editEmail-${id}" value="${esc(a.email||'')}" />
             </div>
             <div>
               <label>Telefone</label>
-              <input type="tel" id="editTelefone-${id}" value="${esc(a.telefone || '')}" />
+              <input type="tel" id="editTelefone-${id}" value="${esc(a.telefone||'')}" />
             </div>
             <div>
               <label>CPF</label>
-              <input type="text" id="editCpf-${id}" value="${esc(a.cpf || '')}" />
+              <input type="tel" inputmode="numeric" maxlength="14" id="editCpf-${id}"
+                value="${esc(a.cpf||'')}" placeholder="000.000.000-00"
+                oninput="this.value=window._fmtCpf(this.value)" />
             </div>
             <div>
               <label>Data de Nascimento</label>
-              <input type="text" id="editDataNasc-${id}" value="${esc(a.data_nasc || '')}" placeholder="DD/MM/AAAA" />
+              <input type="date" id="editDataNasc-${id}" value="${esc(a.data_nasc||'')}" />
+            </div>
+            <div>
+              <label>Data de Início</label>
+              <input type="date" id="editDataInicio-${id}" value="${esc(a.data_inicio||'')}" />
             </div>
             <div>
               <label>Categoria</label>
               <select id="editCategoria-${id}">
-                <option value="Adulto" ${a.categoria === 'Adulto' ? 'selected' : ''}>Adulto</option>
-                <option value="Kids" ${a.categoria === 'Kids' ? 'selected' : ''}>Kids</option>
-                <option value="Infantil" ${a.categoria === 'Infantil' ? 'selected' : ''}>Infantil</option>
-                <option value="Juvenil" ${a.categoria === 'Juvenil' ? 'selected' : ''}>Juvenil</option>
+                <option value="Adulto"   ${a.categoria==='Adulto'  ?'selected':''}>Adulto</option>
+                <option value="Kids"     ${a.categoria==='Kids'    ?'selected':''}>Kids</option>
+                <option value="Infantil" ${a.categoria==='Infantil'?'selected':''}>Infantil</option>
+                <option value="Juvenil"  ${a.categoria==='Juvenil' ?'selected':''}>Juvenil</option>
               </select>
             </div>
+
+            <div class="editar-secao">🥋 Graduação</div>
+
+            <div>
+              <label>Aulas no Grau Atual</label>
+              <input type="number" min="0" id="editAulasNoGrau-${id}" value="${esc(String(a.aulas_no_grau??0))}" />
+            </div>
+
+            <div class="editar-secao">📍 Endereço</div>
+
+            <div>
+              <label>CEP</label>
+              <div class="cep-wrap-edit">
+                <input type="tel" inputmode="numeric" maxlength="9" id="editCep-${id}"
+                  value="${esc(a.cep?a.cep.replace(/(\d{5})(\d{3})/,'$1-$2'):'')}"
+                  placeholder="00000-000"
+                  oninput="window._editCepInput('${id}',this)" />
+                <span class="cep-spinner-edit" id="editCepSpinner-${id}">⏳</span>
+              </div>
+            </div>
+            <div>
+              <label>Rua</label>
+              <input type="text" id="editRua-${id}" value="${esc(a.rua||'')}" readonly />
+            </div>
+            <div class="editar-grid-2">
+              <div>
+                <label>Bairro</label>
+                <input type="text" id="editBairro-${id}" value="${esc(a.bairro||'')}" readonly />
+              </div>
+              <div>
+                <label>Cidade</label>
+                <input type="text" id="editCidade-${id}" value="${esc(a.cidade||'')}" readonly />
+              </div>
+            </div>
+            <div class="editar-grid-2">
+              <div>
+                <label>Estado</label>
+                <input type="text" id="editEstado-${id}" value="${esc(a.estado||'')}" maxlength="2" readonly />
+              </div>
+              <div>
+                <label>Número</label>
+                <input type="text" id="editNumero-${id}" value="${esc(a.numero||'')}" placeholder="Ex: 277" />
+              </div>
+            </div>
+
+            <div class="editar-secao">💰 Financeiro</div>
+
             <div>
               <label>Plano</label>
               <select id="editPlano-${id}">
-                <option value="" ${!a.plano ? 'selected' : ''}>Não definido</option>
-                <option value="Recorrente" ${a.plano === 'Recorrente' ? 'selected' : ''}>Recorrente</option>
-                <option value="Semestral" ${a.plano === 'Semestral' ? 'selected' : ''}>Semestral</option>
-                <option value="Mensal" ${a.plano === 'Mensal' ? 'selected' : ''}>Mensal</option>
+                <option value=""           ${!a.plano            ?'selected':''}>Não definido</option>
+                <option value="Recorrente" ${a.plano==='Recorrente'?'selected':''}>Recorrente – R$ 200,00</option>
+                <option value="Semestral"  ${a.plano==='Semestral' ?'selected':''}>Semestral – R$ 220,00</option>
+                <option value="Mensal"     ${a.plano==='Mensal'    ?'selected':''}>Mensal – R$ 240,00</option>
               </select>
             </div>
             <div>
-              <label>Aulas no Grau Atual</label>
-              <input type="number" min="0" id="editAulasNoGrau-${id}" value="${esc(String(a.aulas_no_grau ?? 0))}" />
+              <label>Grupo Familiar</label>
+              <input type="text" id="editGrupoFamiliar-${id}" value="${esc(a.grupo_familiar||'')}" placeholder="Ex: Família Silva" />
             </div>
+            <div>
+              <label>Data de Início do Contrato</label>
+              <input type="date" id="editDataContrato-${id}" value="${esc(a.data_contrato||'')}" />
+            </div>
+
             <div class="editar-inline-btns">
               <button class="btn-confirmar-faixa btn-salvar-editar" data-id="${id}">💾 Salvar</button>
-              <button class="btn-cancelar-faixa btn-cancelar-editar" data-id="${id}">Cancelar</button>
+              <button class="btn-cancelar-faixa  btn-cancelar-editar" data-id="${id}">Cancelar</button>
             </div>
             <p class="fin-msg" id="editMsg-${id}"></p>
           </div>
@@ -703,78 +387,84 @@
       `}).join('');
     }
 
+    // ── Helpers globais (usados em oninput inline) ─────────────
+    window._fmtCpf = formatarCpf;
+
+    window._editCepInput = function(alunoId, input) {
+      input.value = formatarCep(input.value);
+      const cepLimpo = input.value.replace(/\D/g,'');
+      const spinner  = document.getElementById('editCepSpinner-'+alunoId);
+      if (cepLimpo.length !== 8) {
+        ['Rua','Bairro','Cidade','Estado'].forEach(f => {
+          const el = document.getElementById('edit'+f+'-'+alunoId);
+          if (el) el.value = '';
+        });
+        return;
+      }
+      if (spinner) spinner.style.display = '';
+      fetch('https://viacep.com.br/ws/'+cepLimpo+'/json/')
+        .then(r => r.json())
+        .then(data => {
+          if (spinner) spinner.style.display = 'none';
+          if (data.erro) return;
+          const set = (f, v) => { const el = document.getElementById('edit'+f+'-'+alunoId); if (el) el.value = v; };
+          set('Rua',    data.logradouro || '');
+          set('Bairro', data.bairro     || '');
+          set('Cidade', data.localidade || '');
+          set('Estado', data.uf         || '');
+        })
+        .catch(() => { if (spinner) spinner.style.display = 'none'; });
+    };
+
     // ── Filtro de busca ────────────────────────────────────────
     document.getElementById('searchBox').addEventListener('input', async (e) => {
       const q = e.target.value.trim().toLowerCase();
-      if (!listaCarregada && q.length >= 3) {
-        await carregarAlunos();
-        listaCarregada = true;
-      }
+      if (!listaCarregada && q.length >= 3) { await carregarAlunos(); listaCarregada = true; }
       if (listaCarregada) renderListaFiltrada();
     });
 
     document.getElementById('btnVerTodos').addEventListener('click', async () => {
-      if (!listaCarregada) {
-        await carregarAlunos();
-        listaCarregada = true;
-      } else {
-        renderListaFiltrada();
-      }
+      if (!listaCarregada) { await carregarAlunos(); listaCarregada = true; }
+      else renderListaFiltrada();
     });
 
     document.getElementById('btnAtualizar').addEventListener('click', async () => {
-      invalidarCacheAlunos();
-      listaCarregada = false;
-      todosAlunos = [];
-      await carregarAlunos(true);
-      listaCarregada = true;
+      invalidarCacheAlunos(); listaCarregada = false; todosAlunos = [];
+      await carregarAlunos(true); listaCarregada = true;
     });
 
-    // ── Event delegation para botões ───────────────────────────
+    // ── Event delegation ───────────────────────────────────────
     document.getElementById('listaAlunos').addEventListener('click', (e) => {
       const btnToggle = e.target.closest('.btn-toggle');
-      if (btnToggle) {
-        const id     = btnToggle.dataset.id;
-        const status = btnToggle.dataset.status;
-        if (id && status) toggleStatus(id, status);
-        return;
-      }
+      if (btnToggle) { toggleStatus(btnToggle.dataset.id, btnToggle.dataset.status); return; }
 
       const btnFaixa = e.target.closest('.btn-faixa');
       if (btnFaixa) {
-        const id   = btnFaixa.dataset.id;
-        const area = document.getElementById('trocaFaixaArea-' + id);
+        const id = btnFaixa.dataset.id;
+        const area = document.getElementById('trocaFaixaArea-'+id);
         if (area) area.style.display = area.style.display === 'none' ? 'flex' : 'none';
         return;
       }
 
-      const btnSalvarEditar = e.target.closest('.btn-salvar-editar');
-      if (btnSalvarEditar) {
-        const id = btnSalvarEditar.dataset.id;
-        salvarEdicao(id);
-        return;
-      }
+      const btnSalvar = e.target.closest('.btn-salvar-editar');
+      if (btnSalvar) { salvarEdicao(btnSalvar.dataset.id); return; }
 
-      const btnCancelarEditar = e.target.closest('.btn-cancelar-editar');
-      if (btnCancelarEditar) {
-        const id   = btnCancelarEditar.dataset.id;
-        const area = document.getElementById('editarArea-' + id);
+      const btnCancelar = e.target.closest('.btn-cancelar-editar');
+      if (btnCancelar) {
+        const area = document.getElementById('editarArea-'+btnCancelar.dataset.id);
         if (area) area.style.display = 'none';
         return;
       }
 
       const btnConfirmar = e.target.closest('.btn-confirmar-faixa');
-      if (btnConfirmar) {
-        const id        = btnConfirmar.dataset.id;
-        const novaFaixa = document.getElementById('selectFaixa-' + id).value;
-        trocarFaixa(id, novaFaixa);
+      if (btnConfirmar && !btnConfirmar.classList.contains('btn-salvar-editar')) {
+        trocarFaixa(btnConfirmar.dataset.id, document.getElementById('selectFaixa-'+btnConfirmar.dataset.id).value);
         return;
       }
 
-      const btnCancelar = e.target.closest('.btn-cancelar-faixa');
-      if (btnCancelar) {
-        const id   = btnCancelar.dataset.id;
-        const area = document.getElementById('trocaFaixaArea-' + id);
+      const btnCancFaixa = e.target.closest('.btn-cancelar-faixa');
+      if (btnCancFaixa && !btnCancFaixa.classList.contains('btn-cancelar-editar')) {
+        const area = document.getElementById('trocaFaixaArea-'+btnCancFaixa.dataset.id);
         if (area) area.style.display = 'none';
         return;
       }
@@ -782,181 +472,142 @@
       const btnEditar = e.target.closest('.btn-editar');
       if (btnEditar) {
         const id   = btnEditar.dataset.id;
-        const area = document.getElementById('editarArea-' + id);
-        if (area) {
-          const isHidden = area.style.display === '' || area.style.display === 'none';
-          area.style.display = isHidden ? 'flex' : 'none';
-        }
+        const area = document.getElementById('editarArea-'+id);
+        if (area) area.style.display = (area.style.display === '' || area.style.display === 'none') ? 'flex' : 'none';
         return;
       }
 
       const btnRemover = e.target.closest('.btn-remover');
-      if (btnRemover) {
-        const id = btnRemover.dataset.id;
-        removerAluno(id);
-        return;
-      }
+      if (btnRemover) { removerAluno(btnRemover.dataset.id); return; }
     });
 
     // ── Toggle status ──────────────────────────────────────────
     async function toggleStatus(id, statusAtual) {
       const novoStatus = statusAtual === 'ATIVO' ? 'INATIVO' : 'ATIVO';
-      const btn   = document.getElementById('btn-' + id);
-      const badge = document.getElementById('badge-' + id);
-
+      const btn   = document.getElementById('btn-'+id);
+      const badge = document.getElementById('badge-'+id);
       const aluno = todosAlunos.find(a => String(a.id) === String(id));
       if (aluno) aluno.status = novoStatus;
-      if (btn) {
-        btn.textContent    = novoStatus === 'ATIVO' ? 'Desativar' : 'Ativar';
-        btn.dataset.status = novoStatus;
-        btn.disabled       = true;
-      }
-      if (badge) {
-        badge.textContent = novoStatus;
-        badge.className   = novoStatus === 'ATIVO' ? 'badge-ativo' : 'badge-inativo';
-      }
-
+      if (btn)   { btn.textContent = novoStatus === 'ATIVO' ? 'Desativar' : 'Ativar'; btn.dataset.status = novoStatus; btn.disabled = true; }
+      if (badge) { badge.textContent = novoStatus; badge.className = novoStatus === 'ATIVO' ? 'badge-ativo' : 'badge-inativo'; }
       try {
-        await updateDoc(doc(db, 'alunos', id), { status: novoStatus });
+        await updateDoc(doc(db,'alunos',id), { status: novoStatus });
         salvarCacheAlunos(todosAlunos);
-      } catch (e) {
+      } catch(e) {
         if (aluno) aluno.status = statusAtual;
-        if (btn) { btn.textContent = statusAtual === 'ATIVO' ? 'Desativar' : 'Ativar'; btn.dataset.status = statusAtual; }
+        if (btn)   { btn.textContent = statusAtual === 'ATIVO' ? 'Desativar' : 'Ativar'; btn.dataset.status = statusAtual; }
         if (badge) { badge.textContent = statusAtual; badge.className = statusAtual === 'ATIVO' ? 'badge-ativo' : 'badge-inativo'; }
         alert('Erro ao alterar status.');
-      } finally {
-        if (btn) btn.disabled = false;
-      }
+      } finally { if (btn) btn.disabled = false; }
     }
 
     // ── Trocar faixa ───────────────────────────────────────────
     async function trocarFaixa(id, novaFaixa) {
-      const btnF  = document.getElementById('btnFaixa-' + id);
-      const area  = document.getElementById('trocaFaixaArea-' + id);
-      const label = document.getElementById('faixaLabel-' + id);
+      const btnF  = document.getElementById('btnFaixa-'+id);
+      const area  = document.getElementById('trocaFaixaArea-'+id);
+      const label = document.getElementById('faixaLabel-'+id);
       if (btnF) btnF.disabled = true;
-
       try {
         const metaGrau = novaFaixa === 'Branca' ? 36 : 56;
-        await updateDoc(doc(db, 'alunos', id), {
-          faixa: novaFaixa,
-          grau_atual: 0,
-          aulas_no_grau: 0,
-          aulas_restantes: metaGrau,
-          meta_grau: metaGrau,
-          statusExame: '',
-          data_ultimo_grau: new Date().toISOString().slice(0, 10),
-        });
+        await updateDoc(doc(db,'alunos',id), { faixa:novaFaixa, grau_atual:0, aulas_no_grau:0, aulas_restantes:metaGrau, meta_grau:metaGrau, statusExame:'', data_ultimo_grau:new Date().toISOString().slice(0,10) });
         const aluno = todosAlunos.find(a => String(a.id) === String(id));
-        if (aluno) {
-          aluno.faixa = novaFaixa;
-          aluno.grau_atual = 0;
-          aluno.meta_grau = metaGrau;
-          aluno.aulas_restantes = metaGrau;
-          aluno.aulas_no_grau = 0;
-        }
+        if (aluno) { aluno.faixa=novaFaixa; aluno.grau_atual=0; aluno.meta_grau=metaGrau; aluno.aulas_restantes=metaGrau; aluno.aulas_no_grau=0; }
         salvarCacheAlunos(todosAlunos);
         if (label) label.textContent = novaFaixa + ' G0';
         if (area) area.style.display = 'none';
-      } catch (e) {
-        alert('Erro ao trocar faixa.');
-      } finally {
-        if (btnF) btnF.disabled = false;
-      }
+      } catch(e) { alert('Erro ao trocar faixa.'); }
+      finally { if (btnF) btnF.disabled = false; }
     }
 
     // ── Salvar edição inline ───────────────────────────────────
     async function salvarEdicao(id) {
-      const msg = document.getElementById('editMsg-' + id);
+      const msg = document.getElementById('editMsg-'+id);
       const btn = document.querySelector(`.btn-salvar-editar[data-id="${id}"]`);
       if (btn) btn.disabled = true;
       if (msg) msg.textContent = 'Salvando…';
-
       try {
-        const updates = {
-          nome_aluno: document.getElementById('editNome-' + id).value.trim(),
-          email:      document.getElementById('editEmail-' + id).value.trim().toLowerCase(),
-          telefone:   document.getElementById('editTelefone-' + id).value.trim(),
-          cpf:        document.getElementById('editCpf-' + id).value.trim(),
-          data_nasc:  document.getElementById('editDataNasc-' + id).value.trim(),
-          categoria:  document.getElementById('editCategoria-' + id).value,
-          plano:      document.getElementById('editPlano-' + id).value,
-        };
-
-        const aulasNoGrau = parseInt(document.getElementById('editAulasNoGrau-' + id).value) || 0;
+        const aulasNoGrau = parseInt(document.getElementById('editAulasNoGrau-'+id).value) || 0;
         const aluno = todosAlunos.find(a => String(a.id) === String(id));
         const metaGrau = aluno ? (aluno.meta_grau || (aluno.faixa === 'Branca' ? 36 : 56)) : 56;
-        updates.aulas_no_grau = aulasNoGrau;
-        updates.aulas_restantes = Math.max(0, metaGrau - aulasNoGrau);
 
-        await updateDoc(doc(db, 'alunos', id), updates);
+        const cepRaw = (document.getElementById('editCep-'+id).value || '').replace(/\D/g,'');
 
-        // Update local cache
+        const updates = {
+          nome_aluno:      document.getElementById('editNome-'+id).value.trim(),
+          email:           document.getElementById('editEmail-'+id).value.trim().toLowerCase(),
+          telefone:        document.getElementById('editTelefone-'+id).value.trim(),
+          cpf:             document.getElementById('editCpf-'+id).value.trim(),
+          data_nasc:       document.getElementById('editDataNasc-'+id).value,
+          data_inicio:     document.getElementById('editDataInicio-'+id).value,
+          categoria:       document.getElementById('editCategoria-'+id).value,
+          plano:           document.getElementById('editPlano-'+id).value,
+          grupo_familiar:  document.getElementById('editGrupoFamiliar-'+id).value.trim(),
+          data_contrato:   document.getElementById('editDataContrato-'+id).value,
+          cep:             cepRaw,
+          numero:          document.getElementById('editNumero-'+id).value.trim(),
+          rua:             document.getElementById('editRua-'+id).value.trim(),
+          bairro:          document.getElementById('editBairro-'+id).value.trim(),
+          cidade:          document.getElementById('editCidade-'+id).value.trim(),
+          estado:          document.getElementById('editEstado-'+id).value.trim(),
+          aulas_no_grau:   aulasNoGrau,
+          aulas_restantes: Math.max(0, metaGrau - aulasNoGrau),
+        };
+
+        await updateDoc(doc(db,'alunos',id), updates);
         if (aluno) Object.assign(aluno, updates);
         salvarCacheAlunos(todosAlunos);
 
-        // Update visible name/email in the card
-        const cardNome = document.querySelector(`#card-${id} .aluno-nome`);
+        const cardNome  = document.querySelector(`#card-${id} .aluno-nome`);
         const cardEmail = document.querySelector(`#card-${id} .aluno-email`);
-        if (cardNome) cardNome.textContent = updates.nome_aluno || '—';
-        if (cardEmail) cardEmail.textContent = updates.email || '—';
+        if (cardNome)  cardNome.textContent  = updates.nome_aluno || '—';
+        if (cardEmail) cardEmail.textContent = updates.email      || '—';
 
         if (msg) msg.textContent = '✅ Salvo!';
         setTimeout(() => {
           if (msg) msg.textContent = '';
-          const area = document.getElementById('editarArea-' + id);
+          const area = document.getElementById('editarArea-'+id);
           if (area) area.style.display = 'none';
         }, 1500);
-      } catch (e) {
-        if (msg) msg.textContent = 'Erro ao salvar: ' + (e.message || 'tente novamente.');
-      } finally {
-        if (btn) btn.disabled = false;
-      }
+      } catch(e) {
+        if (msg) msg.textContent = 'Erro ao salvar: '+(e.message||'tente novamente.');
+      } finally { if (btn) btn.disabled = false; }
     }
 
     // ── Remover aluno ──────────────────────────────────────────
     async function removerAluno(id) {
       if (!confirm('Tem certeza que deseja remover este aluno? Esta ação não pode ser desfeita.')) return;
-
-      const btn = document.getElementById('btnRemover-' + id);
+      const btn = document.getElementById('btnRemover-'+id);
       if (btn) btn.disabled = true;
-
       try {
-        await deleteDoc(doc(db, 'alunos', id));
-        // Remove from local list and re-render
+        await deleteDoc(doc(db,'alunos',id));
         todosAlunos = todosAlunos.filter(a => String(a.id) !== String(id));
         salvarCacheAlunos(todosAlunos);
-        const card = document.getElementById('card-' + id);
+        const card = document.getElementById('card-'+id);
         if (card) card.remove();
-      } catch (e) {
-        alert('Erro ao remover aluno: ' + (e.message || 'tente novamente.'));
-        if (btn) btn.disabled = false;
-      }
+      } catch(e) { alert('Erro ao remover aluno: '+(e.message||'tente novamente.')); if (btn) btn.disabled = false; }
     }
 
     // ── Escape HTML ────────────────────────────────────────────
     function esc(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     }
 
     // ── Formatar data YYYY-MM-DD → DD/MM/YYYY ─────────────────
     function formatarData(val) {
       if (!val || String(val).trim() === '' || String(val).trim() === 'undefined') return '—';
-      var s = String(val).trim();
-      if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
-        var parts = s.substring(0, 10).split('-');
-        return parts[2] + '/' + parts[1] + '/' + parts[0];
-      }
+      const s = String(val).trim();
+      if (/^\d{4}-\d{2}-\d{2}/.test(s)) { const p=s.substring(0,10).split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
       return s;
+    }
+    // Para inputs type=date (retorna YYYY-MM-DD ou DD/MM/YYYY → normaliza pra mostrar)
+    function formatarDataInput(val) {
+      if (!val) return '';
+      if (/^\d{4}-\d{2}-\d{2}/.test(val)) { const p=val.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+      return val;
     }
 
     document.getElementById('btnHdrSair').addEventListener('click', () => {
-      signOut(auth).catch(() => {});
+      signOut(auth).catch(()=>{});
       sessionStorage.removeItem(TOKEN_KEY);
       location.href = './administrativo.html';
     });
