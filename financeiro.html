@@ -59,6 +59,7 @@
     .btn-acao.wpp      { background: #25D366; }
     .btn-acao.manual   { background: #e67e22; }
     .btn-acao.cartao   { background: #8e44ad; }
+    .btn-acao.historico{ background: #2c3e50; }
     .select-input { width: 100%; padding: 14px; font-size: 16px; border-radius: 12px; background: #222; border: 2px solid #333; color: #fff; outline: none; margin-bottom: 12px; appearance: none; -webkit-appearance: none; }
     .select-input:focus { border-color: var(--red); }
     .busca-fixa { position: sticky; top: 72px; z-index: 9; background: var(--bg); padding: 12px 0 4px; margin-bottom: 8px; }
@@ -73,6 +74,13 @@
     .mes-selector .select-input { margin-bottom: 0; flex: 1; }
     .mes-selector .btn-mes { background: var(--red); border: none; color: #fff; border-radius: 10px; padding: 12px 18px; font-size: 15px; font-weight: 800; cursor: pointer; white-space: nowrap; }
     .mes-selector .btn-mes:active { opacity: .75; }
+    /* Sync automático indicator */
+    .sync-status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #aaa; margin-bottom: 8px; }
+    .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #555; display: inline-block; }
+    .sync-dot.syncing { background: #f39c12; animation: pulse 1s infinite; }
+    .sync-dot.ok { background: #2ecc71; }
+    .sync-dot.erro { background: #e74c3c; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 50; align-items: flex-end; justify-content: center; }
     .modal-overlay.open { display: flex; }
     .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 20px 20px 0 0; padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px)); width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; }
@@ -109,6 +117,14 @@
     .primeiro-pag-select { background: #222; border: 1px solid #555; color: #fff; border-radius: 8px; padding: 5px 10px; font-size: 12px; font-weight: 700; cursor: pointer; flex: 1; min-width: 140px; }
     .primeiro-pag-select.pago { border-color: #2ecc71; color: #2ecc71; }
     .primeiro-pag-select.pendente { border-color: #f39c12; color: #f39c12; }
+    /* Histórico */
+    .hist-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); gap: 10px; }
+    .hist-item:last-child { border-bottom: none; }
+    .hist-info { display: flex; flex-direction: column; gap: 2px; }
+    .hist-data { font-size: 13px; color: #aaa; }
+    .hist-forma { font-size: 14px; color: #fff; font-weight: 700; }
+    .hist-valor { font-size: 16px; font-weight: 900; color: #2ecc71; white-space: nowrap; }
+    .hist-vazio { color: #aaa; text-align: center; padding: 24px 0; font-size: 14px; }
   </style>
 </head>
 <body>
@@ -145,6 +161,10 @@
           <button class="btn-filtro" data-filtro="pendente">⏳ Pendentes</button>
           <button class="btn-filtro" data-filtro="vencido">❌ Vencidos</button>
         </div>
+        <div class="sync-status">
+          <span class="sync-dot" id="syncDot"></span>
+          <span id="syncLabel">–</span>
+        </div>
         <p class="msg info" id="listInfo"></p>
       </div>
       <div class="resumo-grid" id="resumoGrid" style="display:none;">
@@ -158,32 +178,6 @@
       </div>
     </section>
   </main>
-
-  <!-- MODAL REGISTRO MANUAL -->
-  <div class="modal-overlay" id="modalPagamento">
-    <div class="modal-box">
-      <div class="modal-title">Registrar Pagamento</div>
-      <div class="modal-subtitle" id="modalAlunoNome"></div>
-      <input type="hidden" id="modalAlunoId" />
-      <label class="label" for="fValor">Valor (R$)</label>
-      <input id="fValor" class="input" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" />
-      <label class="label" for="fData">Data do Pagamento</label>
-      <input id="fData" class="input" type="date" />
-      <label class="label" for="fFormaPag">Forma de Pagamento</label>
-      <select id="fFormaPag" class="select-input">
-        <option value="dinheiro">💵 Dinheiro</option>
-        <option value="debito">💳 Débito</option>
-        <option value="pix">📲 Pix</option>
-        <option value="cartao">💳 Cartão</option>
-      </select>
-      <p class="msg err" id="modalErr"></p>
-      <p class="msg info" id="modalInfo"></p>
-      <div class="modal-btns">
-        <button class="btn secondary" id="btnCancelarModal">Cancelar</button>
-        <button class="btn primary" id="btnConfirmarPag">Confirmar</button>
-      </div>
-    </div>
-  </div>
 
   <!-- MODAL VINCULAR AO ASAAS -->
   <div class="modal-overlay" id="modalVincular">
@@ -298,11 +292,22 @@
     </div>
   </div>
 
+  <!-- MODAL HISTÓRICO -->
+  <div class="modal-overlay" id="modalHistorico">
+    <div class="modal-box">
+      <div class="modal-title">📋 Histórico de Pagamentos</div>
+      <div class="modal-subtitle" id="histAlunoNome"></div>
+      <div id="histLista"></div>
+      <button class="btn secondary" style="margin-top:12px;" id="btnFecharHist">Fechar</button>
+    </div>
+  </div>
+
   <script type="module">
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbx7pbyrOuM_2PcRn-epYGByCCuICaSLmS-gR9RVyEfhaRae-iT_8W_H6NnVJPGAJCIC/exec';
+    const AUTO_SYNC_INTERVAL = 5 * 60 * 1000; // 5 minutos
 
     import { db, auth } from './firebase-config.js';
-    import { collection, doc, query, where, getDocs, getDoc, addDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { collection, doc, query, where, getDocs, getDoc, addDoc, updateDoc, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
     import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
     const TOKEN_KEY      = 'rv_prof_token';
@@ -312,10 +317,10 @@
     let mesSelecionado   = new Date().getMonth() + 1;
     let anoSelecionado   = new Date().getFullYear();
     const asaasStatusMap = {};
-    let _lastPaymentLink = '';
-    let _lastCustomerId  = '';
     let _cartaoAlunoData = null;
+    let autoSyncTimer    = null;
 
+    // ── Utilitários ────────────────────────────────────────────
     function valorDePlano(plano) {
       if (!plano) return 0;
       const p = plano.toLowerCase();
@@ -356,17 +361,10 @@
     function escAttr(s) { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
     function show(id)   { document.getElementById(id).classList.remove('hidden'); }
     function validarTelefone(tel) { const t=(tel||'').replace(/\D/g,''); return (t.length>=10&&t.length<=11)?t:null; }
-    function detectarBandeira(num) {
-      const n = num.replace(/\D/g,'');
-      if (/^4/.test(n))                          return { emoji:'💳' };
-      if (/^5[1-5]/.test(n)||/^2[2-7]/.test(n)) return { emoji:'💳' };
-      if (/^3[47]/.test(n))                      return { emoji:'💳' };
-      return { emoji:'💳' };
-    }
+    function detectarBandeira(num) { return { emoji: '💳' }; }
     function formatarNumeroCartao(val) { return val.replace(/\D/g,'').slice(0,16).replace(/(\d{4})(?=\d)/g,'$1 '); }
     function formatarValidade(val)     { return val.replace(/\D/g,'').slice(0,4).replace(/(\d{2})(?=\d)/,'$1/'); }
     function formatarCpf(val)          { return val.replace(/\D/g,'').slice(0,11).replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2'); }
-    function formatarCep(val)          { return val.replace(/\D/g,'').slice(0,8).replace(/(\d{5})(\d)/,'$1-$2'); }
 
     async function gasCall(action, params) {
       const qs = Object.entries(Object.assign({ action }, params || {}))
@@ -376,6 +374,67 @@
       return resp.json();
     }
 
+    // ── Sync status indicator ──────────────────────────────────
+    function setSyncStatus(estado, texto) {
+      const dot = document.getElementById('syncDot');
+      const lbl = document.getElementById('syncLabel');
+      dot.className = 'sync-dot ' + estado;
+      lbl.textContent = texto;
+    }
+
+    // ── Sync automático: percorre todos os alunos com asaas_id ─
+    async function syncTodos(silencioso = false) {
+      const comAsaas = todosRegistros.filter(a => a.asaas_id);
+      if (!comAsaas.length) {
+        setSyncStatus('ok', 'Nenhum aluno vinculado ao Asaas.');
+        return;
+      }
+      if (!silencioso) setSyncStatus('syncing', 'Sincronizando com Asaas…');
+
+      let erros = 0;
+      for (const a of comAsaas) {
+        try {
+          let tipo = 'customer', asaasId = a.asaas_id;
+          if (a.asaas_tipo === 'assinatura' && a.asaas_assinatura_id)                                { tipo = 'assinatura'; asaasId = a.asaas_assinatura_id; }
+          else if ((a.asaas_tipo === 'parcelamento' || a.asaas_tipo === 'avista') && a.asaas_cobranca_id) { tipo = 'cobranca';   asaasId = a.asaas_cobranca_id; }
+
+          const resp = await gasCall('asaasStatus', { asaasId, tipo, mes: mesSelecionado, ano: anoSelecionado });
+          if (resp.ok) {
+            asaasStatusMap[a.id] = resp;
+            const idx = todosRegistros.findIndex(r => r.id === a.id);
+            if (idx >= 0) {
+              const st = resp.status || '';
+              if (st === 'CONFIRMED' || st === 'RECEIVED') {
+                todosRegistros[idx].statusPagamento = 'pago';
+                todosRegistros[idx].valor = resp.valor || todosRegistros[idx].valor;
+                todosRegistros[idx].dataPagamento = resp.dataPagamento || '';
+              } else if (st === 'OVERDUE') {
+                todosRegistros[idx].statusPagamento = 'vencido';
+              } else {
+                todosRegistros[idx].statusPagamento = 'pendente';
+              }
+            }
+          } else { erros++; }
+        } catch(e) { erros++; }
+      }
+
+      renderListaFiltrada();
+      atualizarResumo();
+      const agora = new Date();
+      const hora  = agora.getHours().toString().padStart(2,'0') + ':' + agora.getMinutes().toString().padStart(2,'0');
+      if (erros > 0) {
+        setSyncStatus('erro', `Sync com ${erros} erro(s) — ${hora}`);
+      } else {
+        setSyncStatus('ok', `Sincronizado às ${hora}`);
+      }
+    }
+
+    function agendarAutoSync() {
+      if (autoSyncTimer) clearInterval(autoSyncTimer);
+      autoSyncTimer = setInterval(() => syncTodos(true), AUTO_SYNC_INTERVAL);
+    }
+
+    // ── Auth ───────────────────────────────────────────────────
     onAuthStateChanged(auth, user => {
       if (user) { show('sectionFinanceiro'); preencherSeletores(); carregarFinanceiro(); }
       else location.href = './administrativo.html';
@@ -385,7 +444,9 @@
       document.getElementById('selMes').value = mesSelecionado;
       const selAno = document.getElementById('selAno');
       const anoAtual = new Date().getFullYear();
-      for (let a = anoAtual; a >= anoAtual-3; a--) { const o = document.createElement('option'); o.value=a; o.textContent=a; selAno.appendChild(o); }
+      for (let a = anoAtual; a >= anoAtual-3; a--) {
+        const o = document.createElement('option'); o.value = a; o.textContent = a; selAno.appendChild(o);
+      }
       selAno.value = anoSelecionado;
     }
 
@@ -396,6 +457,8 @@
       document.getElementById('listInfo').textContent = 'Carregando…';
       document.getElementById('listaAlunos').innerHTML = '';
       document.getElementById('resumoGrid').style.display = 'none';
+      setSyncStatus('', '');
+
       try {
         const alunosSnap = await getDocs(query(collection(db,'alunos'), where('status','==','ATIVO')));
         const pagSnap    = await getDocs(query(collection(db,'pagamentos'), where('mes','==',mes), where('ano','==',ano)));
@@ -403,19 +466,45 @@
         pagSnap.forEach(d => { const p=d.data(); pagByAluno[p.alunoId]=p; });
         const agora  = new Date();
         const isPast = (ano < agora.getFullYear()) || (ano === agora.getFullYear() && mes < agora.getMonth()+1);
+
         todosRegistros = alunosSnap.docs.map(d => {
-          const a=d.data(); const id=d.id; const pag=pagByAluno[id];
-          return { id, nome:a.nome_aluno||'', plano:a.plano||'', email:a.email||'', telefone:a.telefone||'', cpf:a.cpf||'', grupo_familiar:a.grupo_familiar||'', data_contrato:a.data_contrato||'', asaas_id:a.asaas_id||'', asaas_assinatura_id:a.asaas_assinatura_id||'', asaas_cobranca_id:a.asaas_cobranca_id||'', asaas_tipo:a.asaas_tipo||'', asaas_paymentLink:a.asaas_paymentLink||'', numero:a.numero||'', primeiro_pagamento:a.primeiro_pagamento||'', valorMensalidade:valorDePlano(a.plano), statusPagamento:pag?'pago':(isPast?'vencido':'pendente'), valor:pag?(pag.valor||0):0, dataPagamento:pag?(pag.data||''):'', formaPagamento:pag?(pag.formaPagamento||''):'', };
+          const a = d.data(); const id = d.id; const pag = pagByAluno[id];
+          return {
+            id, nome: a.nome_aluno||'', plano: a.plano||'', email: a.email||'',
+            telefone: a.telefone||'', cpf: a.cpf||'', grupo_familiar: a.grupo_familiar||'',
+            data_contrato: a.data_contrato||'', asaas_id: a.asaas_id||'',
+            asaas_assinatura_id: a.asaas_assinatura_id||'', asaas_cobranca_id: a.asaas_cobranca_id||'',
+            asaas_tipo: a.asaas_tipo||'', asaas_paymentLink: a.asaas_paymentLink||'',
+            numero: a.numero||'', primeiro_pagamento: a.primeiro_pagamento||'',
+            valorMensalidade: valorDePlano(a.plano),
+            statusPagamento: pag ? 'pago' : (isPast ? 'vencido' : 'pendente'),
+            valor: pag ? (pag.valor||0) : 0,
+            dataPagamento: pag ? (pag.data||'') : '',
+            formaPagamento: pag ? (pag.formaPagamento||'') : '',
+          };
         });
+
         document.getElementById('listInfo').textContent = '';
-        renderListaFiltrada(); atualizarResumo();
-      } catch(e) { console.error('Erro carregarFinanceiro:', e); document.getElementById('listInfo').textContent = 'Erro de conexão. Tente novamente.'; }
+        renderListaFiltrada();
+        atualizarResumo();
+
+        // Sync automático após carregar
+        await syncTodos();
+        agendarAutoSync();
+      } catch(e) {
+        console.error('Erro carregarFinanceiro:', e);
+        document.getElementById('listInfo').textContent = 'Erro de conexão. Tente novamente.';
+      }
     }
 
     function atualizarResumo() {
       if (!todosRegistros.length) { document.getElementById('resumoGrid').style.display='none'; return; }
       let arrecadado=0, pendente=0, emDia=0;
-      todosRegistros.forEach(a => { const st=getEffectiveStatus(a); if(st==='pago'){arrecadado+=parseFloat(a.valor||calcularValorFinal(a));emDia++;}else{pendente+=calcularValorFinal(a);} });
+      todosRegistros.forEach(a => {
+        const st = getEffectiveStatus(a);
+        if (st==='pago') { arrecadado += parseFloat(a.valor || calcularValorFinal(a)); emDia++; }
+        else pendente += calcularValorFinal(a);
+      });
       document.getElementById('resumoArrecadado').textContent = 'R$ '+arrecadado.toFixed(2).replace('.',',');
       document.getElementById('resumoPendente').textContent   = 'R$ '+pendente.toFixed(2).replace('.',',');
       document.getElementById('resumoEmDia').textContent      = emDia;
@@ -442,42 +531,80 @@
       }
       const temDesconto = detectarDesconto(a);
       const valorFinal  = calcularValorFinal(a);
-      const valorDisp   = valorFinal>0 ? 'R$\u00a0'+valorFinal.toFixed(2).replace('.',',')+(temDesconto?' <span class="desconto-tag">10%\u00a0desc.</span>':'') : '—';
+      const valorDisp   = valorFinal>0
+        ? 'R$\u00a0'+valorFinal.toFixed(2).replace('.',',')+(temDesconto?' <span class="desconto-tag">10%\u00a0desc.</span>':'')
+        : '—';
+
       let extras = '';
       if (a.asaas_id) extras += '<span class="asaas-badge" style="margin-top:6px;display:inline-block;">Asaas</span> ';
       if (a.plano==='Recorrente' && a.data_contrato) {
         const dc=new Date(a.data_contrato+'T00:00:00'); const dataC=new Date(dc); dataC.setMonth(dataC.getMonth()+2);
-        if (new Date()<dataC) extras+='<span class="chip-carencia">⏳ Carência até '+formatDataBR(dataC)+'</span>';
+        if (new Date()<dataC) extras += '<span class="chip-carencia">⏳ Carência até '+formatDataBR(dataC)+'</span>';
       }
+
       const vencimento   = String(DIA_VENCIMENTO).padStart(2,'0')+'/'+String(mesSelecionado).padStart(2,'0')+'/'+anoSelecionado;
       const contratoDisp = a.data_contrato ? formatData(a.data_contrato) : '—';
       const dataPagDisp  = a.dataPagamento ? formatData(a.dataPagamento) : '—';
+
+      // Próx. vencimento: para recorrente/assinatura, é o dia de vencimento do mês atual ou próximo
+      let proxVenc = '—';
+      const liveData = asaasStatusMap[a.id];
+      if (a.asaas_id && liveData && liveData.proxVencimento) {
+        proxVenc = formatData(liveData.proxVencimento);
+      } else if (a.plano && a.data_contrato) {
+        proxVenc = vencimento;
+      }
+
+      // Status + valor do Asaas se disponível
+      let statusDisplay = '—';
+      let valorDisplay  = valorDisp;
+      if (liveData && liveData.status) {
+        const sMap = { CONFIRMED:'✅ Confirmado', RECEIVED:'✅ Recebido', PENDING:'⏳ Pendente', OVERDUE:'❌ Vencido', REFUNDED:'↩️ Estornado', CANCELLED:'🚫 Cancelado' };
+        statusDisplay = sMap[liveData.status] || liveData.status;
+        if (liveData.valor) valorDisplay = 'R$\u00a0'+parseFloat(liveData.valor).toFixed(2).replace('.',',');
+      }
+
       const ie = escAttr(a.id);
+
       let acoes = '';
       if (!a.asaas_id) {
         acoes += '<button class="btn-acao vincular" onclick="window._vincular(\''+ie+'\')">🔗 Vincular ao Asaas</button>';
       } else {
-        acoes += '<button class="btn-acao sync" id="btnSync-'+ie+'" onclick="window._sync(\''+ie+'\')">🔄 Sincronizar</button>';
         if (a.asaas_paymentLink) acoes += '<a class="btn-acao ver" href="'+escHtml(a.asaas_paymentLink)+'" target="_blank" rel="noopener">🔗 Ver no Asaas</a>';
         if (a.plano==='Mensal' && st!=='pago') {
           acoes += '<button class="btn-acao pix" onclick="window._cobrar(\''+ie+'\',\'PIX\')">📲 Gerar Pix</button>';
           acoes += '<button class="btn-acao boleto" onclick="window._cobrar(\''+ie+'\',\'BOLETO\')">📄 Gerar Boleto</button>';
         }
-        if (a.plano==='Recorrente' && a.asaas_assinatura_id) acoes += '<button class="btn-acao cancelar" onclick="window._cancelar(\''+ie+'\')">❌ Cancelar Assinatura</button>';
+        if (a.plano==='Recorrente' && a.asaas_assinatura_id) {
+          acoes += '<button class="btn-acao cancelar" onclick="window._cancelar(\''+ie+'\')">❌ Cancelar Assinatura</button>';
+        }
         acoes += '<button class="btn-acao cartao" onclick="window._abrirCartao(\''+ie+'\')">💳 Cartão</button>';
       }
+
       const tel = validarTelefone(a.telefone);
-      // Pix 1º mês: só Recorrente vinculado sem 1º pagamento confirmado
       const primPag = a.primeiro_pagamento || '';
       const primPagConfirmado = primPag === 'pix_pago' || primPag === 'debito' || primPag === 'dinheiro';
       if (a.plano==='Recorrente' && a.asaas_id && !primPagConfirmado && !a.asaas_cobranca_id && tel) {
         acoes += '<button class="btn-acao wpp" onclick="window._wppPix(\''+ie+'\')">📲 Gerar Pix 1º mês</button>';
       }
-      // Registrar Manual: Mensal e Recorrente
-      if (a.plano==='Mensal' || (a.plano==='Recorrente' && a.asaas_id)) {
-        acoes += '<button class="btn-acao manual" onclick="window._manual(\''+ie+'\',\''+escAttr(a.nome||'')+'\',\''+escAttr(String(valorFinal||''))+'\')">💵 Registrar Manual</button>';
-      }
-      return '<div class="fin-aluno-card"><div class="fin-aluno-header"><div class="fin-aluno-nome">'+escHtml(a.nome||'—')+'</div><span class="status-badge '+badgeClass+'">'+badgeText+'</span></div>'+(extras?'<div style="margin-top:6px;">'+extras+'</div>':'')+'<div class="fin-aluno-info"><div class="fin-info-item"><span class="fin-info-label">Plano</span><span class="fin-info-valor">'+escHtml(a.plano||'—')+'</span></div><div class="fin-info-item"><span class="fin-info-label">Valor</span><span class="fin-info-valor">'+valorDisp+'</span></div><div class="fin-info-item"><span class="fin-info-label">Contrato</span><span class="fin-info-valor">'+contratoDisp+'</span></div><div class="fin-info-item"><span class="fin-info-label">Vencimento</span><span class="fin-info-valor">'+(st==='pago'?dataPagDisp:vencimento)+'</span></div>'+(st==='pago'?'<div class="fin-info-item"><span class="fin-info-label">Forma</span><span class="fin-info-valor">'+formatFormaPag(a.formaPagamento)+'</span></div>':'')+'</div><div class="btns-acao">'+acoes+'</div>'+(a.plano==='Recorrente'&&a.asaas_id&&st!=='pago'?primeiroPagHtml(a):'')+  '</div>';
+
+      // Histórico sempre disponível
+      acoes += '<button class="btn-acao historico" onclick="window._historico(\''+ie+'\',\''+escAttr(a.nome||'')+'\')">📋 Histórico</button>';
+
+      return '<div class="fin-aluno-card">' +
+        '<div class="fin-aluno-header"><div class="fin-aluno-nome">'+escHtml(a.nome||'—')+'</div><span class="status-badge '+badgeClass+'">'+badgeText+'</span></div>' +
+        (extras ? '<div style="margin-top:6px;">'+extras+'</div>' : '') +
+        '<div class="fin-aluno-info">' +
+          '<div class="fin-info-item"><span class="fin-info-label">Plano</span><span class="fin-info-valor">'+escHtml(a.plano||'—')+'</span></div>' +
+          '<div class="fin-info-item"><span class="fin-info-label">Valor</span><span class="fin-info-valor">'+valorDisplay+'</span></div>' +
+          '<div class="fin-info-item"><span class="fin-info-label">Status</span><span class="fin-info-valor">'+statusDisplay+'</span></div>' +
+          '<div class="fin-info-item"><span class="fin-info-label">Próx. Vencimento</span><span class="fin-info-valor">'+proxVenc+'</span></div>' +
+          '<div class="fin-info-item"><span class="fin-info-label">Contrato</span><span class="fin-info-valor">'+contratoDisp+'</span></div>' +
+          (st==='pago' ? '<div class="fin-info-item"><span class="fin-info-label">Forma</span><span class="fin-info-valor">'+formatFormaPag(a.formaPagamento)+'</span></div>' : '') +
+        '</div>' +
+        '<div class="btns-acao">'+acoes+'</div>' +
+        (a.plano==='Recorrente' && a.asaas_id && st!=='pago' ? primeiroPagHtml(a) : '') +
+        '</div>';
     }
 
     function primeiroPagHtml(a) {
@@ -488,17 +615,54 @@
       return '<div class="primeiro-pag-wrap">' +
         '<span class="primeiro-pag-label">1º mês:</span>' +
         '<select class="primeiro-pag-select ' + cls + '" onchange="window._salvarPrimeiroPag(\'' + ie + '\',this.value)">' +
-          '<option value=""' + (val===''?' selected':'') + '>⏳ Aguardando pagamento</option>' +
-          '<option value="pix_pago"' + (val==='pix_pago'?' selected':'') + '>✅ Pix pago</option>' +
-          '<option value="debito"' + (val==='debito'?' selected':'') + '>✅ Débito pago</option>' +
-          '<option value="dinheiro"' + (val==='dinheiro'?' selected':'') + '>✅ Dinheiro pago</option>' +
+          '<option value=""'       + (val===''       ?' selected':'') + '>⏳ Aguardando pagamento</option>' +
+          '<option value="pix_pago"'  + (val==='pix_pago' ?' selected':'') + '>✅ Pix pago</option>' +
+          '<option value="debito"'    + (val==='debito'   ?' selected':'') + '>✅ Débito pago</option>' +
+          '<option value="dinheiro"'  + (val==='dinheiro' ?' selected':'') + '>✅ Dinheiro pago</option>' +
         '</select>' +
       '</div>';
     }
 
+    // ── Histórico ──────────────────────────────────────────────
+    window._historico = async function(alunoId, nome) {
+      document.getElementById('histAlunoNome').textContent = nome;
+      document.getElementById('histLista').innerHTML = '<p style="color:#aaa;text-align:center;padding:16px;">Carregando…</p>';
+      document.getElementById('modalHistorico').classList.add('open');
+      try {
+        const snap = await getDocs(query(
+          collection(db, 'pagamentos'),
+          where('alunoId', '==', alunoId),
+          orderBy('criadoEm', 'desc')
+        ));
+        if (snap.empty) {
+          document.getElementById('histLista').innerHTML = '<div class="hist-vazio">Nenhum pagamento registrado.</div>';
+          return;
+        }
+        const itens = snap.docs.map(d => d.data());
+        document.getElementById('histLista').innerHTML = itens.map(p => {
+          const mes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][parseInt(p.mes||1)-1];
+          return '<div class="hist-item">' +
+            '<div class="hist-info">' +
+              '<div class="hist-forma">'+escHtml(formatFormaPag(p.formaPagamento||''))+'</div>' +
+              '<div class="hist-data">'+escHtml(formatData(p.data||''))+' — '+escHtml(mes||'')+'/'+escHtml(String(p.ano||''))+'</div>' +
+            '</div>' +
+            '<div class="hist-valor">R$ '+parseFloat(p.valor||0).toFixed(2).replace('.',',')+'</div>' +
+          '</div>';
+        }).join('');
+      } catch(e) {
+        document.getElementById('histLista').innerHTML = '<div class="hist-vazio">Erro ao carregar histórico.</div>';
+      }
+    };
+    document.getElementById('btnFecharHist').addEventListener('click', () => {
+      document.getElementById('modalHistorico').classList.remove('open');
+    });
+    document.getElementById('modalHistorico').addEventListener('click', function(e) {
+      if (e.target === this) this.classList.remove('open');
+    });
+
+    // ── Salvar 1º pagamento ────────────────────────────────────
     window._salvarPrimeiroPag = async function(alunoId, valor) {
       try {
-        // Se pix_pago, dar baixa no Asaas primeiro
         if (valor === 'pix_pago') {
           const a = todosRegistros.find(r => r.id === alunoId);
           let cobrancaId = a ? a.asaas_cobranca_id : '';
@@ -510,19 +674,14 @@
           }
           if (!cobrancaId) {
             alert('Nenhuma cobrança Pix encontrada. Gere o Pix primeiro usando o botão "📲 Gerar Pix 1º mês".');
-            renderListaFiltrada();
-            return;
+            renderListaFiltrada(); return;
           }
-          const respAsaas = await gasCall('asaasConfirmarPix', {
-            cobrancaId, valor: a ? calcularValorFinal(a) : 0
-          });
+          const respAsaas = await gasCall('asaasConfirmarPix', { cobrancaId, valor: a ? calcularValorFinal(a) : 0 });
           if (!respAsaas.ok) {
             alert('Erro ao confirmar Pix no Asaas: ' + (respAsaas.erro || 'desconhecido'));
-            renderListaFiltrada();
-            return;
+            renderListaFiltrada(); return;
           }
         }
-        // Salvar no Firestore
         await updateDoc(doc(db,'alunos',alunoId), { primeiro_pagamento: valor });
         const idx = todosRegistros.findIndex(r => r.id === alunoId);
         if (idx >= 0) todosRegistros[idx].primeiro_pagamento = valor;
@@ -530,6 +689,7 @@
       } catch(e) { alert('Erro ao salvar: '+e.message); }
     };
 
+    // ── Abrir cartão ───────────────────────────────────────────
     window._abrirCartao = async function(alunoId) {
       const a = todosRegistros.find(r => r.id === alunoId);
       if (!a) return;
@@ -551,10 +711,10 @@
       document.getElementById('cartaoSuccessWrap').style.display = 'none';
       document.getElementById('modalCartao').classList.add('open');
       try {
-        const alunoDoc = await getDoc(doc(db, 'alunos', alunoId));
+        const alunoDoc = await getDoc(doc(db,'alunos',alunoId));
         if (alunoDoc.exists()) {
           const dados = alunoDoc.data();
-          const cepFirestore = (dados.cep || '').replace(/\D/g, '');
+          const cepFirestore = (dados.cep || '').replace(/\D/g,'');
           if (cepFirestore.length === 8) document.getElementById('cCartaoCep').value = cepFirestore;
           if (dados.numero) _cartaoAlunoData = Object.assign({}, _cartaoAlunoData, { numero: dados.numero });
         }
@@ -566,7 +726,6 @@
     document.getElementById('cCartaoValidade').addEventListener('input', function() { this.value = formatarValidade(this.value); });
     document.getElementById('cCartaoCvv').addEventListener('input',      function() { this.value = this.value.replace(/\D/g,'').slice(0,4); });
     document.getElementById('cCartaoCpf').addEventListener('input',      function() { this.value = formatarCpf(this.value); });
-    document.getElementById('cCartaoCep').addEventListener('input',      function() { this.value = formatarCep(this.value); });
 
     document.getElementById('btnSalvarCartao').addEventListener('click', async () => {
       const alunoId    = document.getElementById('cartaoAlunoId').value;
@@ -599,22 +758,21 @@
         });
         document.getElementById('cartaoInfo').textContent = '';
         if (!resp.ok) { document.getElementById('cartaoErr').textContent='Erro: '+(resp.erro||'desconhecido'); document.getElementById('btnSalvarCartao').disabled=false; return; }
-        const upd = { asaas_cartao_token: resp.creditCardToken || '' };
-        await updateDoc(doc(db,'alunos',alunoId), upd);
+        await updateDoc(doc(db,'alunos',alunoId), { asaas_cartao_token: resp.creditCardToken || '' });
         const idx = todosRegistros.findIndex(r => r.id === alunoId);
-        if (idx >= 0) Object.assign(todosRegistros[idx], upd);
+        if (idx >= 0) todosRegistros[idx].asaas_cartao_token = resp.creditCardToken || '';
         document.getElementById('cartaoFormWrap').style.display    = 'none';
         document.getElementById('cartaoSuccessWrap').style.display = '';
         const final4 = numero.slice(-4);
         document.getElementById('cartaoFinal4').textContent = 'Final ' + final4;
         const btnWppCartao = document.getElementById('btnCartaoWpp');
-        const a = _cartaoAlunoData;
-        if (a && validarTelefone(a.telefone)) {
+        const aData = _cartaoAlunoData;
+        if (aData && validarTelefone(aData.telefone)) {
           btnWppCartao.style.display = '';
           btnWppCartao.onclick = function() {
-            const tel   = validarTelefone(a.telefone);
-            const valor = calcularValorFinal(a).toFixed(2).replace('.',',');
-            const msg   = 'Olá '+a.nome+'! 😊\nSeu cartão com final '+final4+' foi cadastrado com sucesso na Riva BJJ.\nAs cobranças do plano '+(a.plano||'')+' (R$ '+valor+'/mês) serão debitadas automaticamente. 🥋';
+            const tel   = validarTelefone(aData.telefone);
+            const valor = calcularValorFinal(aData).toFixed(2).replace('.',',');
+            const msg   = 'Olá '+aData.nome+'! 😊\nSeu cartão com final '+final4+' foi cadastrado com sucesso na Riva BJJ.\nAs cobranças do plano '+(aData.plano||'')+' (R$ '+valor+'/mês) serão debitadas automaticamente. 🥋';
             window.open('https://wa.me/55'+tel+'?text='+encodeURIComponent(msg),'_blank');
           };
         } else { btnWppCartao.style.display='none'; }
@@ -626,6 +784,7 @@
     document.getElementById('btnFecharCartao').addEventListener('click', () => { fecharModalCartao(); renderListaFiltrada(); });
     document.getElementById('modalCartao').addEventListener('click', function(e) { if (e.target===this) fecharModalCartao(); });
 
+    // ── Pix WhatsApp ───────────────────────────────────────────
     window._wppPix = async function(alunoId) {
       const a = todosRegistros.find(r => r.id === alunoId);
       if (!a) return;
@@ -640,20 +799,23 @@
       try {
         const temDesc      = detectarDesconto(a);
         const dataContrato = a.data_contrato || new Date().toISOString().slice(0,10);
-        const resp = await gasCall('asaasVincular', { alunoId:a.id, nome:a.nome, email:a.email, telefone:a.telefone, cpf:a.cpf, plano:a.plano, formaPag:'PIX', grupoFamiliar:a.grupo_familiar, temDesconto:temDesc?'true':'false', dataContrato });
+        const resp = await gasCall('asaasVincular', { alunoId: a.id, nome: a.nome, email: a.email, telefone: a.telefone, cpf: a.cpf, plano: a.plano, formaPag: 'PIX', grupoFamiliar: a.grupo_familiar, temDesconto: temDesc?'true':'false', dataContrato });
         document.getElementById('pixWppInfo').style.display = 'none';
         if (!resp.ok) { document.getElementById('pixWppErr').textContent='Erro: '+(resp.erro||'desconhecido'); return; }
-        const upd = { asaas_cobranca_id:resp.cobranca_id||'', asaas_paymentLink:resp.paymentLink||'' };
+        const upd = { asaas_cobranca_id: resp.cobranca_id||'', asaas_paymentLink: resp.paymentLink||'' };
         if (resp.customerId && !a.asaas_id) upd.asaas_id = resp.customerId;
         await updateDoc(doc(db,'alunos',a.id), upd);
         const idx = todosRegistros.findIndex(r => r.id === a.id);
         if (idx >= 0) Object.assign(todosRegistros[idx], upd);
-        if (resp.pixCopiaECola) asaasStatusMap[a.id] = Object.assign(asaasStatusMap[a.id]||{}, { pixCopiaECola:resp.pixCopiaECola, invoiceUrl:resp.paymentLink||'' });
+        if (resp.pixCopiaECola) asaasStatusMap[a.id] = Object.assign(asaasStatusMap[a.id]||{}, { pixCopiaECola: resp.pixCopiaECola, invoiceUrl: resp.paymentLink||'' });
         document.getElementById('pixWppResultado').style.display = '';
         const qrImg = document.getElementById('pixWppQrImg');
-        if (resp.pixQrCodeImage) { qrImg.src='data:image/png;base64,'+resp.pixQrCodeImage; qrImg.style.display=''; } else { qrImg.style.display='none'; }
+        if (resp.pixQrCodeImage) { qrImg.src='data:image/png;base64,'+resp.pixQrCodeImage; qrImg.style.display=''; }
+        else qrImg.style.display='none';
         document.getElementById('pixWppKey').textContent = resp.pixCopiaECola || '(código não disponível)';
-        document.getElementById('btnCopiarPixWpp').onclick = function() { navigator.clipboard.writeText(resp.pixCopiaECola||'').then(()=>{this.textContent='✅ Copiado!';setTimeout(()=>{this.textContent='📋 Copiar código Pix';},2000);}).catch(()=>alert('Código Pix: '+resp.pixCopiaECola)); };
+        document.getElementById('btnCopiarPixWpp').onclick = function() {
+          navigator.clipboard.writeText(resp.pixCopiaECola||'').then(()=>{this.textContent='✅ Copiado!';setTimeout(()=>{this.textContent='📋 Copiar código Pix';},2000);}).catch(()=>alert('Código Pix: '+resp.pixCopiaECola));
+        };
         document.getElementById('btnEnviarPixWpp').onclick = function() {
           const aAtual = todosRegistros.find(r=>r.id===a.id)||a;
           const valor  = calcularValorFinal(aAtual).toFixed(2).replace('.',',');
@@ -664,77 +826,16 @@
           window.open('https://wa.me/55'+tel+'?text='+encodeURIComponent(msg),'_blank');
         };
         renderListaFiltrada();
-      } catch(e) { document.getElementById('pixWppInfo').style.display='none'; document.getElementById('pixWppErr').textContent='Erro: '+e.message; }
+      } catch(e) {
+        document.getElementById('pixWppInfo').style.display='none';
+        document.getElementById('pixWppErr').textContent='Erro: '+e.message;
+      }
     };
 
     document.getElementById('btnFecharPixWpp').addEventListener('click', () => { document.getElementById('modalPixWpp').classList.remove('open'); });
     document.getElementById('modalPixWpp').addEventListener('click', function(e) { if (e.target===this) this.classList.remove('open'); });
 
-    window._manual = function(alunoId, nome, valorSug) {
-      document.getElementById('modalAlunoId').value         = alunoId;
-      document.getElementById('modalAlunoNome').textContent  = nome;
-      document.getElementById('fValor').value               = valorSug||'';
-      document.getElementById('fData').value                = new Date().toISOString().slice(0,10);
-      document.getElementById('fFormaPag').value            = 'dinheiro';
-      document.getElementById('modalErr').textContent       = '';
-      document.getElementById('modalInfo').textContent      = '';
-      document.getElementById('btnConfirmarPag').disabled   = false;
-      document.getElementById('modalPagamento').classList.add('open');
-    };
-    window._abrirModal = window._manual;
-
-    window._sync = async function(alunoId) {
-      const a = todosRegistros.find(r => r.id === alunoId);
-      if (!a || !a.asaas_id) return;
-      const btn = document.getElementById('btnSync-'+alunoId);
-      if (btn) { btn.disabled=true; btn.textContent='⏳'; }
-      try {
-        let tipo='customer', asaasId=a.asaas_id;
-        if (a.asaas_tipo==='assinatura' && a.asaas_assinatura_id)                                { tipo='assinatura'; asaasId=a.asaas_assinatura_id; }
-        else if ((a.asaas_tipo==='parcelamento'||a.asaas_tipo==='avista') && a.asaas_cobranca_id) { tipo='cobranca';   asaasId=a.asaas_cobranca_id; }
-        const resp = await gasCall('asaasStatus', { asaasId, tipo, mes:mesSelecionado, ano:anoSelecionado });
-        if (resp.ok) {
-          asaasStatusMap[alunoId] = resp;
-          const idx = todosRegistros.findIndex(r => r.id === alunoId);
-          if (idx >= 0) {
-            const st = resp.status||'';
-            if (st==='CONFIRMED'||st==='RECEIVED') { todosRegistros[idx].statusPagamento='pago'; todosRegistros[idx].valor=resp.valor||todosRegistros[idx].valor; todosRegistros[idx].dataPagamento=resp.dataPagamento||''; }
-            else if (st==='OVERDUE') todosRegistros[idx].statusPagamento='vencido';
-            else todosRegistros[idx].statusPagamento='pendente';
-          }
-          renderListaFiltrada(); atualizarResumo();
-        } else { alert('Erro ao sincronizar: '+(resp.erro||'desconhecido')); if (btn) { btn.disabled=false; btn.textContent='🔄 Sincronizar'; } }
-      } catch(e) { alert('Erro: '+e.message); if (btn) { btn.disabled=false; btn.textContent='🔄 Sincronizar'; } }
-    };
-
-    window._cancelar = async function(alunoId) {
-      const a = todosRegistros.find(r => r.id === alunoId);
-      if (!a || !a.asaas_assinatura_id) { alert('Assinatura não encontrada.'); return; }
-      if (a.data_contrato) {
-        const dc=new Date(a.data_contrato+'T00:00:00'); const dataC=new Date(dc); dataC.setMonth(dataC.getMonth()+2);
-        if (new Date()<dataC && !confirm('⚠️ Este aluno está em carência até '+formatDataBR(dataC)+'.\nDeseja cancelar mesmo assim?')) return;
-      }
-      if (!confirm('Cancelar a assinatura de '+a.nome+'?\nEsta ação não pode ser desfeita.')) return;
-      try {
-        const resp = await gasCall('asaasCancelarAssinatura', { assinatura_id: a.asaas_assinatura_id });
-        if (resp.ok) {
-          await updateDoc(doc(db,'alunos',alunoId), { asaas_assinatura_id:'', asaas_tipo:'cancelado' });
-          const idx = todosRegistros.findIndex(r => r.id === alunoId);
-          if (idx >= 0) { todosRegistros[idx].asaas_assinatura_id=''; todosRegistros[idx].asaas_tipo='cancelado'; }
-          renderListaFiltrada(); alert('✅ Assinatura cancelada com sucesso.');
-        } else alert('Erro: '+(resp.erro||'desconhecido'));
-      } catch(e) { alert('Erro: '+e.message); }
-    };
-
-    window._wpp = function(alunoId) {
-      const a = todosRegistros.find(r => r.id === alunoId);
-      if (!a) return;
-      const tel = validarTelefone(a.telefone);
-      if (!tel) { alert('Telefone inválido.'); return; }
-      const url = buildWhatsAppUrl(a);
-      if (url) window.open(url,'_blank');
-    };
-
+    // ── Cobrar (Mensal) ────────────────────────────────────────
     window._cobrar = async function(alunoId, formaPag) {
       const a = todosRegistros.find(r => r.id === alunoId);
       if (!a) return;
@@ -747,11 +848,28 @@
         await updateDoc(doc(db,'alunos',alunoId), upd);
         const idx = todosRegistros.findIndex(r => r.id === alunoId);
         if (idx >= 0) Object.assign(todosRegistros[idx], upd);
-        if (formaPag==='PIX' && (resp.pixQrCodeImage||resp.pixCopiaECola)) { _mostrarPixModal(a.nome, resp.pixQrCodeImage, resp.pixCopiaECola, resp.paymentLink, todosRegistros.find(r=>r.id===alunoId)||a); }
-        else { renderListaFiltrada(); alert('✅ Cobrança gerada!'+(resp.paymentLink?'\nLink: '+resp.paymentLink:'')); }
+        if (formaPag==='PIX' && (resp.pixQrCodeImage||resp.pixCopiaECola)) {
+          // Reaproveita modal pix
+          document.getElementById('pixWppNome').textContent        = a.nome||'';
+          document.getElementById('pixWppInfo').style.display      = 'none';
+          document.getElementById('pixWppResultado').style.display = '';
+          document.getElementById('pixWppErr').textContent         = '';
+          const qrImg = document.getElementById('pixWppQrImg');
+          if (resp.pixQrCodeImage) { qrImg.src='data:image/png;base64,'+resp.pixQrCodeImage; qrImg.style.display=''; }
+          else qrImg.style.display='none';
+          document.getElementById('pixWppKey').textContent = resp.pixCopiaECola||'(não disponível)';
+          document.getElementById('btnCopiarPixWpp').onclick = function() {
+            navigator.clipboard.writeText(resp.pixCopiaECola||'').then(()=>{this.textContent='✅ Copiado!';setTimeout(()=>{this.textContent='📋 Copiar código Pix';},2000);});
+          };
+          document.getElementById('modalPixWpp').classList.add('open');
+        } else {
+          renderListaFiltrada();
+          alert('✅ Cobrança gerada!'+(resp.paymentLink?'\nLink: '+resp.paymentLink:''));
+        }
       } catch(e) { alert('Erro: '+e.message); }
     };
 
+    // ── Vincular ───────────────────────────────────────────────
     window._vincular = function(alunoId) {
       const a = todosRegistros.find(r => r.id === alunoId);
       if (!a) return;
@@ -769,37 +887,13 @@
       document.getElementById('modalVincular').classList.add('open');
     };
 
-    function _mostrarPixModal(nome, qrImage, pixKey, paymentLink, alunoData) {
-      document.getElementById('vincularAlunoId').value          = alunoData?alunoData.id:'';
-      document.getElementById('vincularNome').textContent        = nome||'';
-      document.getElementById('vincularFormWrap').style.display    = 'none';
-      document.getElementById('vincularSuccessWrap').style.display = '';
-      const qrWrap = document.getElementById('vincularQrWrap');
-      if (qrImage||pixKey) {
-        qrWrap.style.display='';
-        const qrImg = document.getElementById('vincularQrImg');
-        qrImg.src = qrImage?'data:image/png;base64,'+qrImage:''; qrImg.style.display=qrImage?'':'none';
-        document.getElementById('vincularPixKey').textContent = pixKey||'';
-        document.getElementById('btnCopiarPix').onclick = function() { navigator.clipboard.writeText(pixKey||'').then(()=>{this.textContent='✅ Copiado!';setTimeout(()=>{this.textContent='📋 Copiar código Pix';},2000);}).catch(()=>alert('Código Pix: '+pixKey)); };
-      } else qrWrap.style.display='none';
-      const btnWa = document.getElementById('btnVincularWhatsapp');
-      if (alunoData) {
-        const tel = validarTelefone(alunoData.telefone);
-        if (pixKey) asaasStatusMap[alunoData.id] = Object.assign(asaasStatusMap[alunoData.id]||{}, { pixCopiaECola:pixKey });
-        if (tel) { btnWa.style.display=''; btnWa.onclick=function(){const u=buildWhatsAppUrl(alunoData);if(u)window.open(u,'_blank');}; }
-        else btnWa.style.display='none';
-      }
-      document.getElementById('modalVincular').classList.add('open');
-      renderListaFiltrada();
-    }
-
     function atualizarFormVincular() {
       const plano = document.getElementById('vincularPlano').value;
-      document.getElementById('vincularFormaPagWrap').style.display    = plano==='Mensal'     ?'':'none';
-      const temD=document.getElementById('vincularDesconto').checked;
-      const base={Recorrente:200,Semestral:220,Mensal:240}[plano]||0;
-      const final=temD?Math.round(base*0.9*100)/100:base;
-      document.getElementById('vincularValorFinal').textContent='R$ '+final.toFixed(2).replace('.',',');
+      document.getElementById('vincularFormaPagWrap').style.display = plano==='Mensal' ? '' : 'none';
+      const temD  = document.getElementById('vincularDesconto').checked;
+      const base  = {Recorrente:200,Semestral:220,Mensal:240}[plano]||0;
+      const final = temD ? Math.round(base*0.9*100)/100 : base;
+      document.getElementById('vincularValorFinal').textContent = 'R$ '+final.toFixed(2).replace('.',',');
     }
     document.getElementById('vincularPlano').addEventListener('change', atualizarFormVincular);
     document.getElementById('vincularDesconto').addEventListener('change', atualizarFormVincular);
@@ -817,67 +911,66 @@
       document.getElementById('btnCriarAsaas').disabled   = true;
       try {
         const resp = await gasCall('asaasVincular', { alunoId, nome:a?a.nome:'', email:a?a.email:'', telefone:a?a.telefone:'', cpf:a?a.cpf:'', plano, formaPag:plano==='Mensal'?formaPag:'', grupoFamiliar:a?a.grupo_familiar:'', temDesconto:temDesconto?'true':'false', dataContrato });
-        if (!resp.ok) { document.getElementById('vincularErr').textContent='Erro: '+(resp.erro||'desconhecido'); document.getElementById('vincularInfo').textContent=''; document.getElementById('btnCriarAsaas').disabled=false; return; }
+        if (!resp.ok) {
+          document.getElementById('vincularErr').textContent='Erro: '+(resp.erro||'desconhecido');
+          document.getElementById('vincularInfo').textContent='';
+          document.getElementById('btnCriarAsaas').disabled=false;
+          return;
+        }
         const upd = { asaas_id:resp.customerId||'', asaas_assinatura_id:resp.assinatura_id||'', asaas_cobranca_id:resp.cobranca_id||'', asaas_tipo:resp.tipo||'', asaas_paymentLink:resp.paymentLink||'', data_contrato:dataContrato, plano };
         await updateDoc(doc(db,'alunos',alunoId), upd);
         const idx = todosRegistros.findIndex(r => r.id === alunoId);
         if (idx >= 0) Object.assign(todosRegistros[idx], upd);
         document.getElementById('vincularFormWrap').style.display    = 'none';
         document.getElementById('vincularSuccessWrap').style.display = '';
-        const btnCartao=document.getElementById('btnCadastrarCartao');
-        btnCartao.style.display='';
-        btnCartao.onclick=function(){ fecharModalVincular(); window._abrirCartao(alunoId); };
-      } catch(e) { document.getElementById('vincularErr').textContent='Erro: '+e.message; document.getElementById('vincularInfo').textContent=''; document.getElementById('btnCriarAsaas').disabled=false; }
+        const btnCartao = document.getElementById('btnCadastrarCartao');
+        btnCartao.style.display = '';
+        btnCartao.onclick = function() { fecharModalVincular(); window._abrirCartao(alunoId); };
+      } catch(e) {
+        document.getElementById('vincularErr').textContent='Erro: '+e.message;
+        document.getElementById('vincularInfo').textContent='';
+        document.getElementById('btnCriarAsaas').disabled=false;
+      }
     });
+
+    // ── Cancelar assinatura ────────────────────────────────────
+    window._cancelar = async function(alunoId) {
+      const a = todosRegistros.find(r => r.id === alunoId);
+      if (!a || !a.asaas_assinatura_id) { alert('Assinatura não encontrada.'); return; }
+      if (a.data_contrato) {
+        const dc=new Date(a.data_contrato+'T00:00:00'); const dataC=new Date(dc); dataC.setMonth(dataC.getMonth()+2);
+        if (new Date()<dataC && !confirm('⚠️ Este aluno está em carência até '+formatDataBR(dataC)+'.\nDeseja cancelar mesmo assim?')) return;
+      }
+      if (!confirm('Cancelar a assinatura de '+a.nome+'?\nEsta ação não pode ser desfeita.')) return;
+      try {
+        const resp = await gasCall('asaasCancelarAssinatura', { assinatura_id: a.asaas_assinatura_id });
+        if (resp.ok) {
+          await updateDoc(doc(db,'alunos',alunoId), { asaas_assinatura_id:'', asaas_tipo:'cancelado' });
+          const idx = todosRegistros.findIndex(r => r.id === alunoId);
+          if (idx >= 0) { todosRegistros[idx].asaas_assinatura_id=''; todosRegistros[idx].asaas_tipo='cancelado'; }
+          renderListaFiltrada();
+          alert('✅ Assinatura cancelada com sucesso.');
+        } else alert('Erro: '+(resp.erro||'desconhecido'));
+      } catch(e) { alert('Erro: '+e.message); }
+    };
 
     function fecharModalVincular() { document.getElementById('modalVincular').classList.remove('open'); }
     document.getElementById('btnCancelarVincular').addEventListener('click', fecharModalVincular);
-    document.getElementById('btnFecharVincular').addEventListener('click', () => { _lastPaymentLink=''; _lastCustomerId=''; fecharModalVincular(); renderListaFiltrada(); atualizarResumo(); });
+    document.getElementById('btnFecharVincular').addEventListener('click', () => { fecharModalVincular(); renderListaFiltrada(); atualizarResumo(); });
     document.getElementById('modalVincular').addEventListener('click', function(e) { if (e.target===this) fecharModalVincular(); });
-
-    function fecharModal() { document.getElementById('modalPagamento').classList.remove('open'); }
-    document.getElementById('btnCancelarModal').addEventListener('click', fecharModal);
-    document.getElementById('modalPagamento').addEventListener('click', function(e) { if (e.target===this) fecharModal(); });
-
-    document.getElementById('btnConfirmarPag').addEventListener('click', async () => {
-      const alunoId=document.getElementById('modalAlunoId').value;
-      const valor=parseFloat(document.getElementById('fValor').value);
-      const data=document.getElementById('fData').value;
-      const formaPag=document.getElementById('fFormaPag').value;
-      document.getElementById('modalErr').textContent='';
-      if (!alunoId)                       { document.getElementById('modalErr').textContent='Aluno não identificado.'; return; }
-      if (!valor||isNaN(valor)||valor<=0) { document.getElementById('modalErr').textContent='Informe um valor válido.'; return; }
-      if (!data)                          { document.getElementById('modalErr').textContent='Informe a data.'; return; }
-      document.getElementById('modalInfo').textContent='Registrando…'; document.getElementById('btnConfirmarPag').disabled=true;
-      try {
-        const aluno=todosRegistros.find(a=>String(a.id)===String(alunoId));
-        await addDoc(collection(db,'pagamentos'),{alunoId,nome:aluno?aluno.nome:'',valor,data,formaPagamento:formaPag,mes:mesSelecionado,ano:anoSelecionado,criadoEm:serverTimestamp()});
-        document.getElementById('modalInfo').textContent=''; fecharModal(); await carregarFinanceiro();
-      } catch(e) { document.getElementById('modalErr').textContent='Erro ao registrar pagamento.'; document.getElementById('modalInfo').textContent=''; document.getElementById('btnConfirmarPag').disabled=false; }
-    });
 
     document.querySelectorAll('.btn-filtro').forEach(btn => btn.addEventListener('click', () => {
       document.querySelectorAll('.btn-filtro').forEach(b => b.classList.remove('ativo'));
       btn.classList.add('ativo'); filtroAtivo=btn.dataset.filtro; renderListaFiltrada();
     }));
     document.getElementById('searchBox').addEventListener('input', renderListaFiltrada);
-    document.getElementById('btnCarregar').addEventListener('click', carregarFinanceiro);
-    document.getElementById('btnHdrSair').addEventListener('click', () => { signOut(auth).catch(()=>{}); sessionStorage.removeItem(TOKEN_KEY); location.href='./administrativo.html'; });
-
-    function buildWhatsAppUrl(a) {
-      const tel=validarTelefone(a.telefone); if (!tel) return null;
-      const nome=a.nome||'', valor=calcularValorFinal(a).toFixed(2).replace('.',','), plano=a.plano||'';
-      const live=asaasStatusMap[a.id]||{};
-      const paymentLink=live.invoiceUrl||a.asaas_paymentLink||'';
-      const pixKey=live.pixCopiaECola||'';
-      const dataVenc=a.data_contrato?formatData(a.data_contrato):String(DIA_VENCIMENTO).padStart(2,'0')+'/'+String(mesSelecionado).padStart(2,'0')+'/'+anoSelecionado;
-      let msg='';
-      if (plano==='Recorrente')     msg='Olá '+nome+'! 😊\nSua assinatura mensal Riva BJJ está ativa.\nValor: R$ '+valor+'/mês (débito automático no cartão)\nEm caso de dúvidas, estamos à disposição! 🥋';
-      else if (plano==='Semestral') msg='Olá '+nome+'! 😊\nSeu plano semestral Riva BJJ foi gerado.\n6x de R$ '+valor+' no cartão de crédito.\nLink para pagamento: '+paymentLink+'\nEm caso de dúvidas, estamos à disposição! 🥋';
-      else if (plano==='Mensal')    msg=pixKey?'Olá '+nome+'! 😊\nSua mensalidade Riva BJJ de R$ '+valor+' foi gerada.\nPague via Pix: '+pixKey+'\nVencimento: '+dataVenc+'\nEm caso de dúvidas, estamos à disposição! 🥋':'Olá '+nome+'! 😊\nSua mensalidade Riva BJJ de R$ '+valor+' foi gerada.\nBoleto: '+paymentLink+'\nVencimento: '+dataVenc+'\nEm caso de dúvidas, estamos à disposição! 🥋';
-      else msg='Olá '+nome+'! 😊\nEm caso de dúvidas sobre seu plano Riva BJJ, estamos à disposição! 🥋';
-      return 'https://wa.me/55'+tel+'?text='+encodeURIComponent(msg);
-    }
+    document.getElementById('btnCarregar').addEventListener('click', () => { if (autoSyncTimer) clearInterval(autoSyncTimer); carregarFinanceiro(); });
+    document.getElementById('btnHdrSair').addEventListener('click', () => {
+      if (autoSyncTimer) clearInterval(autoSyncTimer);
+      signOut(auth).catch(()=>{});
+      sessionStorage.removeItem(TOKEN_KEY);
+      location.href = './administrativo.html';
+    });
   </script>
 </body>
 </html>
