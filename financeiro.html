@@ -74,7 +74,6 @@
     .mes-selector .select-input { margin-bottom: 0; flex: 1; }
     .mes-selector .btn-mes { background: var(--red); border: none; color: #fff; border-radius: 10px; padding: 12px 18px; font-size: 15px; font-weight: 800; cursor: pointer; white-space: nowrap; }
     .mes-selector .btn-mes:active { opacity: .75; }
-    /* Sync automático indicator */
     .sync-status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #aaa; margin-bottom: 8px; }
     .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #555; display: inline-block; }
     .sync-dot.syncing { background: #f39c12; animation: pulse 1s infinite; }
@@ -117,7 +116,6 @@
     .primeiro-pag-select { background: #222; border: 1px solid #555; color: #fff; border-radius: 8px; padding: 5px 10px; font-size: 12px; font-weight: 700; cursor: pointer; flex: 1; min-width: 140px; }
     .primeiro-pag-select.pago { border-color: #2ecc71; color: #2ecc71; }
     .primeiro-pag-select.pendente { border-color: #f39c12; color: #f39c12; }
-    /* Histórico */
     .hist-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); gap: 10px; }
     .hist-item:last-child { border-bottom: none; }
     .hist-info { display: flex; flex-direction: column; gap: 2px; }
@@ -320,6 +318,9 @@
     let _cartaoAlunoData = null;
     let autoSyncTimer    = null;
 
+    // Controle de pagamentos já gravados nesta sessão (evita duplicatas)
+    const _pagamentosGravados = new Set();
+
     // ── Utilitários ────────────────────────────────────────────
     function valorDePlano(plano) {
       if (!plano) return 0;
@@ -395,19 +396,63 @@
       for (const a of comAsaas) {
         try {
           let tipo = 'customer', asaasId = a.asaas_id;
-          if (a.asaas_tipo === 'assinatura' && a.asaas_assinatura_id)                                { tipo = 'assinatura'; asaasId = a.asaas_assinatura_id; }
-          else if ((a.asaas_tipo === 'parcelamento' || a.asaas_tipo === 'avista') && a.asaas_cobranca_id) { tipo = 'cobranca';   asaasId = a.asaas_cobranca_id; }
+          if (a.asaas_tipo === 'assinatura' && a.asaas_assinatura_id)
+            { tipo = 'assinatura'; asaasId = a.asaas_assinatura_id; }
+          else if ((a.asaas_tipo === 'parcelamento' || a.asaas_tipo === 'avista') && a.asaas_cobranca_id)
+            { tipo = 'cobranca'; asaasId = a.asaas_cobranca_id; }
 
           const resp = await gasCall('asaasStatus', { asaasId, tipo, mes: mesSelecionado, ano: anoSelecionado });
+
           if (resp.ok) {
             asaasStatusMap[a.id] = resp;
             const idx = todosRegistros.findIndex(r => r.id === a.id);
             if (idx >= 0) {
               const st = resp.status || '';
+
               if (st === 'CONFIRMED' || st === 'RECEIVED') {
                 todosRegistros[idx].statusPagamento = 'pago';
-                todosRegistros[idx].valor = resp.valor || todosRegistros[idx].valor;
-                todosRegistros[idx].dataPagamento = resp.dataPagamento || '';
+                todosRegistros[idx].valor           = resp.valor || todosRegistros[idx].valor;
+                todosRegistros[idx].dataPagamento   = resp.dataPagamento || '';
+
+                // ── Gravar no Firestore se ainda não foi gravado ──────
+                const chave = `${a.id}_${mesSelecionado}_${anoSelecionado}`;
+                if (!_pagamentosGravados.has(chave)) {
+                  try {
+                    // Verifica se já existe documento para este aluno/mês/ano
+                    const existeSnap = await getDocs(query(
+                      collection(db, 'pagamentos'),
+                      where('alunoId', '==', a.id),
+                      where('mes',     '==', mesSelecionado),
+                      where('ano',     '==', anoSelecionado)
+                    ));
+                    if (existeSnap.empty) {
+                      // Detecta forma de pagamento com base no tipo Asaas
+                      let formaPag = 'pix';
+                      if (tipo === 'assinatura')          formaPag = 'cartao';
+                      else if (a.asaas_tipo === 'avista') formaPag = 'pix';
+
+                      await addDoc(collection(db, 'pagamentos'), {
+                        alunoId:        a.id,
+                        nome:           a.nome || '',
+                        valor:          parseFloat(resp.valor || calcularValorFinal(a)),
+                        data:           resp.dataPagamento || new Date().toISOString().slice(0, 10),
+                        formaPagamento: formaPag,
+                        mes:            mesSelecionado,
+                        ano:            anoSelecionado,
+                        criadoEm:       serverTimestamp(),
+                        fonte:          'asaas_sync',
+                      });
+                      todosRegistros[idx].valor          = parseFloat(resp.valor || calcularValorFinal(a));
+                      todosRegistros[idx].formaPagamento = formaPag;
+                    }
+                    // Marca como gravado (já existia ou acabou de gravar)
+                    _pagamentosGravados.add(chave);
+                  } catch(errGrav) {
+                    console.warn('Erro ao gravar pagamento no Firestore:', errGrav);
+                  }
+                }
+                // ─────────────────────────────────────────────────────
+
               } else if (st === 'OVERDUE') {
                 todosRegistros[idx].statusPagamento = 'vencido';
               } else {
@@ -544,9 +589,7 @@
 
       const vencimento   = String(DIA_VENCIMENTO).padStart(2,'0')+'/'+String(mesSelecionado).padStart(2,'0')+'/'+anoSelecionado;
       const contratoDisp = a.data_contrato ? formatData(a.data_contrato) : '—';
-      const dataPagDisp  = a.dataPagamento ? formatData(a.dataPagamento) : '—';
 
-      // Próx. vencimento: para recorrente/assinatura, é o dia de vencimento do mês atual ou próximo
       let proxVenc = '—';
       const liveData = asaasStatusMap[a.id];
       if (a.asaas_id && liveData && liveData.proxVencimento) {
@@ -555,7 +598,6 @@
         proxVenc = vencimento;
       }
 
-      // Status + valor do Asaas se disponível
       let statusDisplay = '—';
       let valorDisplay  = valorDisp;
       if (liveData && liveData.status) {
@@ -588,7 +630,6 @@
         acoes += '<button class="btn-acao wpp" onclick="window._wppPix(\''+ie+'\')">📲 Gerar Pix 1º mês</button>';
       }
 
-      // Histórico sempre disponível
       acoes += '<button class="btn-acao historico" onclick="window._historico(\''+ie+'\',\''+escAttr(a.nome||'')+'\')">📋 Histórico</button>';
 
       return '<div class="fin-aluno-card">' +
@@ -615,7 +656,7 @@
       return '<div class="primeiro-pag-wrap">' +
         '<span class="primeiro-pag-label">1º mês:</span>' +
         '<select class="primeiro-pag-select ' + cls + '" onchange="window._salvarPrimeiroPag(\'' + ie + '\',this.value)">' +
-          '<option value=""'       + (val===''       ?' selected':'') + '>⏳ Aguardando pagamento</option>' +
+          '<option value=""'          + (val===''         ?' selected':'') + '>⏳ Aguardando pagamento</option>' +
           '<option value="pix_pago"'  + (val==='pix_pago' ?' selected':'') + '>✅ Pix pago</option>' +
           '<option value="debito"'    + (val==='debito'   ?' selected':'') + '>✅ Débito pago</option>' +
           '<option value="dinheiro"'  + (val==='dinheiro' ?' selected':'') + '>✅ Dinheiro pago</option>' +
@@ -628,31 +669,51 @@
       document.getElementById('histAlunoNome').textContent = nome;
       document.getElementById('histLista').innerHTML = '<p style="color:#aaa;text-align:center;padding:16px;">Carregando…</p>';
       document.getElementById('modalHistorico').classList.add('open');
-      try {
-        const snap = await getDocs(query(
-          collection(db, 'pagamentos'),
-          where('alunoId', '==', alunoId),
-          orderBy('criadoEm', 'desc')
-        ));
-        if (snap.empty) {
+
+      function renderItens(docs) {
+        if (!docs.length) {
           document.getElementById('histLista').innerHTML = '<div class="hist-vazio">Nenhum pagamento registrado.</div>';
           return;
         }
-        const itens = snap.docs.map(d => d.data());
-        document.getElementById('histLista').innerHTML = itens.map(p => {
-          const mes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][parseInt(p.mes||1)-1];
+        // Ordena em memória: ano desc, mes desc
+        docs.sort((a, b) => {
+          if ((b.ano||0) !== (a.ano||0)) return (b.ano||0) - (a.ano||0);
+          return (b.mes||0) - (a.mes||0);
+        });
+        document.getElementById('histLista').innerHTML = docs.map(p => {
+          const mesNome = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][parseInt(p.mes||1)-1];
           return '<div class="hist-item">' +
             '<div class="hist-info">' +
               '<div class="hist-forma">'+escHtml(formatFormaPag(p.formaPagamento||''))+'</div>' +
-              '<div class="hist-data">'+escHtml(formatData(p.data||''))+' — '+escHtml(mes||'')+'/'+escHtml(String(p.ano||''))+'</div>' +
+              '<div class="hist-data">'+escHtml(formatData(p.data||''))+' — '+escHtml(mesNome||'')+'/'+escHtml(String(p.ano||''))+'</div>' +
             '</div>' +
             '<div class="hist-valor">R$ '+parseFloat(p.valor||0).toFixed(2).replace('.',',')+'</div>' +
           '</div>';
         }).join('');
+      }
+
+      try {
+        let snap;
+        try {
+          // Tenta com orderBy (requer índice composto no Firestore)
+          snap = await getDocs(query(
+            collection(db, 'pagamentos'),
+            where('alunoId', '==', alunoId),
+            orderBy('criadoEm', 'desc')
+          ));
+        } catch(indexErr) {
+          // Fallback sem orderBy — funciona mesmo sem índice composto ou sem campo criadoEm
+          snap = await getDocs(query(
+            collection(db, 'pagamentos'),
+            where('alunoId', '==', alunoId)
+          ));
+        }
+        renderItens(snap.docs.map(d => d.data()));
       } catch(e) {
         document.getElementById('histLista').innerHTML = '<div class="hist-vazio">Erro ao carregar histórico.</div>';
       }
     };
+
     document.getElementById('btnFecharHist').addEventListener('click', () => {
       document.getElementById('modalHistorico').classList.remove('open');
     });
@@ -849,7 +910,6 @@
         const idx = todosRegistros.findIndex(r => r.id === alunoId);
         if (idx >= 0) Object.assign(todosRegistros[idx], upd);
         if (formaPag==='PIX' && (resp.pixQrCodeImage||resp.pixCopiaECola)) {
-          // Reaproveita modal pix
           document.getElementById('pixWppNome').textContent        = a.nome||'';
           document.getElementById('pixWppInfo').style.display      = 'none';
           document.getElementById('pixWppResultado').style.display = '';
