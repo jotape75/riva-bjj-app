@@ -95,6 +95,20 @@
     <section class="hidden" id="sectionAlunos">
       <div class="busca-fixa">
         <h1 class="title" style="margin-bottom:10px;">Alunos</h1>
+        <div class="resumo-alunos" id="resumoAlunos" style="display:none;">
+        <div class="resumo-aluno-item">
+          <div class="resumo-aluno-num" id="resumoTotal">—</div>
+          <div class="resumo-aluno-label">Total</div>
+        </div>
+        <div class="resumo-aluno-item">
+          <div class="resumo-aluno-num verde" id="resumoAtivos">—</div>
+          <div class="resumo-aluno-label">Ativos</div>
+        </div>
+        <div class="resumo-aluno-item">
+          <div class="resumo-aluno-num vermelho" id="resumoInativos">—</div>
+          <div class="resumo-aluno-label">Inativos</div>
+        </div>
+      </div>
         <input id="searchBox" class="input" type="search" placeholder="Buscar por nome ou CPF…" />
         <div class="busca-btns">
           <button class="btn secondary" id="btnVerTodos">Ver todos</button>
