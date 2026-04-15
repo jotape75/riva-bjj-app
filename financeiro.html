@@ -305,7 +305,7 @@
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbx7pbyrOuM_2PcRn-epYGByCCuICaSLmS-gR9RVyEfhaRae-iT_8W_H6NnVJPGAJCIC/exec';
 
     import { db, auth } from './firebase-config.js';
-    import { collection, doc, query, where, getDocs, addDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { collection, doc, query, where, getDocs, getDoc, addDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
     import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
     const TOKEN_KEY      = 'rv_prof_token';
