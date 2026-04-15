@@ -205,9 +205,6 @@
             <option value="BOLETO">📄 Boleto</option>
           </select>
         </div>
-        <div id="vincularPrimeiroPagWrap" style="display:none;">
-          <label class="check-label"><input type="checkbox" id="vincularPrimeiroPix" /> Cobrar 1º mês via Pix agora</label>
-        </div>
         <label class="label" for="vincularDataContrato">Data de início do contrato</label>
         <input type="date" class="input" id="vincularDataContrato" style="margin-bottom:12px;" />
         <label class="check-label"><input type="checkbox" id="vincularDesconto" /> Desconto família 10%</label>
@@ -774,7 +771,6 @@
     function atualizarFormVincular() {
       const plano = document.getElementById('vincularPlano').value;
       document.getElementById('vincularFormaPagWrap').style.display    = plano==='Mensal'     ?'':'none';
-      document.getElementById('vincularPrimeiroPagWrap').style.display = plano==='Recorrente' ?'':'none';
       const temD=document.getElementById('vincularDesconto').checked;
       const base={Recorrente:200,Semestral:220,Mensal:240}[plano]||0;
       const final=temD?Math.round(base*0.9*100)/100:base;
@@ -790,7 +786,6 @@
       const formaPag     = document.getElementById('vincularFormaPag').value;
       const dataContrato = document.getElementById('vincularDataContrato').value;
       const temDesconto  = document.getElementById('vincularDesconto').checked;
-      const primeiroPix  = plano==='Recorrente' && document.getElementById('vincularPrimeiroPix').checked;
       if (!dataContrato) { document.getElementById('vincularErr').textContent='Informe a data de início.'; return; }
       document.getElementById('vincularErr').textContent  = '';
       document.getElementById('vincularInfo').textContent = 'Criando no Asaas…';
@@ -802,20 +797,6 @@
         await updateDoc(doc(db,'alunos',alunoId), upd);
         const idx = todosRegistros.findIndex(r => r.id === alunoId);
         if (idx >= 0) Object.assign(todosRegistros[idx], upd);
-        _lastPaymentLink=resp.paymentLink||''; _lastCustomerId=resp.customerId||'';
-        let respPix = null;
-        if (primeiroPix) {
-          document.getElementById('vincularInfo').textContent='Gerando Pix do 1º mês…';
-          try {
-            respPix = await gasCall('asaasVincular', { alunoId, nome:a?a.nome:'', email:a?a.email:'', telefone:a?a.telefone:'', cpf:a?a.cpf:'', plano, formaPag:'PIX', grupoFamiliar:a?a.grupo_familiar:'', temDesconto:temDesconto?'true':'false', dataContrato });
-            if (respPix&&respPix.ok) {
-              const updPix={asaas_cobranca_id:respPix.cobranca_id||upd.asaas_cobranca_id,asaas_paymentLink:respPix.paymentLink||upd.asaas_paymentLink};
-              await updateDoc(doc(db,'alunos',alunoId),updPix);
-              const idx2=todosRegistros.findIndex(r=>r.id===alunoId); if(idx2>=0)Object.assign(todosRegistros[idx2],updPix);
-              if(respPix.pixCopiaECola)asaasStatusMap[alunoId]=Object.assign(asaasStatusMap[alunoId]||{},{pixCopiaECola:respPix.pixCopiaECola,invoiceUrl:respPix.paymentLink||''});
-            }
-          } catch(e) { console.error('Erro Pix 1º mês:',e); }
-        }
         document.getElementById('vincularFormWrap').style.display    = 'none';
         document.getElementById('vincularSuccessWrap').style.display = '';
         const btnCartao=document.getElementById('btnCadastrarCartao');
