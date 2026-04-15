@@ -483,6 +483,31 @@
       return '<div class="fin-aluno-card"><div class="fin-aluno-header"><div class="fin-aluno-nome">'+escHtml(a.nome||'—')+'</div><span class="status-badge '+badgeClass+'">'+badgeText+'</span></div>'+(extras?'<div style="margin-top:6px;">'+extras+'</div>':'')+'<div class="fin-aluno-info"><div class="fin-info-item"><span class="fin-info-label">Plano</span><span class="fin-info-valor">'+escHtml(a.plano||'—')+'</span></div><div class="fin-info-item"><span class="fin-info-label">Valor</span><span class="fin-info-valor">'+valorDisp+'</span></div><div class="fin-info-item"><span class="fin-info-label">Contrato</span><span class="fin-info-valor">'+contratoDisp+'</span></div><div class="fin-info-item"><span class="fin-info-label">Vencimento</span><span class="fin-info-valor">'+(st==='pago'?dataPagDisp:vencimento)+'</span></div>'+(st==='pago'?'<div class="fin-info-item"><span class="fin-info-label">Forma</span><span class="fin-info-valor">'+formatFormaPag(a.formaPagamento)+'</span></div>':'')+'</div><div class="btns-acao">'+acoes+'</div>'+(a.plano==='Recorrente'&&a.asaas_id&&st!=='pago'?primeiroPagHtml(a):'')+  '</div>';
     }
 
+    function primeiroPagHtml(a) {
+      const val = a.primeiro_pagamento || '';
+      const isPago = val === 'pix_pago' || val === 'debito' || val === 'dinheiro';
+      const cls = isPago ? 'pago' : 'pendente';
+      const ie = escAttr(a.id);
+      return '<div class="primeiro-pag-wrap">' +
+        '<span class="primeiro-pag-label">1º mês:</span>' +
+        '<select class="primeiro-pag-select ' + cls + '" onchange="window._salvarPrimeiroPag(\'' + ie + '\',this.value)">' +
+          '<option value=""' + (val===''?' selected':'') + '>⏳ Aguardando pagamento</option>' +
+          '<option value="pix_pago"' + (val==='pix_pago'?' selected':'') + '>✅ Pix pago</option>' +
+          '<option value="debito"' + (val==='debito'?' selected':'') + '>✅ Débito pago</option>' +
+          '<option value="dinheiro"' + (val==='dinheiro'?' selected':'') + '>✅ Dinheiro pago</option>' +
+        '</select>' +
+      '</div>';
+    }
+
+    window._salvarPrimeiroPag = async function(alunoId, valor) {
+      try {
+        await updateDoc(doc(db,'alunos',alunoId), { primeiro_pagamento: valor });
+        const idx = todosRegistros.findIndex(r => r.id === alunoId);
+        if (idx >= 0) todosRegistros[idx].primeiro_pagamento = valor;
+        renderListaFiltrada();
+      } catch(e) { alert('Erro ao salvar: '+e.message); }
+    };
+
     window._abrirCartao = async function(alunoId) {
       const a = todosRegistros.find(r => r.id === alunoId);
       if (!a) return;
