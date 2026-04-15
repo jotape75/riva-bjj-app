@@ -724,3 +724,10 @@ body{
 .sk-num    { height: 38px; width: 60px; margin: 0 auto 6px; border-radius: 8px; }
 .sk-block  { height: 48px; width: 100%; border-radius: 12px; margin-bottom: 8px; }
 .sk-card   { height: 80px; width: 100%; border-radius: 12px; margin-bottom: 8px; }
+
+.resumo-alunos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+.resumo-aluno-item { background: #141414; border: 1px solid var(--border); border-radius: 12px; padding: 14px 10px; text-align: center; }
+.resumo-aluno-num { font-size: 28px; font-weight: 900; color: #fff; line-height: 1.1; }
+.resumo-aluno-num.verde { color: #2ecc71; }
+.resumo-aluno-num.vermelho { color: #e74c3c; }
+.resumo-aluno-label { font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
