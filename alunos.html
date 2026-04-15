@@ -362,6 +362,17 @@
 
             <div class="editar-secao">🥋 Graduação</div>
 
+            <div class="editar-secao">🥋 Graduação</div>
+            <div>
+              <label>Grau Atual</label>
+              <select id="editGrauAtual-${id}">
+                <option value="0" ${(a.grau_atual??0)==0?'selected':''}>0</option>
+                <option value="1" ${(a.grau_atual??0)==1?'selected':''}>1</option>
+                <option value="2" ${(a.grau_atual??0)==2?'selected':''}>2</option>
+                <option value="3" ${(a.grau_atual??0)==3?'selected':''}>3</option>
+                <option value="4" ${(a.grau_atual??0)==4?'selected':''}>4</option>
+              </select>
+            </div>
             <div>
               <label>Aulas no Grau Atual</label>
               <input type="number" min="0" id="editAulasNoGrau-${id}" value="${esc(String(a.aulas_no_grau??0))}" />
@@ -573,6 +584,7 @@
       if (btn) btn.disabled = true;
       if (msg) msg.textContent = 'Salvando…';
       try {
+        const grauAtual   = parseInt(document.getElementById('editGrauAtual-'+id).value) || 0;
         const aulasNoGrau = parseInt(document.getElementById('editAulasNoGrau-'+id).value) || 0;
         const aluno = todosAlunos.find(a => String(a.id) === String(id));
         const metaGrau = aluno ? (aluno.meta_grau || (aluno.faixa === 'Branca' ? 36 : 56)) : 56;
@@ -598,6 +610,7 @@
           estado:          document.getElementById('editEstado-'+id).value.trim(),
           aulas_no_grau:   aulasNoGrau,
           aulas_restantes: Math.max(0, metaGrau - aulasNoGrau),
+          grau_atual:      grauAtual,
         };
 
         await updateDoc(doc(db,'alunos',id), updates);
