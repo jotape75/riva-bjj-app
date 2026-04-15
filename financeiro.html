@@ -751,7 +751,12 @@
             alert('Nenhuma cobrança Pix encontrada. Gere o Pix primeiro usando o botão "📲 Gerar Pix 1º mês".');
             renderListaFiltrada(); return;
           }
-          const respAsaas = await gasCall('asaasConfirmarPix', { cobrancaId, valor: a ? calcularValorFinal(a) : 0 });
+          // Data de hoje no fuso de Brasília (UTC-3), evitando que UTC devolva o dia anterior
+          const hoje = new Date();
+          const offsetBR = -3 * 60;
+          const localBR  = new Date(hoje.getTime() + (offsetBR - hoje.getTimezoneOffset()) * 60000);
+          const dataHojeBR = localBR.toISOString().slice(0, 10);
+          const respAsaas = await gasCall('asaasConfirmarPix', { cobrancaId, valor: a ? calcularValorFinal(a) : 0, dataPagamento: dataHojeBR });
           if (!respAsaas.ok) {
             alert('Erro ao confirmar Pix no Asaas: ' + (respAsaas.erro || 'desconhecido'));
             renderListaFiltrada(); return;
