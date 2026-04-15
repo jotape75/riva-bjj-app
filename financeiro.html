@@ -498,6 +498,31 @@
 
     window._salvarPrimeiroPag = async function(alunoId, valor) {
       try {
+        // Se pix_pago, dar baixa no Asaas primeiro
+        if (valor === 'pix_pago') {
+          const a = todosRegistros.find(r => r.id === alunoId);
+          let cobrancaId = a ? a.asaas_cobranca_id : '';
+          if (!cobrancaId) {
+            try {
+              const snap = await getDoc(doc(db,'alunos',alunoId));
+              if (snap.exists()) cobrancaId = snap.data().asaas_cobranca_id || '';
+            } catch(e) {}
+          }
+          if (!cobrancaId) {
+            alert('Nenhuma cobrança Pix encontrada. Gere o Pix primeiro usando o botão "📲 Gerar Pix 1º mês".');
+            renderListaFiltrada();
+            return;
+          }
+          const respAsaas = await gasCall('asaasConfirmarPix', {
+            cobrancaId, valor: a ? calcularValorFinal(a) : 0
+          });
+          if (!respAsaas.ok) {
+            alert('Erro ao confirmar Pix no Asaas: ' + (respAsaas.erro || 'desconhecido'));
+            renderListaFiltrada();
+            return;
+          }
+        }
+        // Salvar no Firestore
         await updateDoc(doc(db,'alunos',alunoId), { primeiro_pagamento: valor });
         const idx = todosRegistros.findIndex(r => r.id === alunoId);
         if (idx >= 0) todosRegistros[idx].primeiro_pagamento = valor;
