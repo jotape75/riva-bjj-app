@@ -640,7 +640,7 @@
       const tel = validarTelefone(a.telefone);
       const primPag = a.primeiro_pagamento || '';
       const primPagConfirmado = primPag === 'pix_pago' || primPag === 'debito' || primPag === 'dinheiro';
-      if (a.plano==='Recorrente' && a.asaas_id && !primPagConfirmado && !a.asaas_cobranca_id && tel) {
+      if (a.plano==='Recorrente' && a.asaas_id && !primPagConfirmado && tel) {
         acoes += '<button class="btn-acao wpp" onclick="window._wppPix(\''+ie+'\')">📲 Gerar Pix 1º mês</button>';
       }
 
@@ -876,7 +876,40 @@
       document.getElementById('pixWppResultado').style.display = 'none';
       document.getElementById('pixWppErr').textContent         = '';
       document.getElementById('modalPixWpp').classList.add('open');
+
+      function exibirQr(pixCopiaECola, pixQrCodeImage, paymentLink) {
+        document.getElementById('pixWppInfo').style.display = 'none';
+        document.getElementById('pixWppResultado').style.display = '';
+        const qrImg = document.getElementById('pixWppQrImg');
+        if (pixQrCodeImage) { qrImg.src='data:image/png;base64,'+pixQrCodeImage; qrImg.style.display=''; }
+        else qrImg.style.display='none';
+        document.getElementById('pixWppKey').textContent = pixCopiaECola || '(código não disponível)';
+        document.getElementById('btnCopiarPixWpp').onclick = function() {
+          navigator.clipboard.writeText(pixCopiaECola||'').then(()=>{this.textContent='✅ Copiado!';setTimeout(()=>{this.textContent='📋 Copiar código Pix';},2000);}).catch(()=>alert('Código Pix: '+pixCopiaECola));
+        };
+        document.getElementById('btnEnviarPixWpp').onclick = function() {
+          const aAtual = todosRegistros.find(r=>r.id===a.id)||a;
+          const valor  = calcularValorFinal(aAtual).toFixed(2).replace('.',',');
+          const dataVenc = a.data_contrato ? formatData(a.data_contrato) : String(DIA_VENCIMENTO).padStart(2,'0')+'/'+String(mesSelecionado).padStart(2,'0')+'/'+anoSelecionado;
+          const msg = pixCopiaECola
+            ? 'Olá '+aAtual.nome+'! 😊\nSua mensalidade Riva BJJ de R$ '+valor+' foi gerada.\n\n📲 *Pague via Pix (copia e cola):*\n'+pixCopiaECola+'\n\nVencimento: '+dataVenc+'\nEm caso de dúvidas, estamos à disposição! 🥋'
+            : 'Olá '+aAtual.nome+'! 😊\nSua mensalidade Riva BJJ de R$ '+valor+' foi gerada.\nLink: '+(paymentLink||'')+'\nVencimento: '+dataVenc+'\nEm caso de dúvidas, estamos à disposição! 🥋';
+          window.open('https://wa.me/55'+tel+'?text='+encodeURIComponent(msg),'_blank');
+        };
+        renderListaFiltrada();
+      }
+
       try {
+        // Se já tem cobrança Pix gerada, busca o QR dela em vez de criar uma nova
+        if (a.asaas_cobranca_id) {
+          const respStatus = await gasCall('asaasStatus', { asaasId: a.asaas_cobranca_id, tipo: 'cobranca', mes: mesSelecionado, ano: anoSelecionado });
+          document.getElementById('pixWppInfo').style.display = 'none';
+          if (!respStatus.ok) { document.getElementById('pixWppErr').textContent='Erro: '+(respStatus.erro||'desconhecido'); return; }
+          exibirQr(respStatus.pixCopiaECola || '', respStatus.pixQrCodeImage || '', respStatus.invoiceUrl || a.asaas_paymentLink || '');
+          return;
+        }
+
+        // Sem cobrança prévia: cria uma nova
         const temDesc      = detectarDesconto(a);
         const dataContrato = a.data_contrato || new Date().toISOString().slice(0,10);
         const resp = await gasCall('asaasVincular', { alunoId: a.id, nome: a.nome, email: a.email, telefone: a.telefone, cpf: a.cpf, plano: a.plano, formaPag: 'PIX', grupoFamiliar: a.grupo_familiar, temDesconto: temDesc?'true':'false', dataContrato });
@@ -888,24 +921,7 @@
         const idx = todosRegistros.findIndex(r => r.id === a.id);
         if (idx >= 0) Object.assign(todosRegistros[idx], upd);
         if (resp.pixCopiaECola) asaasStatusMap[a.id] = Object.assign(asaasStatusMap[a.id]||{}, { pixCopiaECola: resp.pixCopiaECola, invoiceUrl: resp.paymentLink||'' });
-        document.getElementById('pixWppResultado').style.display = '';
-        const qrImg = document.getElementById('pixWppQrImg');
-        if (resp.pixQrCodeImage) { qrImg.src='data:image/png;base64,'+resp.pixQrCodeImage; qrImg.style.display=''; }
-        else qrImg.style.display='none';
-        document.getElementById('pixWppKey').textContent = resp.pixCopiaECola || '(código não disponível)';
-        document.getElementById('btnCopiarPixWpp').onclick = function() {
-          navigator.clipboard.writeText(resp.pixCopiaECola||'').then(()=>{this.textContent='✅ Copiado!';setTimeout(()=>{this.textContent='📋 Copiar código Pix';},2000);}).catch(()=>alert('Código Pix: '+resp.pixCopiaECola));
-        };
-        document.getElementById('btnEnviarPixWpp').onclick = function() {
-          const aAtual = todosRegistros.find(r=>r.id===a.id)||a;
-          const valor  = calcularValorFinal(aAtual).toFixed(2).replace('.',',');
-          const dataVenc = a.data_contrato ? formatData(a.data_contrato) : String(DIA_VENCIMENTO).padStart(2,'0')+'/'+String(mesSelecionado).padStart(2,'0')+'/'+anoSelecionado;
-          const msg = resp.pixCopiaECola
-            ? 'Olá '+aAtual.nome+'! 😊\nSua mensalidade Riva BJJ de R$ '+valor+' foi gerada.\n\n📲 *Pague via Pix (copia e cola):*\n'+resp.pixCopiaECola+'\n\nVencimento: '+dataVenc+'\nEm caso de dúvidas, estamos à disposição! 🥋'
-            : 'Olá '+aAtual.nome+'! 😊\nSua mensalidade Riva BJJ de R$ '+valor+' foi gerada.\nLink: '+(resp.paymentLink||'')+'\nVencimento: '+dataVenc+'\nEm caso de dúvidas, estamos à disposição! 🥋';
-          window.open('https://wa.me/55'+tel+'?text='+encodeURIComponent(msg),'_blank');
-        };
-        renderListaFiltrada();
+        exibirQr(resp.pixCopiaECola || '', resp.pixQrCodeImage || '', resp.paymentLink || '');
       } catch(e) {
         document.getElementById('pixWppInfo').style.display='none';
         document.getElementById('pixWppErr').textContent='Erro: '+e.message;
