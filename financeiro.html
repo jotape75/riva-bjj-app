@@ -789,7 +789,44 @@
         await updateDoc(doc(db,'alunos',alunoId), { primeiro_pagamento: valor });
         const idx = todosRegistros.findIndex(r => r.id === alunoId);
         if (idx >= 0) todosRegistros[idx].primeiro_pagamento = valor;
+        
+        const a = todosRegistros.find(r => r.id === alunoId);
+        if (a) {
+          const hoje = new Date();
+          const offsetBR = -3 * 60;
+          const localBR  = new Date(hoje.getTime() + (offsetBR - hoje.getTimezoneOffset()) * 60000);
+          const dataHojeBR = localBR.toISOString().slice(0, 10);
+          const formaPag = valor === 'pix_pago' ? 'pix' : valor;
+        
+          const existeSnap = await getDocs(query(
+            collection(db, 'pagamentos'),
+            where('alunoId', '==', alunoId),
+            where('mes',     '==', mesSelecionado),
+            where('ano',     '==', anoSelecionado)
+          ));
+          if (existeSnap.empty) {
+            const valorFinal = calcularValorFinal(a);
+            await addDoc(collection(db, 'pagamentos'), {
+              alunoId:        alunoId,
+              nome:           a.nome || '',
+              valor:          valorFinal,
+              data:           dataHojeBR,
+              formaPagamento: formaPag,
+              mes:            mesSelecionado,
+              ano:            anoSelecionado,
+              criadoEm:       serverTimestamp(),
+              fonte:          'primeiro_pagamento',
+            });
+            if (idx >= 0) {
+              todosRegistros[idx].statusPagamento = 'pago';
+              todosRegistros[idx].valor           = valorFinal;
+              todosRegistros[idx].formaPagamento  = formaPag;
+            }
+          }
+        }
+        
         renderListaFiltrada();
+        atualizarResumo();
       } catch(e) { alert('Erro ao salvar: '+e.message); }
     };
 
