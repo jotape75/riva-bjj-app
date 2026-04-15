@@ -375,6 +375,30 @@
       return resp.json();
     }
 
+    async function recarregarAluno(alunoId) {
+      const snap = await getDoc(doc(db, 'alunos', alunoId));
+      if (!snap.exists()) return null;
+      const d = snap.data();
+      const dados = {
+        nome:          d.nome_aluno    || '',
+        email:         d.email         || '',
+        telefone:      d.telefone      || '',
+        cpf:           d.cpf           || '',
+        cep:           d.cep           || '',
+        numero:        d.numero        || '',
+        rua:           d.rua           || '',
+        bairro:        d.bairro        || '',
+        cidade:        d.cidade        || '',
+        estado:        d.estado        || '',
+        grupo_familiar:d.grupo_familiar|| '',
+        plano:         d.plano         || '',
+        data_contrato: d.data_contrato || '',
+      };
+      const idx = todosRegistros.findIndex(r => r.id === alunoId);
+      if (idx >= 0) Object.assign(todosRegistros[idx], dados);
+      return dados;
+    }
+
     // ── Sync status indicator ──────────────────────────────────
     function setSyncStatus(estado, texto) {
       const dot = document.getElementById('syncDot');
@@ -866,6 +890,7 @@
 
     // ── Pix WhatsApp ───────────────────────────────────────────
     window._wppPix = async function(alunoId) {
+      await recarregarAluno(alunoId);
       const a = todosRegistros.find(r => r.id === alunoId);
       if (!a) return;
       const tel = validarTelefone(a.telefone);
@@ -933,6 +958,7 @@
 
     // ── Cobrar (Mensal) ────────────────────────────────────────
     window._cobrar = async function(alunoId, formaPag) {
+      await recarregarAluno(alunoId);
       const a = todosRegistros.find(r => r.id === alunoId);
       if (!a) return;
       const temDesc = detectarDesconto(a);
@@ -966,6 +992,7 @@
 
     // ── Vincular ───────────────────────────────────────────────
     window._vincular = function(alunoId) {
+      await recarregarAluno(alunoId); 
       const a = todosRegistros.find(r => r.id === alunoId);
       if (!a) return;
       document.getElementById('vincularAlunoId').value      = alunoId;
