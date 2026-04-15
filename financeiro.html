@@ -991,8 +991,8 @@
     };
 
     // ── Vincular ───────────────────────────────────────────────
-    window._vincular = function(alunoId) {
-      // await recarregarAluno(alunoId); 
+    window._vincular = async function(alunoId) {
+      await recarregarAluno(alunoId); 
       const a = todosRegistros.find(r => r.id === alunoId);
       if (!a) return;
       document.getElementById('vincularAlunoId').value      = alunoId;
