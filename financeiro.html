@@ -227,15 +227,7 @@
           <div class="vincular-sucesso-icon">✅</div>
           <div class="vincular-sucesso-text">Vinculado com sucesso!</div>
         </div>
-        <div id="vincularQrWrap" style="display:none;">
-          <div style="font-size:13px;color:#aaa;text-align:center;margin-bottom:4px;">QR Code Pix</div>
-          <div class="qr-container"><img id="vincularQrImg" src="" alt="QR Code Pix" /></div>
-          <div class="pix-copia-cola" id="vincularPixKey"></div>
-          <button class="btn-copiar" id="btnCopiarPix">📋 Copiar código Pix</button>
-        </div>
-        <button class="btn" id="btnCadastrarCartao" style="display:none;background:#8e44ad;color:#fff;margin-top:12px;">💳 Cadastrar cartão agora</button>
-        <button class="btn" id="btnVincularWhatsappPix" style="display:none;background:#25D366;color:#fff;margin-top:8px;">💬 Enviar Pix via WhatsApp</button>
-        <button class="btn primary" id="btnVincularWhatsapp" style="display:none;background:#25D366;margin-top:12px;">💬 Enviar via WhatsApp</button>
+        <button class="btn" id="btnCadastrarCartao" style="display:none;background:#8e44ad;color:#fff;margin-top:16px;">💳 Cadastrar cartão agora</button>
         <button class="btn secondary" style="margin-top:8px;" id="btnFecharVincular">Fechar</button>
       </div>
     </div>
@@ -313,7 +305,7 @@
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbx7pbyrOuM_2PcRn-epYGByCCuICaSLmS-gR9RVyEfhaRae-iT_8W_H6NnVJPGAJCIC/exec';
 
     import { db, auth } from './firebase-config.js';
-    import { collection, doc, query, where, getDocs, getDoc, addDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { collection, doc, query, where, getDocs, addDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
     import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
     const TOKEN_KEY      = 'rv_prof_token';
@@ -448,7 +440,6 @@
       let badgeClass='status-pendente', badgeText='⏳ Pendente';
       if (st==='pago')    { badgeClass='status-pago';    badgeText='✅ Pago'; }
       if (st==='vencido') { badgeClass='status-vencido'; badgeText='❌ Vencido'; }
-      // Badge especial para Recorrente pendente
       if (a.plano==='Recorrente' && st!=='pago' && a.asaas_id) {
         badgeClass='status-recorrente-pendente'; badgeText='⏳ Recorrente Pendente';
       }
@@ -479,45 +470,18 @@
         acoes += '<button class="btn-acao cartao" onclick="window._abrirCartao(\''+ie+'\')">💳 Cartão</button>';
       }
       const tel = validarTelefone(a.telefone);
-      // Pix 1º mês: só para Recorrente vinculado e 1º pagamento ainda não confirmado
+      // Pix 1º mês: só Recorrente vinculado sem 1º pagamento confirmado
       const primPag = a.primeiro_pagamento || '';
       const primPagConfirmado = primPag === 'pix_pago' || primPag === 'debito' || primPag === 'dinheiro';
-      if (a.plano==='Recorrente' && a.asaas_id && !primPagConfirmado && tel) {
-        acoes += '<button class="btn-acao wpp" onclick="window._wppPix(\''+ie+'\')">📲 Pix 1º mês</button>';
+      if (a.plano==='Recorrente' && a.asaas_id && !primPagConfirmado && !a.asaas_cobranca_id && tel) {
+        acoes += '<button class="btn-acao wpp" onclick="window._wppPix(\''+ie+'\')">📲 Gerar Pix 1º mês</button>';
       }
-      // Registrar Manual: Mensal e Recorrente (débito/dinheiro)
+      // Registrar Manual: Mensal e Recorrente
       if (a.plano==='Mensal' || (a.plano==='Recorrente' && a.asaas_id)) {
         acoes += '<button class="btn-acao manual" onclick="window._manual(\''+ie+'\',\''+escAttr(a.nome||'')+'\',\''+escAttr(String(valorFinal||''))+'\')">💵 Registrar Manual</button>';
       }
       return '<div class="fin-aluno-card"><div class="fin-aluno-header"><div class="fin-aluno-nome">'+escHtml(a.nome||'—')+'</div><span class="status-badge '+badgeClass+'">'+badgeText+'</span></div>'+(extras?'<div style="margin-top:6px;">'+extras+'</div>':'')+'<div class="fin-aluno-info"><div class="fin-info-item"><span class="fin-info-label">Plano</span><span class="fin-info-valor">'+escHtml(a.plano||'—')+'</span></div><div class="fin-info-item"><span class="fin-info-label">Valor</span><span class="fin-info-valor">'+valorDisp+'</span></div><div class="fin-info-item"><span class="fin-info-label">Contrato</span><span class="fin-info-valor">'+contratoDisp+'</span></div><div class="fin-info-item"><span class="fin-info-label">Vencimento</span><span class="fin-info-valor">'+(st==='pago'?dataPagDisp:vencimento)+'</span></div>'+(st==='pago'?'<div class="fin-info-item"><span class="fin-info-label">Forma</span><span class="fin-info-valor">'+formatFormaPag(a.formaPagamento)+'</span></div>':'')+'</div><div class="btns-acao">'+acoes+'</div>'+(a.plano==='Recorrente'&&a.asaas_id&&st!=='pago'?primeiroPagHtml(a):'')+  '</div>';
     }
-
-    function primeiroPagHtml(a) {
-      const val = a.primeiro_pagamento || '';
-      const isPago = val === 'pix_pago' || val === 'debito' || val === 'dinheiro';
-      const cls = isPago ? 'pago' : 'pendente';
-      const ie = escAttr(a.id);
-      return '<div class="primeiro-pag-wrap">' +
-        '<span class="primeiro-pag-label">1º mês:</span>' +
-        '<select class="primeiro-pag-select ' + cls + '" onchange="window._salvarPrimeiroPag(\'' + ie + '\',this.value)">' +
-          '<option value=""' + (val===''?' selected':'') + '>⏳ Aguardando pagamento</option>' +
-          '<option value="pix_pago"' + (val==='pix_pago'?' selected':'') + '>✅ Pix pago</option>' +
-          '<option value="debito"' + (val==='debito'?' selected':'') + '>✅ Débito pago</option>' +
-          '<option value="dinheiro"' + (val==='dinheiro'?' selected':'') + '>✅ Dinheiro pago</option>' +
-        '</select>' +
-      '</div>';
-    }
-
-    window._salvarPrimeiroPag = async function(alunoId, valor) {
-      try {
-        // Só salva o status do 1º pagamento no Firestore — controle interno
-        // O badge muda apenas via Sincronizar (quando Asaas confirmar cobrança do cartão)
-        await updateDoc(doc(db,'alunos',alunoId), { primeiro_pagamento: valor });
-        const idx = todosRegistros.findIndex(r => r.id === alunoId);
-        if (idx >= 0) todosRegistros[idx].primeiro_pagamento = valor;
-        renderListaFiltrada();
-      } catch(e) { alert('Erro ao salvar: '+e.message); }
-    };
 
     window._abrirCartao = async function(alunoId) {
       const a = todosRegistros.find(r => r.id === alunoId);
@@ -539,20 +503,15 @@
       document.getElementById('cartaoFormWrap').style.display    = '';
       document.getElementById('cartaoSuccessWrap').style.display = 'none';
       document.getElementById('modalCartao').classList.add('open');
-      // Buscar CEP e número do Firestore silenciosamente
       try {
         const alunoDoc = await getDoc(doc(db, 'alunos', alunoId));
         if (alunoDoc.exists()) {
           const dados = alunoDoc.data();
           const cepFirestore = (dados.cep || '').replace(/\D/g, '');
-          if (cepFirestore.length === 8) {
-            document.getElementById('cCartaoCep').value = cepFirestore;
-          }
-          if (dados.numero) {
-            _cartaoAlunoData = Object.assign({}, _cartaoAlunoData, { numero: dados.numero });
-          }
+          if (cepFirestore.length === 8) document.getElementById('cCartaoCep').value = cepFirestore;
+          if (dados.numero) _cartaoAlunoData = Object.assign({}, _cartaoAlunoData, { numero: dados.numero });
         }
-      } catch(e) { console.warn('Não foi possível buscar dados do Firestore:', e); }
+      } catch(e) { console.warn('Erro ao buscar dados:', e); }
     };
 
     document.getElementById('cCartaoNumero').addEventListener('input',   function() { this.value = formatarNumeroCartao(this.value); document.getElementById('cCartaoBrand').textContent = detectarBandeira(this.value).emoji; });
@@ -560,6 +519,7 @@
     document.getElementById('cCartaoValidade').addEventListener('input', function() { this.value = formatarValidade(this.value); });
     document.getElementById('cCartaoCvv').addEventListener('input',      function() { this.value = this.value.replace(/\D/g,'').slice(0,4); });
     document.getElementById('cCartaoCpf').addEventListener('input',      function() { this.value = formatarCpf(this.value); });
+    document.getElementById('cCartaoCep').addEventListener('input',      function() { this.value = formatarCep(this.value); });
 
     document.getElementById('btnSalvarCartao').addEventListener('click', async () => {
       const alunoId    = document.getElementById('cartaoAlunoId').value;
@@ -576,7 +536,7 @@
       if (!/^\d{2}\/\d{2}$/.test(validade)) { document.getElementById('cartaoErr').textContent='Validade inválida (MM/AA).'; return; }
       if (cvv.length < 3)                   { document.getElementById('cartaoErr').textContent='CVV inválido.'; return; }
       if (cpf.length !== 11)                { document.getElementById('cartaoErr').textContent='CPF do titular inválido.'; return; }
-      if (cep.length !== 8)                 { document.getElementById('cartaoErr').textContent='CEP não encontrado. Adicione o campo "cep" no cadastro do aluno no Firestore.'; return; }
+      if (cep.length !== 8)                 { document.getElementById('cartaoErr').textContent='CEP inválido.'; return; }
       const [mesVal, anoVal] = validade.split('/');
       document.getElementById('cartaoInfo').textContent   = 'Cadastrando cartão…';
       document.getElementById('btnSalvarCartao').disabled = true;
@@ -585,9 +545,10 @@
           customerId, alunoId, numero, nome,
           mesValidade: mesVal, anoValidade: '20'+anoVal, cvv,
           cpfTitular:  cpf,
-          email:       _cartaoAlunoData ? (_cartaoAlunoData.email    || '') : '',
-          telefone:    _cartaoAlunoData ? (_cartaoAlunoData.telefone || '') : '',
-          cep:         cep
+          email:         _cartaoAlunoData ? (_cartaoAlunoData.email    || '') : '',
+          telefone:      _cartaoAlunoData ? (_cartaoAlunoData.telefone || '') : '',
+          cep:           cep,
+          addressNumber: _cartaoAlunoData ? (_cartaoAlunoData.numero   || 'S/N') : 'S/N'
         });
         document.getElementById('cartaoInfo').textContent = '';
         if (!resp.ok) { document.getElementById('cartaoErr').textContent='Erro: '+(resp.erro||'desconhecido'); document.getElementById('btnSalvarCartao').disabled=false; return; }
@@ -832,22 +793,9 @@
         }
         document.getElementById('vincularFormWrap').style.display    = 'none';
         document.getElementById('vincularSuccessWrap').style.display = '';
-        const qrWrap=document.getElementById('vincularQrWrap');
-        const pixData=primeiroPix&&respPix&&respPix.ok?respPix:resp;
-        if (pixData.pixQrCodeImage||pixData.pixCopiaECola) {
-          qrWrap.style.display='';
-          const qrImg=document.getElementById('vincularQrImg');
-          qrImg.src=pixData.pixQrCodeImage?'data:image/png;base64,'+pixData.pixQrCodeImage:''; qrImg.style.display=pixData.pixQrCodeImage?'':'none';
-          document.getElementById('vincularPixKey').textContent=pixData.pixCopiaECola||'';
-          document.getElementById('btnCopiarPix').onclick=function(){navigator.clipboard.writeText(pixData.pixCopiaECola||'').then(()=>{this.textContent='✅ Copiado!';setTimeout(()=>{this.textContent='📋 Copiar código Pix';},2000);}).catch(()=>alert('Código Pix: '+pixData.pixCopiaECola));};
-        } else qrWrap.style.display='none';
-        const aAtual=todosRegistros.find(r=>r.id===alunoId);
-        const btnWa=document.getElementById('btnVincularWhatsapp');
-        if (aAtual&&validarTelefone(aAtual.telefone)) { btnWa.style.display=''; btnWa.onclick=function(){const u=buildWhatsAppUrl(aAtual);if(u)window.open(u,'_blank');}; } else btnWa.style.display='none';
-        const btnWaPix=document.getElementById('btnVincularWhatsappPix');
-        if (aAtual&&validarTelefone(aAtual.telefone)) { btnWaPix.style.display=''; btnWaPix.onclick=function(){fecharModalVincular();window._wppPix(alunoId);}; } else btnWaPix.style.display='none';
         const btnCartao=document.getElementById('btnCadastrarCartao');
-        if (_lastPaymentLink||_lastCustomerId) { btnCartao.style.display=''; btnCartao.onclick=function(){fecharModalVincular();window._abrirCartao(alunoId);}; } else btnCartao.style.display='none';
+        btnCartao.style.display='';
+        btnCartao.onclick=function(){ fecharModalVincular(); window._abrirCartao(alunoId); };
       } catch(e) { document.getElementById('vincularErr').textContent='Erro: '+e.message; document.getElementById('vincularInfo').textContent=''; document.getElementById('btnCriarAsaas').disabled=false; }
     });
 
