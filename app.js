@@ -10,7 +10,7 @@ const anonAuthPromise = signInAnonymously(auth).catch(() => {});
 
 const SEMANA_TTL          = 600000;   // 10 min
 const PRESENCA_TTL        = 600000;   // 10 min
-const GRADUANDOS_TTL      = 43200000; // 12 h
+const GRADUANDOS_TTL      = 300000; // 5 min
 const NOTIF_TTL           = 900000;   // 15 min
 const BIO_GRACE_MS        = 1800000;  // 30 min
 const RP_NAME             = 'Riva BJJ';
@@ -364,7 +364,7 @@ async function fbGraduandos() {
       const metaGrau = a.meta_grau ?? (a.faixa === 'Branca' ? 36 : 56);
       const restantes = Math.max(0, metaGrau - aulasNoGrau);
       const grauAtual = a.grau_atual ?? 0;
-      if (grauAtual === MAX_GRAU_POR_FAIXA && restantes <= 0) {
+      if (grauAtual >= MAX_GRAU_POR_FAIXA) {
         data.push({
           nome:      a.nome_aluno || '',
           faixa:     a.faixa || '',
