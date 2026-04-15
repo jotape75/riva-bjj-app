@@ -647,18 +647,22 @@
       const ie = escAttr(a.id);
 
       let acoes = '';
-      if (!a.asaas_id) {
-        acoes += '<button class="btn-acao vincular" onclick="window._vincular(\''+ie+'\')">🔗 Vincular ao Asaas</button>';
-      } else {
-        if (a.asaas_paymentLink) acoes += '<a class="btn-acao ver" href="'+escHtml(a.asaas_paymentLink)+'" target="_blank" rel="noopener">🔗 Ver no Asaas</a>';
-        if (a.plano==='Mensal' && st!=='pago') {
-          acoes += '<button class="btn-acao pix" onclick="window._cobrar(\''+ie+'\',\'PIX\')">📲 Gerar Pix</button>';
-          acoes += '<button class="btn-acao boleto" onclick="window._cobrar(\''+ie+'\',\'BOLETO\')">📄 Gerar Boleto</button>';
+      if (a.plano === 'Recorrente') {
+        // Recorrente: fluxo Asaas como antes
+        if (!a.asaas_id) {
+          acoes += '<button class="btn-acao vincular" onclick="window._vincular(\''+ie+'\')">🔗 Vincular ao Asaas</button>';
+        } else {
+          if (a.asaas_paymentLink) acoes += '<a class="btn-acao ver" href="'+escHtml(a.asaas_paymentLink)+'" target="_blank" rel="noopener">🔗 Ver no Asaas</a>';
+          if (a.asaas_assinatura_id) acoes += '<button class="btn-acao cancelar" onclick="window._cancelar(\''+ie+'\')">❌ Cancelar Assinatura</button>';
+          acoes += '<button class="btn-acao cartao" onclick="window._abrirCartao(\''+ie+'\')">💳 Cartão</button>';
         }
-        if (a.plano==='Recorrente' && a.asaas_assinatura_id) {
-          acoes += '<button class="btn-acao cancelar" onclick="window._cancelar(\''+ie+'\')">❌ Cancelar Assinatura</button>';
+      } else if (a.plano === 'Mensal' || a.plano === 'Semestral') {
+        // Mensal/Semestral: confirmação manual, sem Asaas
+        if (st !== 'pago') {
+          acoes += '<button class="btn-acao pix" onclick="window._confirmarPagManual(\''+ie+'\')">✅ Confirmar Pagamento</button>';
         }
-        acoes += '<button class="btn-acao cartao" onclick="window._abrirCartao(\''+ie+'\')">💳 Cartão</button>';
+      }
+      acoes += '<button class="btn-acao historico" onclick="window._historico(\''+ie+'\',\''+escAttr(a.nome||'')+'\')">📋 Histórico</button>';
       }
 
       const tel = validarTelefone(a.telefone);
@@ -828,6 +832,63 @@
         renderListaFiltrada();
         atualizarResumo();
       } catch(e) { alert('Erro ao salvar: '+e.message); }
+    };
+    window._confirmarPagManual = async function(alunoId) {
+      const a = todosRegistros.find(r => r.id === alunoId);
+      if (!a) return;
+      const valorFinal = calcularValorFinal(a);
+      const valorStr   = 'R$ ' + valorFinal.toFixed(2).replace('.', ',');
+      if (!confirm('Confirmar pagamento de ' + valorStr + ' para ' + a.nome + '?')) return;
+    
+      try {
+        const hoje = new Date();
+        const offsetBR   = -3 * 60;
+        const localBR    = new Date(hoje.getTime() + (offsetBR - hoje.getTimezoneOffset()) * 60000);
+        const dataHojeBR = localBR.toISOString().slice(0, 10);
+    
+        // Verifica se já existe pagamento neste mês/ano
+        const existeSnap = await getDocs(query(
+          collection(db, 'pagamentos'),
+          where('alunoId', '==', alunoId),
+          where('mes',     '==', mesSelecionado),
+          where('ano',     '==', anoSelecionado)
+        ));
+        if (!existeSnap.empty) { alert('Pagamento já registrado para este mês.'); return; }
+    
+        await addDoc(collection(db, 'pagamentos'), {
+          alunoId:        alunoId,
+          nome:           a.nome || '',
+          valor:          valorFinal,
+          data:           dataHojeBR,
+          formaPagamento: 'maquina',
+          mes:            mesSelecionado,
+          ano:            anoSelecionado,
+          criadoEm:       serverTimestamp(),
+          fonte:          'manual',
+        });
+    
+        // Calcula próximo vencimento
+        const dc = new Date(dataHojeBR + 'T00:00:00');
+        if (a.plano === 'Semestral') dc.setMonth(dc.getMonth() + 6);
+        else dc.setMonth(dc.getMonth() + 1);
+        const proxVencISO = dc.getFullYear() + '-'
+          + String(dc.getMonth()+1).padStart(2,'0') + '-'
+          + String(dc.getDate()).padStart(2,'0');
+    
+        await updateDoc(doc(db, 'alunos', alunoId), { data_contrato: proxVencISO });
+    
+        const idx = todosRegistros.findIndex(r => r.id === alunoId);
+        if (idx >= 0) {
+          todosRegistros[idx].statusPagamento = 'pago';
+          todosRegistros[idx].valor           = valorFinal;
+          todosRegistros[idx].formaPagamento  = 'maquina';
+          todosRegistros[idx].data_contrato   = proxVencISO;
+        }
+    
+        renderListaFiltrada();
+        atualizarResumo();
+        alert('✅ Pagamento confirmado! Próx. vencimento: ' + formatDataBR(dc));
+      } catch(e) { alert('Erro ao confirmar: ' + e.message); }
     };
 
     // ── Abrir cartão ───────────────────────────────────────────
