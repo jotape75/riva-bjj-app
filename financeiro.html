@@ -412,7 +412,7 @@
         });
         document.getElementById('listInfo').textContent = '';
         renderListaFiltrada(); atualizarResumo();
-      } catch(e) { document.getElementById('listInfo').textContent = 'Erro de conexão. Tente novamente.'; }
+      } catch(e) { console.error('Erro carregarFinanceiro:', e); document.getElementById('listInfo').textContent = 'Erro de conexão. Tente novamente.'; }
     }
 
     function atualizarResumo() {
