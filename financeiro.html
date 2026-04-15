@@ -431,11 +431,15 @@
                       if (tipo === 'assinatura')          formaPag = 'cartao';
                       else if (a.asaas_tipo === 'avista') formaPag = 'pix';
 
+                      // Usa a string de data do Asaas diretamente (YYYY-MM-DD) para evitar
+                      // conversão UTC→local que adiantaria ou atrasaria o dia no fuso BR
+                      const dataGrav = (resp.dataPagamento || '').slice(0, 10) ||
+                        (() => { const d = new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })();
                       await addDoc(collection(db, 'pagamentos'), {
                         alunoId:        a.id,
                         nome:           a.nome || '',
                         valor:          parseFloat(resp.valor || calcularValorFinal(a)),
-                        data:           resp.dataPagamento || new Date().toISOString().slice(0, 10),
+                        data:           dataGrav,
                         formaPagamento: formaPag,
                         mes:            mesSelecionado,
                         ano:            anoSelecionado,
@@ -590,10 +594,20 @@
       const vencimento   = String(DIA_VENCIMENTO).padStart(2,'0')+'/'+String(mesSelecionado).padStart(2,'0')+'/'+anoSelecionado;
       const contratoDisp = a.data_contrato ? formatData(a.data_contrato) : '—';
 
+      // Próx. vencimento: usa o que veio do Asaas; se não vier, calcula
+      // com base na data do contrato + meses completos já passados
       let proxVenc = '—';
       const liveData = asaasStatusMap[a.id];
       if (a.asaas_id && liveData && liveData.proxVencimento) {
         proxVenc = formatData(liveData.proxVencimento);
+      } else if (a.data_contrato) {
+        // Calcula o próximo vencimento a partir da data de início do contrato
+        const hoje = new Date();
+        const dc   = new Date(a.data_contrato + 'T00:00:00');
+        // Avança mês a mês até ultrapassar hoje
+        const prox = new Date(dc);
+        while (prox <= hoje) prox.setMonth(prox.getMonth() + 1);
+        proxVenc = formatDataBR(prox);
       } else if (a.plano && a.data_contrato) {
         proxVenc = vencimento;
       }
