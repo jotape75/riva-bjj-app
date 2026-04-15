@@ -76,11 +76,8 @@
 
       <label class="label" for="fGrau">Grau Atual</label>
       <select id="fGrau" class="input">
-        <option value="0">0</option>
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
+        <option value="0">0</option><option value="1">1</option>
+        <option value="2">2</option><option value="3">3</option><option value="4">4</option>
       </select>
 
       <label class="label" for="fAulasNoGrau">Aulas no Grau (opcional)</label>
@@ -98,7 +95,7 @@
       </select>
 
       <label class="label" for="fCpf">CPF</label>
-      <input id="fCpf" class="input" type="text" placeholder="000.000.000-00" />
+      <input id="fCpf" class="input" type="tel" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" autocomplete="off" />
 
       <label class="label" for="fDataNasc">Data de Nascimento</label>
       <input id="fDataNasc" class="input" type="date" />
@@ -182,7 +179,7 @@
 
     // ── Helpers ────────────────────────────────────────────────
     const EMOJI_FAIXA_CAD = {
-      'Branca': '🔲', 'Azul': '🟦', 'Roxa': '🟪', 'Marrom': '🟫', 'Preta': '⬛',
+      'Branca':'🔲','Azul':'🟦','Roxa':'🟪','Marrom':'🟫','Preta':'⬛',
     };
     function gerarStatusCad(faixa, grau) {
       const emoji = EMOJI_FAIXA_CAD[faixa] || '🔲';
@@ -196,8 +193,19 @@
       return `${d}/${m}/${y}`;
     }
     function formatarCep(val) {
-      return val.replace(/\D/g, '').slice(0, 8).replace(/(\d{5})(\d)/, '$1-$2');
+      return val.replace(/\D/g,'').slice(0,8).replace(/(\d{5})(\d)/,'$1-$2');
     }
+
+    // ── Máscara CPF ────────────────────────────────────────────
+    function formatarCpf(val) {
+      return val.replace(/\D/g,'').slice(0,11)
+        .replace(/(\d{3})(\d)/,'$1.$2')
+        .replace(/(\d{3})(\d)/,'$1.$2')
+        .replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+    }
+    document.getElementById('fCpf').addEventListener('input', function() {
+      this.value = formatarCpf(this.value);
+    });
 
     // ── ViaCEP ─────────────────────────────────────────────────
     const cepInput   = document.getElementById('fCep');
@@ -209,9 +217,7 @@
       cepErr.textContent = '';
       const cepLimpo = this.value.replace(/\D/g, '');
       if (cepLimpo.length !== 8) {
-        ['fRua', 'fBairro', 'fCidade', 'fEstado'].forEach(id => {
-          document.getElementById(id).value = '';
-        });
+        ['fRua','fBairro','fCidade','fEstado'].forEach(id => { document.getElementById(id).value = ''; });
         return;
       }
       buscarCep(cepLimpo);
@@ -226,9 +232,7 @@
         cepSpinner.style.display = 'none';
         if (data.erro) {
           cepErr.textContent = 'CEP não encontrado.';
-          ['fRua', 'fBairro', 'fCidade', 'fEstado'].forEach(id => {
-            document.getElementById(id).value = '';
-          });
+          ['fRua','fBairro','fCidade','fEstado'].forEach(id => { document.getElementById(id).value = ''; });
           return;
         }
         document.getElementById('fRua').value    = data.logradouro || '';
@@ -278,7 +282,7 @@
           plano:            document.getElementById('fPlano').value,
           grupo_familiar:   document.getElementById('fGrupoFamiliar').value.trim(),
           data_contrato:    document.getElementById('fDataContrato').value,
-          cep:              document.getElementById('fCep').value.replace(/\D/g, ''),
+          cep:              document.getElementById('fCep').value.replace(/\D/g,''),
           numero:           document.getElementById('fNumero').value.trim(),
           rua:              document.getElementById('fRua').value.trim(),
           bairro:           document.getElementById('fBairro').value.trim(),
@@ -293,20 +297,20 @@
         });
 
         setInfo('formInfo', '✅ Aluno cadastrado com sucesso!');
-        // Limpar campos
-        ['fNome','fEmail','fAulasNoGrau','fCpf','fTelefone',
-         'fGrupoFamiliar','fCep','fRua','fBairro','fCidade','fEstado','fNumero'].forEach(id => {
+        ['fNome','fEmail','fGrupoFamiliar','fCep','fRua','fBairro','fCidade','fEstado','fNumero'].forEach(id => {
           document.getElementById(id).value = '';
         });
-        document.getElementById('fFaixa').value         = 'Branca';
-        document.getElementById('fGrau').value          = '0';
-        document.getElementById('fAulasNoGrau').value   = '0';
-        document.getElementById('fData').value          = '';
-        document.getElementById('fCategoria').value     = 'Adulto';
-        document.getElementById('fDataNasc').value      = '';
-        document.getElementById('fDataInicio').value    = '';
-        document.getElementById('fPlano').value         = '';
-        document.getElementById('fDataContrato').value  = '';
+        document.getElementById('fCpf').value          = '';
+        document.getElementById('fTelefone').value     = '';
+        document.getElementById('fFaixa').value        = 'Branca';
+        document.getElementById('fGrau').value         = '0';
+        document.getElementById('fAulasNoGrau').value  = '0';
+        document.getElementById('fData').value         = '';
+        document.getElementById('fCategoria').value    = 'Adulto';
+        document.getElementById('fDataNasc').value     = '';
+        document.getElementById('fDataInicio').value   = '';
+        document.getElementById('fPlano').value        = '';
+        document.getElementById('fDataContrato').value = '';
         cepErr.textContent = '';
         localStorage.removeItem('rv_alunos_cache');
       } catch (e) {
