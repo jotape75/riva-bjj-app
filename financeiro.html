@@ -662,16 +662,19 @@
           acoes += '<button class="btn-acao pix" onclick="window._confirmarPagManual(\''+ie+'\')">✅ Confirmar Pagamento</button>';
         }
       }
-      acoes += '<button class="btn-acao historico" onclick="window._historico(\''+ie+'\',\''+escAttr(a.nome||'')+'\')">📋 Histórico</button>';
-      }
+      
+      // Removi a chave '}' que estava aqui sobrando e que quebrava o código
+      // Removi também a primeira menção ao botão de histórico para não duplicar
 
       const tel = validarTelefone(a.telefone);
       const primPag = a.primeiro_pagamento || '';
       const primPagConfirmado = primPag === 'pix_pago' || primPag === 'debito' || primPag === 'dinheiro';
+      
       if (a.plano==='Recorrente' && a.asaas_id && !primPagConfirmado && tel) {
         acoes += '<button class="btn-acao wpp" onclick="window._wppPix(\''+ie+'\')">📲 Gerar Pix 1º mês</button>';
       }
 
+      // Adiciona o histórico apenas uma vez ao final
       acoes += '<button class="btn-acao historico" onclick="window._historico(\''+ie+'\',\''+escAttr(a.nome||'')+'\')">📋 Histórico</button>';
 
       return '<div class="fin-aluno-card">' +
