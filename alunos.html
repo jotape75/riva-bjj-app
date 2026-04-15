@@ -177,6 +177,7 @@
             aulas_restantes: a.aulas_restantes ?? 0,
             meta_grau:       a.meta_grau ?? 0,
             data_ultimo_grau:a.data_ultimo_grau || '',
+            statusExame:     a.statusExame || '',
             telefone:        a.telefone || '',
             cpf:             a.cpf || '',
             data_nasc:       a.data_nasc || '',
@@ -191,6 +192,7 @@
             bairro:          a.bairro || '',
             cidade:          a.cidade || '',
             estado:          a.estado || '',
+            criadoEm:        a.criadoEm || '',
           };
         });
         salvarCacheAlunos(todosAlunos);
@@ -243,13 +245,29 @@
             <span class="${a.status==='ATIVO'?'badge-ativo':'badge-inativo'}" id="badge-${id}">${esc(a.status||'—')}</span>
           </div>
           <div class="aluno-detalhes" id="detalhes-${id}">
-            <div class="detalhe-row"><span class="detalhe-label">Categoria</span><span class="detalhe-valor">${cat}</span></div>
-            <div class="detalhe-row"><span class="detalhe-label">Aulas no Grau</span><span class="detalhe-valor">${aulas}</span></div>
-            <div class="detalhe-row"><span class="detalhe-label">Aulas Restantes</span><span class="detalhe-valor">${restantes}</span></div>
-            <div class="detalhe-row"><span class="detalhe-label">Último Grau</span><span class="detalhe-valor">${dataGrau}</span></div>
-            <div class="detalhe-row"><span class="detalhe-label">Telefone</span><span class="detalhe-valor">${tel}</span></div>
-            <div class="detalhe-row"><span class="detalhe-label">CPF</span><span class="detalhe-valor">${cpf}</span></div>
-            <div class="detalhe-row full-width"><span class="detalhe-label">Nascimento</span><span class="detalhe-valor">${nasc||'—'}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Nome</span><span class="detalhe-valor">${esc(a.nome_aluno)}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">E-mail</span><span class="detalhe-valor">${esc(a.email)}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Status</span><span class="detalhe-valor">${esc(a.status)}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Faixa</span><span class="detalhe-valor">${esc(a.faixa)}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Grau Atual</span><span class="detalhe-valor">${esc(a.grau_atual)}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Aulas no Grau</span><span class="detalhe-valor">${esc(a.aulas_no_grau)}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Aulas Restantes</span><span class="detalhe-valor">${esc(a.aulas_restantes)}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Meta Grau</span><span class="detalhe-valor">${esc(a.meta_grau)}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Data Último Grau</span><span class="detalhe-valor">${esc(a.data_ultimo_grau)}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Status Exame</span><span class="detalhe-valor">${esc(a.statusExame)}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Telefone</span><span class="detalhe-valor">${esc(a.telefone)}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">CPF</span><span class="detalhe-valor">${esc(a.cpf)}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Data Nasc.</span><span class="detalhe-valor">${esc(a.data_nasc)}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Data de Início</span><span class="detalhe-valor">${esc(a.data_inicio)}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Categoria</span><span class="detalhe-valor">${esc(a.categoria)}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Plano</span><span class="detalhe-valor">${esc(a.plano)}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Grupo Familiar</span><span class="detalhe-valor">${esc(a.grupo_familiar)}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Data Contrato</span><span class="detalhe-valor">${esc(a.data_contrato)}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">CEP</span><span class="detalhe-valor">${esc(a.cep)}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Endereço</span>
+              <span class="detalhe-valor">${esc(a.rua)}, ${esc(a.numero)} - ${esc(a.bairro)}, ${esc(a.cidade)} / ${esc(a.estado)}</span>
+            </div>
+            <div class="detalhe-row"><span class="detalhe-label">Data de Cadastro</span><span class="detalhe-valor">${esc(String(a.criadoEm||'—'))}</span></div>
           </div>
 
           <!-- ── Trocar Faixa ── -->
