@@ -3,12 +3,19 @@ name: Bump SW Cache Version
 on:
   push:
     branches: [main]
+    paths:
+      - '**.html'
+      - '**.js'
+      - '**.css'
+
+permissions:
+  contents: write
 
 jobs:
   bump:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Bump cache version
         run: |
