@@ -550,6 +550,10 @@
             valor: pag ? (pag.valor||0) : 0,
             dataPagamento: pag ? (pag.data||'') : '',
             formaPagamento: pag ? (pag.formaPagamento||'') : '',
+            resp_nome:     a.resp_nome     || '',
+            resp_email:    a.resp_email    || '',
+            resp_telefone: a.resp_telefone || '',
+            resp_cpf:      a.resp_cpf      || '',
           };
         });
 
@@ -1015,7 +1019,13 @@
 
         const temDesc      = detectarDesconto(a);
         const dataContrato = a.data_contrato || new Date().toISOString().slice(0,10);
-        const resp = await gasCall('asaasVincular', { alunoId: a.id, nome: a.nome, email: a.email, telefone: a.telefone, cpf: a.cpf, plano: a.plano, formaPag: 'PIX', grupoFamiliar: a.grupo_familiar, temDesconto: temDesc?'true':'false', dataContrato });
+        const resp = await gasCall('asaasVincular', { 
+          alunoId: a.id, nome: a.nome, email: a.email, telefone: a.telefone, cpf: a.cpf, 
+          plano: a.plano, formaPag: 'PIX', grupoFamiliar: a.grupo_familiar, 
+          temDesconto: temDesc?'true':'false', dataContrato,
+          resp_nome: a.resp_nome || '', resp_email: a.resp_email || '',
+          resp_telefone: a.resp_telefone || '', resp_cpf: a.resp_cpf || ''
+        });
         document.getElementById('pixWppInfo').style.display = 'none';
         if (!resp.ok) { document.getElementById('pixWppErr').textContent='Erro: '+(resp.erro||'desconhecido'); return; }
         const upd = { asaas_cobranca_id: resp.cobranca_id||'', asaas_paymentLink: resp.paymentLink||'' };
@@ -1110,7 +1120,13 @@
       document.getElementById('vincularInfo').textContent = 'Criando no Asaas…';
       document.getElementById('btnCriarAsaas').disabled   = true;
       try {
-        const resp = await gasCall('asaasVincular', { alunoId, nome:a?a.nome:'', email:a?a.email:'', telefone:a?a.telefone:'', cpf:a?a.cpf:'', plano, formaPag:plano==='Mensal'?formaPag:'', grupoFamiliar:a?a.grupo_familiar:'', temDesconto:temDesconto?'true':'false', dataContrato });
+        const resp = await gasCall('asaasVincular', { 
+          alunoId, nome:a?a.nome:'', email:a?a.email:'', telefone:a?a.telefone:'', cpf:a?a.cpf:'', 
+          plano, formaPag:plano==='Mensal'?formaPag:'', grupoFamiliar:a?a.grupo_familiar:'', 
+          temDesconto:temDesconto?'true':'false', dataContrato,
+          resp_nome: a?a.resp_nome||'':'', resp_email: a?a.resp_email||'':'',
+          resp_telefone: a?a.resp_telefone||'':'', resp_cpf: a?a.resp_cpf||'':''
+        });
         if (!resp.ok) {
           document.getElementById('vincularErr').textContent='Erro: '+(resp.erro||'desconhecido');
           document.getElementById('vincularInfo').textContent='';
