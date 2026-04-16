@@ -434,6 +434,16 @@
           } else if ((a.asaas_tipo === 'parcelamento' || a.asaas_tipo === 'avista') && a.asaas_cobranca_id) {
             tipo = 'cobranca'; asaasId = a.asaas_cobranca_id;
           }
+          // Se 1º pagamento já foi confirmado e estamos no mês do contrato, marca como pago
+          if (a.primeiro_pagamento === 'pix_pago' || a.primeiro_pagamento === 'debito' || a.primeiro_pagamento === 'dinheiro') {
+            const dc = new Date(a.data_contrato + 'T00:00:00');
+            if (dc.getMonth() + 1 === mesSelecionado && dc.getFullYear() === anoSelecionado) {
+              asaasStatusMap[a.id] = { ok: true, status: 'RECEIVED', valor: calcularValorFinal(a) };
+              const idx = todosRegistros.findIndex(r => r.id === a.id);
+              if (idx >= 0) todosRegistros[idx].statusPagamento = 'pago';
+              continue;
+            }
+          }
           const resp = await gasCall('asaasStatus', { asaasId, tipo, mes: mesSelecionado, ano: anoSelecionado });
 
           if (resp.ok) {
