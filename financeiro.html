@@ -488,9 +488,9 @@
               }
             }
           } else { erros++; }
+        console.log('Aluno:', a.nome, '| tipo:', tipo, '| asaasId:', asaasId, '| resp:', JSON.stringify(resp));
         } catch(e) { erros++; }
       }
-      console.log('Aluno:', a.nome, '| tipo:', tipo, '| asaasId:', asaasId, '| resp:', JSON.stringify(resp));
       renderListaFiltrada();
       atualizarResumo();
       const agora = new Date();
