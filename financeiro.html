@@ -486,7 +486,8 @@
           } else { erros++; }
         } catch(e) { erros++; }
       }
-
+      console.log('asaasStatusMap:', JSON.stringify(asaasStatusMap));
+      console.log('todosRegistros status:', todosRegistros.map(a => ({nome: a.nome, status: a.statusPagamento})));
       renderListaFiltrada();
       atualizarResumo();
       const agora = new Date();
