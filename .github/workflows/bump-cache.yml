@@ -1,0 +1,23 @@
+name: Bump SW Cache Version
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Bump cache version
+        run: |
+          sed -i "s/const CACHE = \"riva-bjj-v[0-9]*\"/const CACHE = \"riva-bjj-v$(date +%Y%m%d%H%M%S)\"/" sw.js
+
+      - name: Commit updated sw.js
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add sw.js
+          git commit -m "chore: bump SW cache version" || echo "No changes"
+          git push
