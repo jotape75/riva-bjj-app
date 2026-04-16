@@ -649,7 +649,7 @@
           if (a.asaas_assinatura_id) acoes += '<button class="btn-acao cancelar" onclick="window._cancelar(\''+ie+'\')">❌ Cancelar Assinatura</button>';
           acoes += '<button class="btn-acao cartao" onclick="window._abrirCartao(\''+ie+'\')">💳 Cartão</button>';
         }
-        const tel = validarTelefone(a.telefone);
+        const tel = validarTelefone(a.resp_telefone || a.telefone);
         const primPag = a.primeiro_pagamento || '';
         const primPagConfirmado = primPag === 'pix_pago' || primPag === 'debito' || primPag === 'dinheiro';
         if (a.asaas_id && !primPagConfirmado && tel) {
@@ -752,33 +752,10 @@
     // ── Salvar 1º pagamento (Recorrente) ───────────────────────
     window._salvarPrimeiroPag = async function(alunoId, valor) {
       try {
-        if (valor === 'pix_pago') {
-          const a = todosRegistros.find(r => r.id === alunoId);
-          let cobrancaId = a ? a.asaas_cobranca_id : '';
-          if (!cobrancaId) {
-            try {
-              const snap = await getDoc(doc(db,'alunos',alunoId));
-              if (snap.exists()) cobrancaId = snap.data().asaas_cobranca_id || '';
-            } catch(e) {}
-          }
-          if (!cobrancaId) {
-            alert('Nenhuma cobrança Pix encontrada. Gere o Pix primeiro usando o botão "📲 Gerar Pix 1º mês".');
-            renderListaFiltrada(); return;
-          }
-          const hoje = new Date();
-          const offsetBR = -3 * 60;
-          const localBR  = new Date(hoje.getTime() + (offsetBR - hoje.getTimezoneOffset()) * 60000);
-          const dataHojeBR = localBR.toISOString().slice(0, 10);
-          const respAsaas = await gasCall('asaasConfirmarPix', { cobrancaId, valor: a ? calcularValorFinal(a) : 0, dataPagamento: dataHojeBR });
-          if (!respAsaas.ok) {
-            alert('Erro ao confirmar Pix no Asaas: ' + (respAsaas.erro || 'desconhecido'));
-            renderListaFiltrada(); return;
-          }
-        }
         await updateDoc(doc(db,'alunos',alunoId), { primeiro_pagamento: valor });
         const idx = todosRegistros.findIndex(r => r.id === alunoId);
         if (idx >= 0) todosRegistros[idx].primeiro_pagamento = valor;
-
+    
         const a = todosRegistros.find(r => r.id === alunoId);
         if (a) {
           const hoje = new Date();
@@ -786,7 +763,7 @@
           const localBR  = new Date(hoje.getTime() + (offsetBR - hoje.getTimezoneOffset()) * 60000);
           const dataHojeBR = localBR.toISOString().slice(0, 10);
           const formaPag = valor === 'pix_pago' ? 'pix' : valor;
-
+    
           const existeSnap = await getDocs(query(
             collection(db, 'pagamentos'),
             where('alunoId', '==', alunoId),
@@ -813,7 +790,6 @@
             }
           }
         }
-
         renderListaFiltrada();
         atualizarResumo();
       } catch(e) { alert('Erro ao salvar: '+e.message); }
@@ -880,6 +856,7 @@
     // ── Abrir cartão ───────────────────────────────────────────
     window._abrirCartao = async function(alunoId) {
       const a = todosRegistros.find(r => r.id === alunoId);
+      const cpfTitular = a.resp_cpf || a.cpf;
       if (!a) return;
       _cartaoAlunoData = a;
       document.getElementById('cartaoAlunoId').value         = alunoId;
@@ -889,7 +866,7 @@
       document.getElementById('cCartaoNome').value     = '';
       document.getElementById('cCartaoValidade').value = '';
       document.getElementById('cCartaoCvv').value      = '';
-      document.getElementById('cCartaoCpf').value      = a.cpf ? formatarCpf(a.cpf.replace(/\D/g,'')) : '';
+      document.getElementById('cCartaoCpf').value = cpfTitular ? formatarCpf(cpfTitular.replace(/\D/g,'')) : '';
       document.getElementById('cCartaoCep').value      = '';
       document.getElementById('cCartaoBrand').textContent = '💳';
       document.getElementById('cartaoErr').textContent  = '';
@@ -939,8 +916,8 @@
           customerId, alunoId, numero, nome,
           mesValidade: mesVal, anoValidade: '20'+anoVal, cvv,
           cpfTitular:  cpf,
-          email:         _cartaoAlunoData ? (_cartaoAlunoData.email    || '') : '',
-          telefone:      _cartaoAlunoData ? (_cartaoAlunoData.telefone || '') : '',
+          email:    _cartaoAlunoData ? (_cartaoAlunoData.resp_email    || _cartaoAlunoData.email    || '') : '',
+          telefone: _cartaoAlunoData ? (_cartaoAlunoData.resp_telefone || _cartaoAlunoData.telefone || '') : '',
           cep:           cep,
           addressNumber: _cartaoAlunoData ? (_cartaoAlunoData.numero   || 'S/N') : 'S/N'
         });
@@ -998,11 +975,12 @@
         };
         document.getElementById('btnEnviarPixWpp').onclick = function() {
           const aAtual = todosRegistros.find(r=>r.id===a.id)||a;
+          const nomeContato = aAtual.resp_nome || aAtual.nome;
           const valor  = calcularValorFinal(aAtual).toFixed(2).replace('.',',');
           const dataVenc = a.data_contrato ? formatData(a.data_contrato) : String(DIA_VENCIMENTO).padStart(2,'0')+'/'+String(mesSelecionado).padStart(2,'0')+'/'+anoSelecionado;
           const msg = pixCopiaECola
-            ? 'Olá '+aAtual.nome+'! 😊\nSua mensalidade Riva BJJ de R$ '+valor+' foi gerada.\n\n📲 *Pague via Pix (copia e cola):*\n'+pixCopiaECola+'\n\nVencimento: '+dataVenc+'\nEm caso de dúvidas, estamos à disposição! 🥋'
-            : 'Olá '+aAtual.nome+'! 😊\nSua mensalidade Riva BJJ de R$ '+valor+' foi gerada.\nLink: '+(paymentLink||'')+'\nVencimento: '+dataVenc+'\nEm caso de dúvidas, estamos à disposição! 🥋';
+            ? 'Olá '+nomeContato+'! 😊\nSua mensalidade Riva BJJ de R$ '+valor+' foi gerada.\n\n📲 *Pague via Pix (copia e cola):*\n'+pixCopiaECola+'\n\nVencimento: '+dataVenc+'\nEm caso de dúvidas, estamos à disposição! 🥋'
+            : 'Olá '+nomeContato+'! 😊\nSua mensalidade Riva BJJ de R$ '+valor+' foi gerada.\nLink: '+(paymentLink||'')+'\nVencimento: '+dataVenc+'\nEm caso de dúvidas, estamos à disposição! 🥋';
           window.open('https://wa.me/55'+tel+'?text='+encodeURIComponent(msg),'_blank');
         };
         renderListaFiltrada();
