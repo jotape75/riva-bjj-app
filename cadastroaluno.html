@@ -93,7 +93,22 @@
         <option value="Infantil">Infantil</option>
         <option value="Juvenil">Juvenil</option>
       </select>
-
+      <!-- ── Responsável (Kids / Infantil / Juvenil) ── -->
+      <div id="secaoResponsavel" style="display:none; border: 1px solid #f39c12; border-radius: 12px; padding: 14px; margin-bottom: 12px; background: rgba(243,156,18,.05);">
+        <div style="font-size:15px;font-weight:900;color:#f39c12;margin-bottom:12px;">👨‍👧 Responsável</div>
+      
+        <label class="label" for="fRespNome">Nome do Responsável *</label>
+        <input id="fRespNome" class="input" type="text" placeholder="Nome completo do responsável" />
+      
+        <label class="label" for="fRespCpf">CPF do Responsável *</label>
+        <input id="fRespCpf" class="input" type="tel" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" autocomplete="off" />
+      
+        <label class="label" for="fRespEmail">Email do Responsável *</label>
+        <input id="fRespEmail" class="input" type="email" inputmode="email" placeholder="email@exemplo.com" />
+      
+        <label class="label" for="fRespTelefone">Telefone do Responsável *</label>
+        <input id="fRespTelefone" class="input" type="tel" placeholder="(00) 00000-0000" />
+      </div>
       <label class="label" for="fCpf">CPF</label>
       <input id="fCpf" class="input" type="tel" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" autocomplete="off" />
 
@@ -255,7 +270,18 @@
 
       if (!nome)  { setErr('formErr', 'Nome é obrigatório.'); return; }
       if (!email || email.indexOf('@') < 1) { setErr('formErr', 'Email inválido.'); return; }
-
+      const categoria = document.getElementById('fCategoria').value;
+      const categoriasMenor = ['Kids', 'Infantil', 'Juvenil'];
+      if (categoriasMenor.includes(categoria)) {
+        const respNome  = document.getElementById('fRespNome').value.trim();
+        const respCpf   = document.getElementById('fRespCpf').value.replace(/\D/g,'');
+        const respEmail = document.getElementById('fRespEmail').value.trim();
+        const respTel   = document.getElementById('fRespTelefone').value.trim();
+        if (!respNome)             { setErr('formErr', 'Nome do responsável é obrigatório.'); return; }
+        if (respCpf.length !== 11) { setErr('formErr', 'CPF do responsável inválido.'); return; }
+        if (!respEmail || respEmail.indexOf('@') < 1) { setErr('formErr', 'Email do responsável inválido.'); return; }
+        if (!respTel)              { setErr('formErr', 'Telefone do responsável é obrigatório.'); return; }
+      }
       setErr('formErr', '');
       setInfo('formInfo', 'Cadastrando…');
       document.getElementById('btnCadastrar').disabled = true;
@@ -294,6 +320,10 @@
           asaas_tipo:           '',
           asaas_paymentLink:    '',
           criadoEm:         serverTimestamp(),
+          resp_nome:     document.getElementById('fRespNome').value.trim(),
+          resp_cpf:      document.getElementById('fRespCpf').value.trim(),
+          resp_email:    document.getElementById('fRespEmail').value.trim().toLowerCase(),
+          resp_telefone: document.getElementById('fRespTelefone').value.trim(),
         });
 
         setInfo('formInfo', '✅ Aluno cadastrado com sucesso!');
@@ -311,8 +341,14 @@
         document.getElementById('fDataInicio').value   = '';
         document.getElementById('fPlano').value        = '';
         document.getElementById('fDataContrato').value = '';
+        document.getElementById('fRespNome').value     = '';
+        document.getElementById('fRespCpf').value      = '';
+        document.getElementById('fRespEmail').value    = '';
+        document.getElementById('fRespTelefone').value = '';
+        document.getElementById('secaoResponsavel').style.display = 'none';
         cepErr.textContent = '';
         localStorage.removeItem('rv_alunos_cache');
+        
       } catch (e) {
         setErr('formErr', 'Erro ao cadastrar: ' + (e.message || 'tente novamente.'));
         setInfo('formInfo', '');
@@ -326,6 +362,16 @@
       sessionStorage.removeItem(TOKEN_KEY);
       location.href = './administrativo.html';
     });
+    document.getElementById('fCategoria').addEventListener('change', function() {
+      const categoriasMenor = ['Kids', 'Infantil', 'Juvenil'];
+      const ehMenor = categoriasMenor.includes(this.value);
+      document.getElementById('secaoResponsavel').style.display = ehMenor ? '' : 'none';
+    });
+    document.getElementById('fRespCpf').addEventListener('input', function() {
+      this.value = formatarCpf(this.value);
+    });
+    
+    
   </script>
 </body>
 </html>
