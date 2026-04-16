@@ -424,11 +424,15 @@
       for (const a of comAsaas) {
         try {
           let tipo = 'customer', asaasId = a.asaas_id;
-          if (a.asaas_tipo === 'assinatura' && a.asaas_assinatura_id)
-            { tipo = 'assinatura'; asaasId = a.asaas_assinatura_id; }
-          else if ((a.asaas_tipo === 'parcelamento' || a.asaas_tipo === 'avista') && a.asaas_cobranca_id)
-            { tipo = 'cobranca'; asaasId = a.asaas_cobranca_id; }
-
+          // Se tem cobrança do 1º mês e ainda não foi pago, verifica ela primeiro
+          if (a.asaas_cobranca_id && a.primeiro_pagamento !== 'pix_pago' && 
+              a.primeiro_pagamento !== 'debito' && a.primeiro_pagamento !== 'dinheiro') {
+            tipo = 'cobranca'; asaasId = a.asaas_cobranca_id;
+          } else if (a.asaas_tipo === 'assinatura' && a.asaas_assinatura_id) {
+            tipo = 'assinatura'; asaasId = a.asaas_assinatura_id;
+          } else if ((a.asaas_tipo === 'parcelamento' || a.asaas_tipo === 'avista') && a.asaas_cobranca_id) {
+            tipo = 'cobranca'; asaasId = a.asaas_cobranca_id;
+          }
           const resp = await gasCall('asaasStatus', { asaasId, tipo, mes: mesSelecionado, ano: anoSelecionado });
 
           if (resp.ok) {
