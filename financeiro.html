@@ -671,7 +671,7 @@
           '<div class="fin-info-item"><span class="fin-info-label">Valor</span><span class="fin-info-valor">'+valorDisplay+'</span></div>' +
           '<div class="fin-info-item"><span class="fin-info-label">Status</span><span class="fin-info-valor">'+statusDisplay+'</span></div>' +
           '<div class="fin-info-item"><span class="fin-info-label">Próx. Vencimento</span><span class="fin-info-valor">'+proxVenc+'</span></div>' +
-          '<div class="fin-info-item"><span class="fin-info-label">Contrato</span><span class="fin-info-valor">'+contratoDisp+'</span></div>' +
+          '<div class="fin-info-item"><span class="fin-info-label">Contrato</span><span class="fin-info-valor">'+contratoDisp+'</span></div>' + (a.resp_nome ? '<div class="fin-info-item" style="grid-column:1/-1"><span class="fin-info-label">👨‍👧 Responsável</span><span class="fin-info-valor">'+escHtml(a.resp_nome)+'</span></div>' : '') +
           (st==='pago' ? '<div class="fin-info-item"><span class="fin-info-label">Forma</span><span class="fin-info-valor">'+formatFormaPag(a.formaPagamento)+'</span></div>' : '') +
         '</div>' +
         '<div class="btns-acao">'+acoes+'</div>' +
