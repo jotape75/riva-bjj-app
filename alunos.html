@@ -213,6 +213,10 @@
             cidade:          a.cidade || '',
             estado:          a.estado || '',
             criadoEm:        a.criadoEm || '',
+            resp_nome:     a.resp_nome     || '',
+            resp_email:    a.resp_email    || '',
+            resp_telefone: a.resp_telefone || '',
+            resp_cpf:      a.resp_cpf      || '',
           };
         });
         salvarCacheAlunos(todosAlunos);
@@ -297,6 +301,15 @@
               <span class="detalhe-valor">${esc(a.rua)}, ${esc(a.numero)} - ${esc(a.bairro)}, ${esc(a.cidade)} / ${esc(a.estado)}</span>
             </div>
             <div class="detalhe-row"><span class="detalhe-label">Data de Cadastro</span><span class="detalhe-valor">${esc(formatarTimestamp(a.criadoEm))}</span></div>
+            ${a.resp_nome ? `
+            <div class="detalhe-row full-width" style="border-top:1px solid #f39c12;margin-top:8px;padding-top:8px;">
+              <span class="detalhe-label" style="color:#f39c12;">👨‍👧 Responsável</span>
+            </div>
+            <div class="detalhe-row"><span class="detalhe-label">Nome Responsável</span><span class="detalhe-valor">${esc(a.resp_nome)}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">CPF Responsável</span><span class="detalhe-valor">${esc(a.resp_cpf||'—')}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Email Responsável</span><span class="detalhe-valor">${esc(a.resp_email||'—')}</span></div>
+            <div class="detalhe-row"><span class="detalhe-label">Tel. Responsável</span><span class="detalhe-valor">${esc(a.resp_telefone||'—')}</span></div>
+            ` : ''}
           </div>
 
           <!-- ── Trocar Faixa ── -->
@@ -359,6 +372,20 @@
                 <option value="Juvenil"  ${a.categoria==='Juvenil' ?'selected':''}>Juvenil</option>
               </select>
             </div>
+            ${['Kids','Infantil','Juvenil'].includes(a.categoria) ? `
+            <div class="editar-secao">👨‍👧 Responsável</div>
+            <div><label>Nome do Responsável</label>
+              <input type="text" id="editRespNome-${id}" value="${esc(a.resp_nome||'')}" /></div>
+            <div><label>CPF do Responsável</label>
+              <input type="tel" inputmode="numeric" maxlength="14" id="editRespCpf-${id}"
+                value="${esc(a.resp_cpf||'')}" placeholder="000.000.000-00"
+                oninput="this.value=window._fmtCpf(this.value)" /></div>
+            <div><label>Email do Responsável</label>
+              <input type="email" id="editRespEmail-${id}" value="${esc(a.resp_email||'')}" /></div>
+            <div><label>Telefone do Responsável</label>
+              <input type="tel" id="editRespTelefone-${id}" value="${esc(a.resp_telefone||'')}" /></div>
+            ` : ''}
+            
             <div class="editar-secao">🥋 Graduação</div>
             <div>
               <label>Grau Atual</label>
@@ -608,6 +635,10 @@
           aulas_no_grau:   aulasNoGrau,
           aulas_restantes: Math.max(0, metaGrau - aulasNoGrau),
           grau_atual:      grauAtual,
+          resp_nome:     (document.getElementById('editRespNome-'+id)     ? document.getElementById('editRespNome-'+id).value.trim()                : ''),
+          resp_cpf:      (document.getElementById('editRespCpf-'+id)      ? document.getElementById('editRespCpf-'+id).value.trim()                 : ''),
+          resp_email:    (document.getElementById('editRespEmail-'+id)    ? document.getElementById('editRespEmail-'+id).value.trim().toLowerCase()  : ''),
+          resp_telefone: (document.getElementById('editRespTelefone-'+id) ? document.getElementById('editRespTelefone-'+id).value.trim()             : ''),
         };
 
         await updateDoc(doc(db,'alunos',id), updates);
