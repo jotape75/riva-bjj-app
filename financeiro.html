@@ -424,6 +424,7 @@
       for (const a of comAsaas) {
         try {
           let tipo = 'customer', asaasId = a.asaas_id;
+          console.log('primeiro_pagamento:', a.primeiro_pagamento, '| asaas_cobranca_id:', a.asaas_cobranca_id);
           // Se tem cobrança do 1º mês e ainda não foi pago, verifica ela primeiro
           if (a.asaas_cobranca_id && a.primeiro_pagamento !== 'pix_pago' && 
               a.primeiro_pagamento !== 'debito' && a.primeiro_pagamento !== 'dinheiro') {
