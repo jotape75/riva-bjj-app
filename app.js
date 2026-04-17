@@ -771,7 +771,7 @@ async function bioAuthenticate() {
 
 function showBioLock(mode) {
   bioAction = mode;
-  ['cardLogin', 'cardAluno', 'cardAgendar', 'cardProf', 'cardBioLock', 'cardNoSupport', 'cardNotificacoes', 'cardSessao', 'cardProfSessao'].forEach(hide);
+  ['cardLogin', 'cardContrato', 'cardAluno', 'cardAgendar', 'cardProf', 'cardBioLock', 'cardNoSupport', 'cardNotificacoes', 'cardSessao', 'cardProfSessao'].forEach(hide);
   hide('mainNav');
   if (mode === 'unlock') {
     $('bioIcon').textContent     = '🔒';
@@ -1036,7 +1036,7 @@ function showGraduandosSkeleton() {
 function showTab(tab) {
   sessionStorage.setItem(SS_PAGE, tab);
   sessionStorage.removeItem(SS_SESSAO);
-  ['cardLogin', 'cardAluno', 'cardAgendar', 'cardProf', 'cardBioLock', 'cardNoSupport', 'cardNotificacoes', 'cardSessao', 'cardProfSessao'].forEach(hide);
+  ['cardLogin', 'cardContrato', 'cardAluno', 'cardAgendar', 'cardProf', 'cardBioLock', 'cardNoSupport', 'cardNotificacoes', 'cardSessao', 'cardProfSessao'].forEach(hide);
   ['navHome', 'navAgendar'].forEach(id => $(id).classList.remove('on'));
 
   // Show nav only for logged-in students; professors have no bottom nav (handled in showProfPage)
