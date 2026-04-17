@@ -1951,6 +1951,7 @@ function init() {
     showBioLock(bioOk && credId ? 'unlock' : 'register');
     return;
   }
+  show('cardLogin');
     // Contrato
   document.getElementById('chkContratoLeitura').addEventListener('change', verificarBotaoContrato);
   document.getElementById('btnAssinarContrato').addEventListener('click', async () => {
