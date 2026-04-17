@@ -668,11 +668,18 @@ function afterBioSuccess(updateTs = true) {
   }
 
   if (email && nome) {
-    alunoData = { nome };
+    const fotoUrl = localStorage.getItem('rv_foto_url') || '';
+    alunoData = { nome, foto_url: fotoUrl };
     preencherCard(alunoData);
     showAlunoSkeleton();
     fbLogin(email)
-      .then(r => { if (r && r.ok) { alunoData = r.data; preencherCard(alunoData); } })
+      .then(r => { 
+        if (r && r.ok) { 
+          alunoData = r.data; 
+          preencherCard(alunoData);
+          localStorage.setItem('rv_foto_url', r.data.foto_url || '');
+        } 
+      })
       .catch(() => {});
     if (savedPage === 'sessaoAluno' && savedSessao) {
       aSelSessao = savedSessao;
@@ -1651,10 +1658,12 @@ function logout() {
   localStorage.removeItem(LS_BIO_TS);
   sessionStorage.removeItem(SS_PAGE);
   sessionStorage.removeItem(SS_SESSAO);
+  localStorage.removeItem('rv_foto_url');
   // Keep rv_credentialId and rv_biometria_ativada so next login skips re-registration
   $('email').value = '';
   hide('mainNav');
   showTab('Home');
+  
 }
 
 /* ── Professor logout ─────────────────────────────────────────── */
