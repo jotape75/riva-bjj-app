@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#c0392b" />
   <title>Contrato – Riva BJJ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -50,15 +51,20 @@
     .check-leitura input { width: 18px; height: 18px; accent-color: var(--red); flex-shrink: 0; margin-top: 2px; }
     .check-leitura span { font-size: 13px; color: #ddd; line-height: 1.5; }
 
-    /* Canvas assinatura */
+       /* Assinatura */
     .assinatura-wrap { margin-bottom: 20px; }
     .assinatura-label { font-size: 13px; color: #aaa; margin-bottom: 8px; display: block; }
-    .canvas-container {
-      background: #fff;
-      border-radius: 12px;
-      border: 2px solid var(--border);
-      position: relative;
-      overflow: hidden;
+    .input-assinatura {
+      width: 100%; padding: 14px 16px; font-size: 16px;
+      border-radius: 12px; border: 2px solid var(--border);
+      background: #1a1a1a; color: #fff; outline: none;
+      margin-bottom: 12px; font-family: system-ui, sans-serif;
+    }
+    .input-assinatura:focus { border-color: var(--red); }
+    .preview-assinatura {
+      background: #fff; border-radius: 12px; border: 2px solid var(--border);
+      min-height: 80px; display: flex; align-items: center;
+      justify-content: center; padding: 12px 20px;
     }
     .canvas-container.ativo { border-color: var(--red); }
     canvas { display: block; width: 100%; touch-action: none; cursor: crosshair; }
@@ -331,74 +337,25 @@
     show('sucessoWrap');
   }
 
-  // ── Canvas de assinatura ───────────────────────────────────
-  const canvas    = document.getElementById('canvasAssinatura');
-  const ctx       = canvas.getContext('2d');
-  const container = document.getElementById('canvasContainer');
-  const placeholder = document.getElementById('canvasPlaceholder');
-  let desenhou    = false;
-  let desenhando  = false;
-
-  function resizeCanvas() {
-    const rect = canvas.getBoundingClientRect();
-    canvas.width  = rect.width  * window.devicePixelRatio;
-    canvas.height = rect.height * window.devicePixelRatio;
-    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-    ctx.strokeStyle = '#1a1a1a';
-    ctx.lineWidth   = 2.5;
-    ctx.lineCap     = 'round';
-    ctx.lineJoin    = 'round';
-  }
-
-  window.addEventListener('resize', () => { if (!desenhou) resizeCanvas(); });
-  setTimeout(resizeCanvas, 100);
-
-  function getPos(e) {
-    const rect = canvas.getBoundingClientRect();
-    if (e.touches) {
-      return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
-    }
-    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-  }
-
-  function startDraw(e) {
-    e.preventDefault();
-    desenhando = true;
-    const pos = getPos(e);
-    ctx.beginPath();
-    ctx.moveTo(pos.x, pos.y);
-    if (!desenhou) {
-      desenhou = true;
-      placeholder.style.display = 'none';
-      container.classList.add('ativo');
-      verificarBotao();
-    }
-  }
-
-  function draw(e) {
-    if (!desenhando) return;
-    e.preventDefault();
-    const pos = getPos(e);
-    ctx.lineTo(pos.x, pos.y);
-    ctx.stroke();
-  }
-
-  function endDraw(e) { desenhando = false; }
-
-  canvas.addEventListener('mousedown',  startDraw);
-  canvas.addEventListener('mousemove',  draw);
-  canvas.addEventListener('mouseup',    endDraw);
-  canvas.addEventListener('touchstart', startDraw, { passive: false });
-  canvas.addEventListener('touchmove',  draw,      { passive: false });
-  canvas.addEventListener('touchend',   endDraw);
-
-  document.getElementById('btnLimpar').addEventListener('click', () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    desenhou = false;
-    placeholder.style.display = '';
-    container.classList.remove('ativo');
+  // ── Assinatura por texto ───────────────────────────────────
+  const inputAss = document.getElementById('inputAssinatura');
+  const textoAss = document.getElementById('textoAssinatura');
+  let assinou    = false;
+  
+  inputAss.addEventListener('input', () => {
+    const val = inputAss.value.trim();
+    textoAss.textContent = val || '—';
+    assinou = val.length >= 3;
     verificarBotao();
   });
+  
+  // ── Checkbox leitura ───────────────────────────────────────
+  document.getElementById('chkLeitura').addEventListener('change', verificarBotao);
+  
+  function verificarBotao() {
+    const leu = document.getElementById('chkLeitura').checked;
+    document.getElementById('btnAssinar').disabled = !(leu && assinou);
+  }
 
   // ── Checkbox leitura ───────────────────────────────────────
   document.getElementById('chkLeitura').addEventListener('change', verificarBotao);
@@ -417,8 +374,13 @@
     document.getElementById('msgErr').textContent  = '';
 
     try {
-      // Exportar canvas como Base64
-      const assinaturaBase64 = canvas.toDataURL('image/png');
+      const nome = inputAss.value.trim();
+      const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="100">
+        <rect width="400" height="100" fill="white"/>
+        <text x="200" y="70" font-family="Dancing Script, cursive" font-size="48"
+          font-weight="700" fill="#1a1a1a" text-anchor="middle">${nome}</text>
+      </svg>`;
+      const assinaturaBase64 = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgStr)));
       const agora = new Date().toISOString();
 
       await updateDoc(doc(db, 'alunos', alunoId), {
