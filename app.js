@@ -1,10 +1,10 @@
-import { db, auth } from './firebase-config.js';
+import { db, auth, storage } from './firebase-config.js';
 import {
   collection, doc, query, where, orderBy, limit,
   getDocs, getDoc, addDoc, updateDoc, deleteDoc, serverTimestamp,
   Timestamp
 } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
-import { signInAnonymously } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-storage.js";
 
 const anonAuthPromise = signInAnonymously(auth).catch(() => {});
 
@@ -39,6 +39,38 @@ function hojeDataBR() {
   const yyyy = now.getFullYear();
   return `${dd}/${mm}/${yyyy}`;
 }
+function iniciaisDe(nome) {
+  if (!nome) return '?';
+  const partes = nome.trim().split(' ').filter(Boolean);
+  if (partes.length === 1) return partes[0][0].toUpperCase();
+  return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase();
+}
+
+function atualizarAvatar(fotoUrl, nome) {
+  const img      = document.getElementById('avatarImg');
+  const initials = document.getElementById('avatarInitials');
+  if (!img || !initials) return;
+  if (fotoUrl) {
+    img.src = fotoUrl;
+    img.style.display = '';
+    initials.style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    initials.textContent  = iniciaisDe(nome);
+    initials.style.display = '';
+  }
+}
+
+async function uploadFotoPerfil(file, alunoId) {
+  const ext      = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  const path     = `fotos_perfil/${alunoId}.${ext}`;
+  const stRef    = ref(storage, path);
+  await uploadBytes(stRef, file);
+  const url = await getDownloadURL(stRef);
+  await updateDoc(doc(db, 'alunos', alunoId), { foto_url: url });
+  return url;
+}
+
 
 /* ── localStorage key constants ──────────────────────────────── */
 const LS_EMAIL        = 'rv_email';
@@ -83,7 +115,7 @@ async function fbLogin(email) {
     const alunosSnap = await getDocs(alunosQ);
     if (!alunosSnap.empty) {
       const docData = alunosSnap.docs[0].data();
-      return {
+            return {
         ok: true,
         tipo: 'aluno',
         data: {
@@ -98,6 +130,7 @@ async function fbLogin(email) {
           aulasRestantes: docData.aulas_restantes ?? null,
           metaGrau:       docData.meta_grau ?? 0,
           email:          docData.email || email,
+          foto_url:       docData.foto_url || '',
         }
       };
     }
@@ -166,10 +199,32 @@ async function fbListaPresenca(dataTreino, horario) {
       where('horario', '==', horario)
     );
     const snap = await getDocs(q);
+
+    // Coletar emails únicos para buscar fotos
+    const emails = [...new Set(
+      snap.docs.map(d => d.data().email).filter(Boolean)
+    )];
+
+    // Buscar foto_url de cada aluno em paralelo
+    const fotoMap = {};
+    await Promise.all(emails.map(async (email) => {
+      try {
+        const aq = query(collection(db, 'alunos'), where('email', '==', email), limit(1));
+        const as = await getDocs(aq);
+        if (!as.empty) fotoMap[email] = as.docs[0].data().foto_url || '';
+      } catch (_) {}
+    }));
+
     const data = [];
     snap.forEach(d => {
       const item = d.data();
-      data.push({ linha: d.id, nome: item.nome, status: item.status });
+      data.push({
+        linha:    d.id,
+        nome:     item.nome,
+        status:   item.status,
+        email:    item.email || '',
+        foto_url: fotoMap[item.email] || '',
+      });
     });
     return { ok: true, data };
   } catch (e) {
@@ -186,10 +241,30 @@ async function fbListaPresencaArquivo(dataTreino, horario) {
       where('horario', '==', horario)
     );
     const snap = await getDocs(q);
+
+    const emails = [...new Set(
+      snap.docs.map(d => d.data().email).filter(Boolean)
+    )];
+
+    const fotoMap = {};
+    await Promise.all(emails.map(async (email) => {
+      try {
+        const aq = query(collection(db, 'alunos'), where('email', '==', email), limit(1));
+        const as = await getDocs(aq);
+        if (!as.empty) fotoMap[email] = as.docs[0].data().foto_url || '';
+      } catch (_) {}
+    }));
+
     const data = [];
     snap.forEach(d => {
       const item = d.data();
-      data.push({ linha: d.id, nome: item.nome, status: item.status });
+      data.push({
+        linha:    d.id,
+        nome:     item.nome,
+        status:   item.status,
+        email:    item.email || '',
+        foto_url: fotoMap[item.email] || '',
+      });
     });
     return { ok: true, data };
   } catch (e) {
@@ -1145,8 +1220,16 @@ function renderPresencaLista(ctx, lista, sessao) {
              <button class="btn-ap reprovar" data-linha="${item.linha}">✗ Reprovar</button>
            </div>`
         : '';
+
+      const avatarHtml = ctx === 'prof'
+        ? (item.foto_url
+            ? `<img src="${item.foto_url}" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid #444;" />`
+            : `<div style="width:36px;height:36px;border-radius:50%;background:#2a2a2a;border:1.5px solid #444;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#888;flex-shrink:0;">${(item.nome||'?')[0].toUpperCase()}</div>`)
+        : '';
+
       return `<div class="presenca-item">
-        <div class="presenca-info">
+        <div class="presenca-info" style="${ctx === 'prof' ? 'align-items:center;gap:10px;' : ''}">
+          ${avatarHtml}
           <span class="presenca-nome">${item.nome}</span>
           <span class="presenca-status ${sc}">${item.status}</span>
         </div>
@@ -1164,7 +1247,6 @@ function renderPresencaLista(ctx, lista, sessao) {
 
   if (ctx !== 'prof' && alunoData) {
     if (sessao.isPast) {
-      // Dia passado: esconde botões de ação (check-in e cancelar)
       hide('btnSessaoCheckin');
       hide('btnSessaoDeletarCheckin');
     } else {
@@ -1522,6 +1604,7 @@ function preencherCard(d) {
     $('statAulasNum').textContent = '—';
     $('statRestantesNum').textContent = '—';
   }
+  atualizarAvatar(d.fotoUrl || d.foto_url || '', d.nome || '');
 }
 
 /* ── Generic login ────────────────────────────────────────────── */
@@ -1637,11 +1720,37 @@ function init() {
   $('navHome').addEventListener('click',    () => showTab('Home'));
   $('navAgendar').addEventListener('click', () => showTab('Agendar'));
 
-  // 6a) Enable mouse drag-to-scroll on days-of-week rows
+   // 6) Listener foto de perfil
+  const fotoInput = document.getElementById('fotoInput');
+  if (fotoInput) {
+    fotoInput.addEventListener('change', async function () {
+      const file = this.files && this.files[0];
+      if (!file || !alunoData || !alunoData.id) return;
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Imagem muito grande. Máximo 5 MB.');
+        return;
+      }
+      // Feedback visual imediato com URL local
+      const localUrl = URL.createObjectURL(file);
+      atualizarAvatar(localUrl, alunoData.nome || '');
+      try {
+        const url = await uploadFotoPerfil(file, alunoData.id);
+        alunoData.foto_url = url;
+        atualizarAvatar(url, alunoData.nome || '');
+      } catch (e) {
+        // Reverte se falhar
+        atualizarAvatar(alunoData.foto_url || '', alunoData.nome || '');
+        alert('Erro ao salvar foto. Tente novamente.');
+      } finally {
+        this.value = '';
+      }
+    });
+  }
+  // 7) Enable mouse drag-to-scroll on days-of-week rows
   enableDragScroll($('diasRow'));
   enableDragScroll($('profDiasRow'));
 
-  // 6) Check for existing session and decide initial screen
+  // 8) Check for existing session and decide initial screen
   const email  = localStorage.getItem(LS_EMAIL);
   const nome   = localStorage.getItem(LS_NOME);
   const pEmail = localStorage.getItem(LS_PROF_EMAIL);
