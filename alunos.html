@@ -836,10 +836,11 @@
       const nomeAss = match ? match[1] : '';
       if (nomeAss) {
         pdf.setFont('times', 'bolditalic');
-        pdf.setFontSize(32);
+        pdf.setFontSize(22);
         const nomeLinhas = pdf.splitTextToSize(nomeAss, maxW);
+        y += 8;
         pdf.text(nomeLinhas, margin, y);
-        y += nomeLinhas.length * 12;
+        y += nomeLinhas.length * 9;
         pdf.setDrawColor(0);
         pdf.line(margin, y, margin + 120, y);
         y += 6;
