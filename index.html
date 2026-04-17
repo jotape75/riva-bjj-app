@@ -101,6 +101,32 @@
     <div class="status" id="aStatus">—</div>
   
   </section>
+    <!-- ── CONTRATO ──────────────────────────────────────────── -->
+    <section class="card hidden" id="cardContrato">
+      <h2 class="title" style="margin-bottom:6px;">📋 Contrato de Adesão</h2>
+      <p style="font-size:13px;color:#aaa;margin-bottom:16px;">Leia e assine o contrato para continuar usando o app.</p>
+    
+      <div id="contratoTexto" style="background:#111;border:1px solid #2a2a2a;border-radius:12px;padding:14px;max-height:40vh;overflow-y:auto;font-size:12px;line-height:1.7;color:#ddd;margin-bottom:14px;">
+        <!-- preenchido dinamicamente pelo app.js -->
+      </div>
+    
+      <label style="display:flex;align-items:flex-start;gap:10px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:12px;margin-bottom:16px;cursor:pointer;">
+        <input type="checkbox" id="chkContratoLeitura" style="width:18px;height:18px;accent-color:#c0392b;flex-shrink:0;margin-top:2px;" />
+        <span style="font-size:13px;color:#ddd;line-height:1.5;">Li e concordo com todos os termos do contrato.</span>
+      </label>
+    
+      <span style="font-size:13px;color:#aaa;display:block;margin-bottom:8px;">✍️ Assine abaixo com o dedo:</span>
+      <div id="contratoCanvasWrap" style="background:#fff;border-radius:12px;border:2px solid #2a2a2a;position:relative;overflow:hidden;margin-bottom:8px;">
+        <canvas id="contratoCanvas" height="160" style="display:block;width:100%;touch-action:none;cursor:crosshair;"></canvas>
+        <div id="contratoCanvasPlaceholder" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;color:#aaa;pointer-events:none;">Toque aqui para assinar</div>
+      </div>
+      <button id="btnLimparContrato" class="btn ghost" style="width:auto;padding:8px 16px;font-size:13px;margin-bottom:16px;">🗑️ Limpar</button>
+    
+      <p class="msg err"  id="contratoErr"></p>
+      <p class="msg info" id="contratoInfo"></p>
+    
+      <button class="btn primary" id="btnAssinarContrato" disabled>✅ Confirmar Assinatura</button>
+    </section>
 
     <!-- ── NOTIFICAÇÕES ───────────────────────────────────────── -->
     <section class="card hidden" id="cardNotificacoes">
