@@ -193,7 +193,6 @@
         <div id="vincularFormaPagWrap" style="display:none;">
           <label class="label" for="vincularFormaPag">Forma de Pagamento</label>
           <select class="select-input" id="vincularFormaPag">
-            <option value="PIX">📲 Pix</option>
             <option value="BOLETO">📄 Boleto</option>
           </select>
         </div>
@@ -271,25 +270,6 @@
       </div>
     </div>
   </div>
-
-  <!-- MODAL PIX WHATSAPP -->
-  <div class="modal-overlay" id="modalPixWpp">
-    <div class="modal-box">
-      <div class="modal-title">📲 Pix para WhatsApp</div>
-      <div class="modal-subtitle" id="pixWppNome"></div>
-      <p class="msg info" id="pixWppInfo" style="text-align:center;padding:20px 0;">Gerando cobrança Pix…</p>
-      <div id="pixWppResultado" style="display:none;">
-        <div style="font-size:13px;color:#aaa;text-align:center;margin-bottom:4px;">QR Code Pix</div>
-        <div class="qr-container"><img id="pixWppQrImg" src="" alt="QR Code Pix" /></div>
-        <div class="pix-copia-cola" id="pixWppKey"></div>
-        <button class="btn-copiar" id="btnCopiarPixWpp">📋 Copiar código Pix</button>
-        <button class="btn" id="btnEnviarPixWpp" style="background:#25D366;color:#fff;margin-top:12px;">💬 Enviar via WhatsApp</button>
-      </div>
-      <p class="msg err" id="pixWppErr"></p>
-      <button class="btn secondary" style="margin-top:8px;" id="btnFecharPixWpp">Fechar</button>
-    </div>
-  </div>
-
   <!-- MODAL HISTÓRICO -->
   <div class="modal-overlay" id="modalHistorico">
     <div class="modal-box">
@@ -970,23 +950,9 @@
         const upd = { asaas_id:resp.customerId||a.asaas_id, asaas_cobranca_id:resp.cobranca_id||'', asaas_tipo:resp.tipo||'avista', asaas_paymentLink:resp.paymentLink||'' };
         await updateDoc(doc(db,'alunos',alunoId), upd);
         const idx = todosRegistros.findIndex(r => r.id === alunoId);
-        if (idx >= 0) Object.assign(todosRegistros[idx], upd);
-        if (formaPag==='PIX' && (resp.pixQrCodeImage||resp.pixCopiaECola)) {
-          document.getElementById('pixWppNome').textContent        = a.nome||'';
-          document.getElementById('pixWppInfo').style.display      = 'none';
-          document.getElementById('pixWppResultado').style.display = '';
-          document.getElementById('pixWppErr').textContent         = '';
-          const qrImg = document.getElementById('pixWppQrImg');
-          if (resp.pixQrCodeImage) { qrImg.src='data:image/png;base64,'+resp.pixQrCodeImage; qrImg.style.display=''; }
-          else qrImg.style.display='none';
-          document.getElementById('pixWppKey').textContent = resp.pixCopiaECola||'(não disponível)';
-          document.getElementById('btnCopiarPixWpp').onclick = function() {
-            navigator.clipboard.writeText(resp.pixCopiaECola||'').then(()=>{this.textContent='✅ Copiado!';setTimeout(()=>{this.textContent='📋 Copiar código Pix';},2000);});
-          };
-          document.getElementById('modalPixWpp').classList.add('open');
-        } else {
+        if (idx >= 0) Object.assign(todosRegistros[idx], upd);{
           renderListaFiltrada();
-          alert('✅ Cobrança gerada!'+(resp.paymentLink?'\nLink: '+resp.paymentLink:''));
+          alert('✅ Cobrança gerada!');
         }
       } catch(e) { alert('Erro: '+e.message); }
     };
