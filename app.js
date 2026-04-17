@@ -135,8 +135,9 @@ function preencherTextoContrato(a) {
   `;
 }
 function verificarBotaoContrato() {
-  const leu = document.getElementById('chkContratoLeitura').checked;
-  document.getElementById('btnAssinarContrato').disabled = !(leu && contratoDesenhou);
+  const leu     = document.getElementById('chkContratoLeitura').checked;
+  const assinou = document.getElementById('contratoInputAssinatura').value.trim().length >= 3;
+  document.getElementById('btnAssinarContrato').disabled = !(leu && assinou);
 }
 
 async function mostrarTelaContrato(a) {
