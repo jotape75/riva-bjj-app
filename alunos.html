@@ -830,10 +830,12 @@
 
   if (a.contrato_assinatura) {
     try {
-      const match = a.contrato_assinatura.match(/text-anchor="middle">([^<]+)<\/text>/);
-      const nomeAss = match ? decodeURIComponent(match[1]) : '';
+      const base64 = a.contrato_assinatura.replace('data:image/svg+xml;base64,', '');
+      const svgDecoded = atob(base64);
+      const match = svgDecoded.match(/text-anchor="middle">([^<]+)<\/text>/);
+      const nomeAss = match ? match[1] : '';
       if (nomeAss) {
-        pdf.setFont('helvetica', 'bolditalic');
+        pdf.setFont('times', 'bolditalic');
         pdf.setFontSize(32);
         const nomeLinhas = pdf.splitTextToSize(nomeAss, maxW);
         pdf.text(nomeLinhas, margin, y);
