@@ -182,15 +182,6 @@ let contratoDesenhando = false;
   canvas.addEventListener('touchmove',  draw,      { passive: false });
   canvas.addEventListener('touchend',   endDraw);
 
-  document.getElementById('btnLimparContrato').addEventListener('click', () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    contratoDesenhou = false;
-    placeholder.style.display = '';
-    wrap.style.borderColor = '#2a2a2a';
-    verificarBotaoContrato();
-  });
-}
-
 function verificarBotaoContrato() {
   const leu = document.getElementById('chkContratoLeitura').checked;
   document.getElementById('btnAssinarContrato').disabled = !(leu && contratoDesenhou);
