@@ -105,6 +105,7 @@ function dataAtualBR() {
 }
 
 function preencherTextoContrato(a) {
+  const nomeAluno = a.nome_aluno || a.nome || '—';  // ← ADICIONE
   const endereco = [a.rua||'', a.numero||'', a.bairro||'', a.cidade||'', a.estado||''].filter(Boolean).join(', ') || '—';
   const cpf      = a.cpf || '—';
   const plano    = a.plano || '—';
@@ -115,9 +116,9 @@ function preencherTextoContrato(a) {
 
   const campo = (v) => `<span style="background:#222;border-radius:4px;padding:1px 6px;color:#f39c12;font-weight:700;">${v}</span>`;
 
-  return `
+ return `
     <p style="font-weight:900;text-align:center;color:#fff;margin-bottom:14px;">CONTRATO DE PRESTAÇÃO DE SERVIÇOS</p>
-    <p>Pelo presente instrumento particular, de um lado, <strong>RIVA BJJ BRAZILIAN JIU JITSU LTDA</strong>, CNPJ 66.256.625/0001-27, e de outro lado, ${campo(a.nome_aluno||'—')}, CPF ${campo(cpf)}, residente em ${campo(endereco)}, aqui denominado(a) <strong>CONTRATANTE</strong>.</p>
+    <p>Pelo presente instrumento particular, de um lado, <strong>RIVA BJJ BRAZILIAN JIU JITSU LTDA</strong>, CNPJ 66.256.625/0001-27, e de outro lado, ${campo(nomeAluno)}, CPF ${campo(cpf)}, residente em ${campo(endereco)}, aqui denominado(a) <strong>CONTRATANTE</strong>.</p>
     <p><strong>Cláusula Primeira – Dos Planos:</strong> Plano: ${campo(plano)} &nbsp; Valor: ${campo(valor)} &nbsp; Início: ${campo(inicioFmt)}</p>
     <p>Parágrafo único – Não haverá reposição de aula, exceto em caso de justificativa médica ou falta da CONTRATADA.</p>
     <p><strong>Cláusula Segunda – Dos Valores:</strong> Pagamento mensal via cartão de crédito ou Pix. Poderá sofrer reajustes a critério da CONTRATADA.</p>
@@ -211,17 +212,18 @@ function formatTimestamp(ts) {
 // login: search alunos then professores by email
 async function fbLogin(email) {
   try {
-    // Check alunos
+  // Check alunos
     const alunosQ = query(collection(db, 'alunos'), where('email', '==', email));
     const alunosSnap = await getDocs(alunosQ);
     if (!alunosSnap.empty) {
       const docData = alunosSnap.docs[0].data();
-            return {
+      return {
         ok: true,
         tipo: 'aluno',
         data: {
           id:             alunosSnap.docs[0].id,
           nome:           docData.nome_aluno || '',
+          nome_aluno:     docData.nome_aluno || '',
           faixa:          docData.faixa || '',
           grau:           docData.grau_atual ?? 0,
           dataGrau:       docData.data_ultimo_grau || '',
@@ -233,6 +235,18 @@ async function fbLogin(email) {
           email:          docData.email || email,
           foto_url:       docData.foto_url || '',
           contrato_assinado: docData.contrato_assinado || false,
+          cpf:            docData.cpf || '',
+          plano:          docData.plano || '',
+          rua:            docData.rua || '',
+          numero:         docData.numero || '',
+          bairro:         docData.bairro || '',
+          cidade:         docData.cidade || '',
+          estado:         docData.estado || '',
+          data_contrato:  docData.data_contrato || '',
+          data_inicio:    docData.data_inicio || '',
+          categoria:      docData.categoria || '',
+          resp_nome:      docData.resp_nome || '',
+          resp_cpf:       docData.resp_cpf || '',
         }
       };
     }
