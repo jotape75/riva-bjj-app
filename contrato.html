@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#c0392b" />
+  <title>Contrato – Riva BJJ</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --red: #c0392b;
+      --bg: #0f0f0f;
+      --card: #1a1a1a;
+      --border: #2a2a2a;
+      --text: #fff;
+    }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; min-height: 100vh; }
+    .page { max-width: 600px; margin: 0 auto; padding: 24px 16px 60px; }
+
+    .logo-wrap { text-align: center; margin-bottom: 24px; }
+    .logo-wrap img { width: 80px; height: 80px; border-radius: 50%; }
+
+    h1 { font-size: 20px; font-weight: 900; text-align: center; margin-bottom: 6px; }
+    .subtitle { font-size: 13px; color: #aaa; text-align: center; margin-bottom: 24px; }
+
+    /* Contrato */
+    .contrato-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 16px;
+      margin-bottom: 20px;
+      max-height: 50vh;
+      overflow-y: auto;
+      font-size: 13px;
+      line-height: 1.7;
+      color: #ddd;
+    }
+    .contrato-box h2 { font-size: 15px; font-weight: 900; color: #fff; text-align: center; margin-bottom: 16px; }
+    .contrato-box p  { margin-bottom: 12px; }
+    .contrato-box strong { color: #fff; }
+    .contrato-box .campo { background: #222; border-radius: 4px; padding: 1px 6px; color: #f39c12; font-weight: 700; }
+    .clausula { font-weight: 900; color: #fff; margin-bottom: 4px; display: block; }
+
+    /* Scroll indicator */
+    .scroll-hint { font-size: 12px; color: #aaa; text-align: center; margin-bottom: 12px; }
+
+    /* Checkbox leitura */
+    .check-leitura { display: flex; align-items: flex-start; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 20px; cursor: pointer; }
+    .check-leitura input { width: 18px; height: 18px; accent-color: var(--red); flex-shrink: 0; margin-top: 2px; }
+    .check-leitura span { font-size: 13px; color: #ddd; line-height: 1.5; }
+
+    /* Canvas assinatura */
+    .assinatura-wrap { margin-bottom: 20px; }
+    .assinatura-label { font-size: 13px; color: #aaa; margin-bottom: 8px; display: block; }
+    .canvas-container {
+      background: #fff;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    .canvas-container.ativo { border-color: var(--red); }
+    canvas { display: block; width: 100%; touch-action: none; cursor: crosshair; }
+    .canvas-placeholder {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; color: #aaa; pointer-events: none;
+    }
+    .btn-limpar {
+      background: transparent; border: 1px solid var(--border); color: #aaa;
+      border-radius: 8px; padding: 6px 14px; font-size: 13px; cursor: pointer;
+      margin-top: 8px;
+    }
+    .btn-limpar:active { opacity: .75; }
+
+    /* Botão confirmar */
+    .btn-assinar {
+      width: 100%; padding: 16px; border: none; border-radius: 12px;
+      background: var(--red); color: #fff; font-size: 17px; font-weight: 900;
+      cursor: pointer; margin-bottom: 12px;
+    }
+    .btn-assinar:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-assinar:active { opacity: .85; }
+
+    .msg-err  { color: #e74c3c; font-size: 13px; text-align: center; margin-bottom: 8px; min-height: 18px; }
+    .msg-info { color: #aaa;    font-size: 13px; text-align: center; margin-bottom: 8px; min-height: 18px; }
+
+    /* Sucesso */
+    .sucesso-wrap { text-align: center; padding: 40px 20px; display: none; }
+    .sucesso-icon { font-size: 64px; margin-bottom: 16px; }
+    .sucesso-titulo { font-size: 22px; font-weight: 900; color: #2ecc71; margin-bottom: 8px; }
+    .sucesso-sub    { font-size: 15px; color: #aaa; line-height: 1.6; }
+
+    /* Expirado / erro */
+    .erro-wrap { text-align: center; padding: 60px 20px; display: none; }
+    .erro-icon   { font-size: 56px; margin-bottom: 16px; }
+    .erro-titulo { font-size: 20px; font-weight: 900; color: #e74c3c; margin-bottom: 8px; }
+    .erro-sub    { font-size: 14px; color: #aaa; }
+
+    /* Loading */
+    .loading-wrap { text-align: center; padding: 60px 20px; }
+    .loading-wrap p { color: #aaa; font-size: 15px; margin-top: 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { width: 36px; height: 36px; border: 3px solid #333; border-top-color: var(--red); border-radius: 50%; animation: spin .8s linear infinite; display: inline-block; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <div class="logo-wrap">
+    <img src="./logo.png" alt="Riva BJJ" />
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-wrap" id="loadingWrap">
+    <div class="spinner"></div>
+    <p>Carregando contrato…</p>
+  </div>
+
+  <!-- Erro / expirado -->
+  <div class="erro-wrap" id="erroWrap">
+    <div class="erro-icon">⚠️</div>
+    <div class="erro-titulo" id="erroTitulo">Link inválido</div>
+    <div class="erro-sub"   id="erroSub">Este link de assinatura não é válido ou já expirou.</div>
+  </div>
+
+  <!-- Sucesso -->
+  <div class="sucesso-wrap" id="sucessoWrap">
+    <div class="sucesso-icon">✅</div>
+    <div class="sucesso-titulo">Contrato assinado!</div>
+    <div class="sucesso-sub">O contrato foi assinado com sucesso.<br>Guarde este comprovante.</div>
+  </div>
+
+  <!-- Contrato -->
+  <div id="contratoWrap" style="display:none;">
+    <h1>Contrato de Prestação de Serviços</h1>
+    <p class="subtitle">Leia o contrato abaixo e assine digitalmente</p>
+
+    <div class="contrato-box" id="contratoBox">
+      <h2>CONTRATO DE PRESTAÇÃO DE SERVIÇOS</h2>
+
+      <p>Pelo presente instrumento particular, de um lado, <strong>RIVA BJJ BRAZILIAN JIU JITSU LTDA</strong>, com sede na Rua Jose Ramos, nº 4181, Loja 07, Parque Barnabé, Indaiatuba/SP, inscrita no CNPJ/MF sob nº 66.256.625/0001-27, aqui denominada simplesmente <strong>CONTRATADA</strong>, e de outro lado, <span class="campo" id="c-nome">—</span>, inscrito(a) no CPF/MF sob o nº <span class="campo" id="c-cpf">—</span>, residente e domiciliado(a) na <span class="campo" id="c-endereco">—</span>, aqui denominado(a) simplesmente <strong>CONTRATANTE</strong>, fica ajustada a prestação de serviços específicos na área de preparação física, onde serão ministradas aulas de acordo com as cláusulas abaixo especificadas:</p>
+
+      <p><span class="clausula">Cláusula Primeira – Dos Planos:</span> As aulas terão frequência mínima de 02 aulas semanais, com planos mensais, recorrentes e anuais. Conforme opção contratada e firmada abaixo:</p>
+
+      <p>Plano contratado: <span class="campo" id="c-plano">—</span> &nbsp;&nbsp; Valor: <span class="campo" id="c-valor">—</span> &nbsp;&nbsp; Início em: <span class="campo" id="c-inicio">—</span></p>
+
+      <p>Parágrafo único – Não haverá reposição e/ou troca de aula, exceto em caso de justificativa médica comprovada ou falta por parte da CONTRATADA.</p>
+
+      <p><span class="clausula">Cláusula Segunda – Dos Valores:</span> O valor correspondente a cada plano será pago a vencer, de forma mensal, mediante débito automático em cartão de crédito ou Pix, de acordo com a tabela de preço que segue em anexo, que poderá sofrer variações e reajustes a critério da CONTRATADA, limitados às disposições legais.</p>
+
+      <p>Parágrafo único – Não será permitida qualquer espécie de cessão do presente contrato, transferência de créditos restantes ou do plano contratado.</p>
+
+      <p><span class="clausula">Cláusula Terceira – Do Prazo:</span> O presente contrato poderá ser renovado automaticamente.</p>
+
+      <p><span class="clausula">Cláusula Quarta – Da Rescisão:</span> O CONTRATANTE deverá comunicá-la com antecedência mínima de 30 (trinta) dias, sob pena de incidir o pagamento do mês vigente.</p>
+
+      <p>Parágrafo único – Não ocorrendo o aviso de rescisão, nem o comparecimento na aula seguinte ao vencimento do plano, o CONTRATANTE renuncia o horário de suas aulas.</p>
+
+      <p><span class="clausula">Cláusula Quinta – Do Termo de Responsabilidade:</span> O CONTRATANTE declara ter consultado médico de sua confiança, e estar apto para a prática de atividades físicas e esportivas de qualquer natureza, bem como, declara estar ciente de que deverá apresentar o respectivo atestado médico.</p>
+
+      <p>Parágrafo 1º – O CONTRATANTE se responsabiliza pela manutenção e cuidados de sua saúde, bem como, pelo uso de qualquer medicamento e/ou substância.</p>
+
+      <p>Parágrafo 2º – O CONTRATANTE deverá apresentar laudo médico caso seja portador de alguma deficiência ou enfermidade que imponha limitações à atividade física.</p>
+
+      <p>Parágrafo 3º – A validade do atestado médico e/ou laudo médico é de 01 (um) ano, sendo necessária sua renovação.</p>
+
+      <p><span class="clausula">Cláusula Sexta – Dos Danos e Acidentes:</span> O CONTRATANTE se obriga a observar estrita e exclusivamente as orientações dos profissionais da CONTRATADA para a prática das atividades físicas. A CONTRATADA não se responsabiliza por danos físicos resultantes da inobservância do CONTRATANTE às suas orientações.</p>
+
+      <p><span class="clausula">Cláusula Sétima – Da Imagem:</span> A CONTRATADA poderá utilizar-se da imagem do CONTRATANTE para fins exclusivos de divulgação da Academia e suas atividades, podendo reproduzi-la ou divulgá-la junto à Internet, redes sociais e demais meios de comunicação.</p>
+
+      <p><span class="clausula">Cláusula Oitava – Dos Danos Causados:</span> O CONTRATANTE se obriga a ressarcir a CONTRATADA por qualquer dano causado por ele, por dolo ou culpa, em até 48 horas após a constatação do evento.</p>
+
+      <p><span class="clausula">Cláusula Nona – Dos Armários, Objetos e Pertences:</span> A CONTRATADA disponibiliza aos seus usuários guarda-volumes e/ou armários, que deverão ser esvaziados diariamente. A CONTRATADA não se responsabiliza pelos objetos deixados no interior dos armários.</p>
+
+      <p><span class="clausula">Cláusula Décima – Do Estacionamento:</span> O estacionamento é gratuito e de uso exclusivo dos CONTRATANTES. A CONTRATADA não se responsabiliza por roubos, furtos ou danos de veículos.</p>
+
+      <p><span class="clausula">Cláusula Décima Primeira – Do Foro:</span> As partes elegem o foro da cidade de Indaiatuba/SP para dirimir eventual entrave decorrente do presente contrato.</p>
+
+      <p style="margin-top:16px;text-align:center;">Indaiatuba, <span class="campo" id="c-data">—</span></p>
+    </div>
+
+    <p class="scroll-hint">↑ Role para cima para ler o contrato completo</p>
+
+    <label class="check-leitura">
+      <input type="checkbox" id="chkLeitura" />
+      <span>Li e concordo com todos os termos do contrato acima.</span>
+    </label>
+
+    <div class="assinatura-wrap">
+      <span class="assinatura-label" id="assinaturaLabel">✍️ Assine abaixo com o dedo:</span>
+      <div class="canvas-container" id="canvasContainer">
+        <canvas id="canvasAssinatura" height="160"></canvas>
+        <div class="canvas-placeholder" id="canvasPlaceholder">Toque aqui para assinar</div>
+      </div>
+      <button class="btn-limpar" id="btnLimpar">🗑️ Limpar assinatura</button>
+    </div>
+
+    <p class="msg-err"  id="msgErr"></p>
+    <p class="msg-info" id="msgInfo"></p>
+
+    <button class="btn-assinar" id="btnAssinar" disabled>✅ Confirmar Assinatura</button>
+  </div>
+
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+  import { getFirestore, doc, getDoc, updateDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDj9SIhTF4-8oun-eACP179aUjSpMAR3So",
+    authDomain: "rivabjj-a477b.firebaseapp.com",
+    projectId: "rivabjj-a477b",
+    storageBucket: "rivabjj-a477b.firebasestorage.app",
+    messagingSenderId: "196632623313",
+    appId: "1:196632623313:web:9a7a3c1fee0795d7302df0"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  // ── Helpers ────────────────────────────────────────────────
+  function show(id) { document.getElementById(id).style.display = ''; }
+  function hide(id) { document.getElementById(id).style.display = 'none'; }
+
+  function formatarData(val) {
+    if (!val) return '—';
+    if (/^\d{4}-\d{2}-\d{2}/.test(val)) {
+      const [y,m,d] = val.split('-');
+      return `${d}/${m}/${y}`;
+    }
+    return val;
+  }
+
+  function valorDePlano(plano) {
+    if (!plano) return '—';
+    const p = plano.toLowerCase();
+    if (p.includes('recorrente')) return 'R$ 200,00/mês';
+    if (p.includes('semestral'))  return 'R$ 220,00/mês';
+    if (p.includes('mensal'))     return 'R$ 240,00/mês';
+    return '—';
+  }
+
+  function dataAtualBR() {
+    const d = new Date();
+    const dia  = String(d.getDate()).padStart(2,'0');
+    const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+    return `${dia} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
+  }
+
+  // ── Pegar token da URL ─────────────────────────────────────
+  const params = new URLSearchParams(location.search);
+  const token  = params.get('token');
+
+  let alunoId   = null;
+  let alunoData = null;
+  let assinado  = false;
+
+  async function init() {
+    if (!token) { mostrarErro('Link inválido', 'Este link não contém um token de assinatura válido.'); return; }
+
+    try {
+      // Busca aluno pelo token
+      const q = query(collection(db, 'alunos'), where('contrato_token', '==', token));
+      const snap = await getDocs(q);
+
+      if (snap.empty) { mostrarErro('Link inválido', 'Token não encontrado. Solicite um novo link.'); return; }
+
+      const docSnap = snap.docs[0];
+      alunoId   = docSnap.id;
+      alunoData = docSnap.data();
+
+      // Verificar se já assinou
+      if (alunoData.contrato_assinado) {
+        mostrarSucesso(); return;
+      }
+
+      // Verificar expiração (7 dias)
+      const expira = alunoData.contrato_token_expira;
+      if (expira) {
+        const expiraDate = expira.toDate ? expira.toDate() : new Date(expira);
+        if (new Date() > expiraDate) {
+          mostrarErro('Link expirado', 'Este link de assinatura expirou. Solicite um novo link à academia.');
+          return;
+        }
+      }
+
+      // Preencher contrato
+      preencherContrato(alunoData);
+      hide('loadingWrap');
+      show('contratoWrap');
+
+    } catch(e) {
+      mostrarErro('Erro ao carregar', 'Não foi possível carregar o contrato. Tente novamente.');
+    }
+  }
+
+  function preencherContrato(a) {
+    // Nome: responsável para menores, aluno para adultos
+    const isResponsavel = ['Kids','Infantil','Juvenil'].includes(a.categoria);
+    const nome = isResponsavel ? (a.resp_nome || a.nome_aluno || '—') : (a.nome_aluno || '—');
+    const cpf  = isResponsavel ? (a.resp_cpf  || '—') : (a.cpf || '—');
+
+    const endereco = [a.rua, a.numero, a.bairro, a.cidade, a.estado].filter(Boolean).join(', ') || '—';
+
+    document.getElementById('c-nome').textContent    = nome;
+    document.getElementById('c-cpf').textContent     = cpf;
+    document.getElementById('c-endereco').textContent= endereco;
+    document.getElementById('c-plano').textContent   = a.plano || '—';
+    document.getElementById('c-valor').textContent   = valorDePlano(a.plano);
+    document.getElementById('c-inicio').textContent  = formatarData(a.data_contrato || a.data_inicio);
+    document.getElementById('c-data').textContent    = dataAtualBR();
+
+    if (isResponsavel) {
+      document.getElementById('assinaturaLabel').textContent = `✍️ Assinatura do Responsável (${nome}):`;
+    }
+  }
+
+  function mostrarErro(titulo, sub) {
+    hide('loadingWrap');
+    document.getElementById('erroTitulo').textContent = titulo;
+    document.getElementById('erroSub').textContent    = sub;
+    show('erroWrap');
+  }
+
+  function mostrarSucesso() {
+    hide('loadingWrap');
+    hide('contratoWrap');
+    show('sucessoWrap');
+  }
+
+  // ── Canvas de assinatura ───────────────────────────────────
+  const canvas    = document.getElementById('canvasAssinatura');
+  const ctx       = canvas.getContext('2d');
+  const container = document.getElementById('canvasContainer');
+  const placeholder = document.getElementById('canvasPlaceholder');
+  let desenhou    = false;
+  let desenhando  = false;
+
+  function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width  = rect.width  * window.devicePixelRatio;
+    canvas.height = rect.height * window.devicePixelRatio;
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth   = 2.5;
+    ctx.lineCap     = 'round';
+    ctx.lineJoin    = 'round';
+  }
+
+  window.addEventListener('resize', () => { if (!desenhou) resizeCanvas(); });
+  setTimeout(resizeCanvas, 100);
+
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    if (e.touches) {
+      return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+    }
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  function startDraw(e) {
+    e.preventDefault();
+    desenhando = true;
+    const pos = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+    if (!desenhou) {
+      desenhou = true;
+      placeholder.style.display = 'none';
+      container.classList.add('ativo');
+      verificarBotao();
+    }
+  }
+
+  function draw(e) {
+    if (!desenhando) return;
+    e.preventDefault();
+    const pos = getPos(e);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+  }
+
+  function endDraw(e) { desenhando = false; }
+
+  canvas.addEventListener('mousedown',  startDraw);
+  canvas.addEventListener('mousemove',  draw);
+  canvas.addEventListener('mouseup',    endDraw);
+  canvas.addEventListener('touchstart', startDraw, { passive: false });
+  canvas.addEventListener('touchmove',  draw,      { passive: false });
+  canvas.addEventListener('touchend',   endDraw);
+
+  document.getElementById('btnLimpar').addEventListener('click', () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    desenhou = false;
+    placeholder.style.display = '';
+    container.classList.remove('ativo');
+    verificarBotao();
+  });
+
+  // ── Checkbox leitura ───────────────────────────────────────
+  document.getElementById('chkLeitura').addEventListener('change', verificarBotao);
+
+  function verificarBotao() {
+    const leu     = document.getElementById('chkLeitura').checked;
+    const assinou = desenhou;
+    document.getElementById('btnAssinar').disabled = !(leu && assinou);
+  }
+
+  // ── Confirmar assinatura ───────────────────────────────────
+  document.getElementById('btnAssinar').addEventListener('click', async () => {
+    if (!alunoId) return;
+    document.getElementById('btnAssinar').disabled = true;
+    document.getElementById('msgInfo').textContent = 'Salvando assinatura…';
+    document.getElementById('msgErr').textContent  = '';
+
+    try {
+      // Exportar canvas como Base64
+      const assinaturaBase64 = canvas.toDataURL('image/png');
+      const agora = new Date().toISOString();
+
+      await updateDoc(doc(db, 'alunos', alunoId), {
+        contrato_assinado:    true,
+        contrato_assinado_em: agora,
+        contrato_assinatura:  assinaturaBase64,
+      });
+
+      document.getElementById('msgInfo').textContent = '';
+      mostrarSucesso();
+
+    } catch(e) {
+      document.getElementById('msgErr').textContent  = 'Erro ao salvar. Tente novamente.';
+      document.getElementById('msgInfo').textContent = '';
+      document.getElementById('btnAssinar').disabled = false;
+    }
+  });
+
+  init();
+</script>
+</body>
+</html>
