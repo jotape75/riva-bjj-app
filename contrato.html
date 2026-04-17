@@ -356,16 +356,6 @@
     const leu = document.getElementById('chkLeitura').checked;
     document.getElementById('btnAssinar').disabled = !(leu && assinou);
   }
-
-  // ── Checkbox leitura ───────────────────────────────────────
-  document.getElementById('chkLeitura').addEventListener('change', verificarBotao);
-
-  function verificarBotao() {
-    const leu     = document.getElementById('chkLeitura').checked;
-    const assinou = desenhou;
-    document.getElementById('btnAssinar').disabled = !(leu && assinou);
-  }
-
   // ── Confirmar assinatura ───────────────────────────────────
   document.getElementById('btnAssinar').addEventListener('click', async () => {
     if (!alunoId) return;
