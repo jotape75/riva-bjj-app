@@ -299,7 +299,7 @@
     }
 
     /* ── Modal ── */
-    function abrirModalAluno(a) {
+    async function abrirModalAluno(a) {
       alunoModalAtual = a;
       // Busca foto_url direto do Firestore se não tiver no cache
       if (!a.foto_url) {
