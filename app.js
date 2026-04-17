@@ -840,8 +840,8 @@ function afterBioSuccess(updateTs = true) {
     fbLogin(email)
       .then(r => { 
         if (r && r.ok) { 
-          alunoData = r.data; 
-          // Verificar contrato
+          alunoData = r.data;
+          preencherCard(alunoData); // ← ADICIONE ESTA LINHA
           if (!alunoData.contrato_assinado) {
             mostrarTelaContrato(alunoData);
           }
