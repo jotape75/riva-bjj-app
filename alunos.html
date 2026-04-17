@@ -202,23 +202,25 @@
     });
 
     async function carregarAlunos(forcar = false) {
-      if (cached) {
-        todosAlunos = cached;
-        setInfo('listInfo','');
-        renderListaFiltrada();
-        atualizarResumoAlunos();
-        // Busca fotos em background
-        getDocs(query(collection(db,'alunos'), orderBy('nome_aluno'))).then(snap => {
-          snap.docs.forEach(d => {
-            const fotoUrl = d.data().foto_url || '';
-            if (fotoUrl) {
-              const aluno = todosAlunos.find(a => a.id === d.id);
-              if (aluno) aluno.foto_url = fotoUrl;
-            }
-          });
+      if (!forcar) {
+        const cached = lerCacheAlunos();
+        if (cached) {
+          todosAlunos = cached;
+          setInfo('listInfo','');
           renderListaFiltrada();
-        }).catch(() => {});
-        return;
+          atualizarResumoAlunos();
+          getDocs(query(collection(db,'alunos'), orderBy('nome_aluno'))).then(snap => {
+            snap.docs.forEach(d => {
+              const fotoUrl = d.data().foto_url || '';
+              if (fotoUrl) {
+                const aluno = todosAlunos.find(a => a.id === d.id);
+                if (aluno) aluno.foto_url = fotoUrl;
+              }
+            });
+            renderListaFiltrada();
+          }).catch(() => {});
+          return;
+        }
       }
       setInfo('listInfo','Carregando alunos…');
       document.getElementById('listaAlunos').innerHTML = '';
