@@ -950,10 +950,9 @@
         const upd = { asaas_id:resp.customerId||a.asaas_id, asaas_cobranca_id:resp.cobranca_id||'', asaas_tipo:resp.tipo||'avista', asaas_paymentLink:resp.paymentLink||'' };
         await updateDoc(doc(db,'alunos',alunoId), upd);
         const idx = todosRegistros.findIndex(r => r.id === alunoId);
-        if (idx >= 0) Object.assign(todosRegistros[idx], upd);{
+        if (idx >= 0) Object.assign(todosRegistros[idx], upd);
           renderListaFiltrada();
           alert('✅ Cobrança gerada!');
-        }
       } catch(e) { alert('Erro: '+e.message); }
     };
 
