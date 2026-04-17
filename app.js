@@ -105,7 +105,7 @@ function dataAtualBR() {
 }
 
 function preencherTextoContrato(a) {
-  const nomeAluno = a.nome_aluno || a.nome || '—';  // ← ADICIONE
+  const nomeAluno = a.nome_aluno || a.nome || '—';
   const endereco = [a.rua||'', a.numero||'', a.bairro||'', a.cidade||'', a.estado||''].filter(Boolean).join(', ') || '—';
   const cpf      = a.cpf || '—';
   const plano    = a.plano || '—';
@@ -113,24 +113,32 @@ function preencherTextoContrato(a) {
   const inicio   = a.data_contrato || a.data_inicio || '';
   const inicioFmt = inicio ? (() => { const [y,m,d] = inicio.split('-'); return `${d}/${m}/${y}`; })() : '—';
   const data     = dataAtualBR();
-
   const campo = (v) => `<span style="background:#222;border-radius:4px;padding:1px 6px;color:#f39c12;font-weight:700;">${v}</span>`;
 
- return `
+  return `
     <p style="font-weight:900;text-align:center;color:#fff;margin-bottom:14px;">CONTRATO DE PRESTAÇÃO DE SERVIÇOS</p>
-    <p>Pelo presente instrumento particular, de um lado, <strong>RIVA BJJ BRAZILIAN JIU JITSU LTDA</strong>, CNPJ 66.256.625/0001-27, e de outro lado, ${campo(nomeAluno)}, CPF ${campo(cpf)}, residente em ${campo(endereco)}, aqui denominado(a) <strong>CONTRATANTE</strong>.</p>
-    <p><strong>Cláusula Primeira – Dos Planos:</strong> Plano: ${campo(plano)} &nbsp; Valor: ${campo(valor)} &nbsp; Início: ${campo(inicioFmt)}</p>
-    <p>Parágrafo único – Não haverá reposição de aula, exceto em caso de justificativa médica ou falta da CONTRATADA.</p>
-    <p><strong>Cláusula Segunda – Dos Valores:</strong> Pagamento mensal via cartão de crédito ou Pix. Poderá sofrer reajustes a critério da CONTRATADA.</p>
-    <p><strong>Cláusula Terceira – Do Prazo:</strong> O contrato poderá ser renovado automaticamente.</p>
-    <p><strong>Cláusula Quarta – Da Rescisão:</strong> Comunicar com 30 dias de antecedência, sob pena de pagamento do mês vigente.</p>
-    <p><strong>Cláusula Quinta – Do Termo de Responsabilidade:</strong> O CONTRATANTE declara estar apto para atividades físicas e compromete-se a apresentar atestado médico.</p>
-    <p><strong>Cláusula Sexta – Dos Danos e Acidentes:</strong> A CONTRATADA não se responsabiliza por danos decorrentes da inobservância às orientações dos profissionais.</p>
-    <p><strong>Cláusula Sétima – Da Imagem:</strong> A CONTRATADA poderá utilizar a imagem do CONTRATANTE para divulgação da academia.</p>
-    <p><strong>Cláusula Oitava – Dos Danos Causados:</strong> O CONTRATANTE ressarcirá a CONTRATADA por danos causados em até 48 horas.</p>
-    <p><strong>Cláusula Nona – Dos Armários:</strong> A CONTRATADA não se responsabiliza por objetos deixados nos armários.</p>
-    <p><strong>Cláusula Décima – Do Estacionamento:</strong> A CONTRATADA não se responsabiliza por danos ou furtos de veículos.</p>
-    <p><strong>Cláusula Décima Primeira – Do Foro:</strong> Foro da cidade de Indaiatuba/SP.</p>
+    <p>Pelo presente instrumento particular, de um lado, <strong>RIVA BJJ BRAZILIAN JIU JITSU LTDA</strong>, com sede na Rua Jose Ramos, nº 4181, Loja 07, Parque Barnabé, Indaiatuba/SP, inscrita no CNPJ/MF sob nº 66.256.625/0001-27, aqui denominada simplesmente <strong>CONTRATADA</strong>, e de outro lado, ${campo(nomeAluno)}, inscrito(a) no CPF/MF sob o nº ${campo(cpf)}, residente e domiciliado(a) na ${campo(endereco)}, aqui denominado(a) simplesmente <strong>CONTRATANTE</strong>, fica ajustada a prestação de serviços específicos na área de preparação física, onde serão ministradas aulas de acordo com as cláusulas abaixo especificadas:</p>
+    <p><strong>Cláusula Primeira – Dos Planos:</strong> As aulas terão frequência mínima de 02 aulas semanais, com planos mensais, recorrentes e anuais. Plano: ${campo(plano)} &nbsp; Valor: ${campo(valor)} &nbsp; Início: ${campo(inicioFmt)}</p>
+    <p>Parágrafo único – Não haverá reposição e/ou troca de aula, exceto em caso de justificativa médica comprovada ou falta por parte da CONTRATADA. Nestes casos, o CONTRATANTE poderá repor a aula em horário que lhe seja conveniente, com prévia e expressa autorização da CONTRATADA.</p>
+    <p><strong>Cláusula Segunda – Dos Valores:</strong> O valor correspondente a cada plano será pago a vencer, de forma mensal, mediante débito automático em cartão de crédito ou Pix, de acordo com a tabela de preço que segue em anexo, que poderá sofrer variações e reajustes a critério da CONTRATADA, limitados às disposições legais.</p>
+    <p>Parágrafo único – Não será permitida qualquer espécie de cessão do presente contrato, transferência de créditos restantes ou do plano contratado, independente do grau de parentesco ou da relação existente com o CONTRATANTE.</p>
+    <p><strong>Cláusula Terceira – Do Prazo:</strong> O presente contrato poderá ser renovado automaticamente.</p>
+    <p>Parágrafo único – Quando da renovação, novos pagamentos deverão ser feitos de acordo com o plano escolhido.</p>
+    <p><strong>Cláusula Quarta – Da Rescisão:</strong> O CONTRATANTE deverá comunicá-la com antecedência mínima de 30 (trinta) dias, sob pena de incidir o pagamento do mês vigente.</p>
+    <p>Parágrafo único – Não ocorrendo o aviso de rescisão, nem o comparecimento na aula seguinte ao vencimento do plano, o CONTRATANTE renuncia o horário de suas aulas, facultando ao CONTRATADO disponibilização daquele horário.</p>
+    <p><strong>Cláusula Quinta – Do Termo de Responsabilidade:</strong> O CONTRATANTE declara ter consultado médico de sua confiança, e estar apto para a prática de atividades físicas e esportivas de qualquer natureza, bem como, declara estar ciente de que deverá apresentar o respectivo atestado médico.</p>
+    <p>Parágrafo 1º – O CONTRATANTE se responsabiliza pela manutenção e cuidados de sua saúde, bem como, pelo uso de qualquer medicamento e/ou substância que faça uso ou passe a utilizar, sob prescrição médica ou não.</p>
+    <p>Parágrafo 2º – O CONTRATANTE deverá apresentar também, caso seja portador de alguma deficiência ou enfermidade que imponha limitações à atividade física, laudo médico informando tal estado.</p>
+    <p>Parágrafo 3º – A validade do atestado médico e/ou laudo médico é de 01 (um) ano, sendo necessária sua renovação.</p>
+    <p><strong>Cláusula Sexta – Dos Danos e Acidentes:</strong> O CONTRATANTE se obriga a observar estrita e exclusivamente as orientações dos profissionais da CONTRATADA para a prática das atividades físicas.</p>
+    <p>Parágrafo único – A CONTRATADA não se responsabiliza por danos físicos de qualquer natureza resultantes da inobservância do CONTRATANTE às suas orientações, pelo acatamento à orientação de terceiros estranhos, ou ainda pelo uso inadequado dos aparelhos e equipamentos.</p>
+    <p><strong>Cláusula Sétima – Da Imagem:</strong> A CONTRATADA, livre de quaisquer ônus junto ao CONTRATANTE, poderá utilizar-se da sua imagem para fins exclusivos de divulgação da Academia e suas atividades, podendo reproduzi-la ou divulgá-la junto à Internet, redes sociais, jornais e todos os demais meios de comunicação público ou privado.</p>
+    <p>Parágrafo único – Em nenhuma hipótese poderá a imagem do CONTRATANTE ser utilizada de maneira contrária à moral ou aos bons costumes ou à ordem pública.</p>
+    <p><strong>Cláusula Oitava – Dos Danos Causados:</strong> O CONTRATANTE se obriga a ressarcir a CONTRATADA por qualquer dano causado por ele, por dolo ou culpa, em até 48 horas após a constatação do evento e sua consequente comunicação formal ao CONTRATANTE.</p>
+    <p><strong>Cláusula Nona – Dos Armários, Objetos e Pertences:</strong> A CONTRATADA disponibiliza aos seus usuários guarda-volumes e/ou armários, que deverão ser esvaziados diariamente. A CONTRATADA não se responsabiliza pelos objetos deixados no interior dos armários ou guarda-volumes.</p>
+    <p><strong>Cláusula Décima – Do Estacionamento:</strong> O estacionamento é gratuito e de uso exclusivo dos CONTRATANTES. A CONTRATADA não se responsabiliza por roubos, furtos, danos de veículos ou motos, ou por objetos deixados no interior deles.</p>
+    <p><strong>Cláusula Décima Primeira – Do Foro:</strong> As partes elegem o foro da cidade de Indaiatuba/SP, desprezando qualquer outro, por mais privilegiado que seja, para dirimir eventual entrave decorrente do presente contrato.</p>
+    <p>E por estarem justos e contratados, assinam o presente instrumento em 02 (duas) vias de igual teor.</p>
     <p style="text-align:center;margin-top:14px;">Indaiatuba, ${data}</p>
   `;
 }
