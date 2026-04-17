@@ -56,13 +56,26 @@
     </section>
 
     <section class="card hidden" id="cardAluno">
-      <div class="row">
-        <div>
-          <div class="name-row">
-            <div class="name" id="aNome">—</div>
+
+      <!-- Avatar + Nome + Ações -->
+      <div class="row" style="align-items:center; gap:14px;">
+
+        <!-- Avatar clicável -->
+        <div style="position:relative; flex-shrink:0; cursor:pointer;" onclick="document.getElementById('fotoInput').click()">
+          <div id="avatarCircle" style="width:62px;height:62px;border-radius:50%;background:#2a2a2a;border:2.5px solid var(--red);display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <img id="avatarImg" src="" alt="" style="width:62px;height:62px;object-fit:cover;display:none;" />
+            <span id="avatarInitials" style="font-size:22px;font-weight:900;color:var(--red);">—</span>
           </div>
-          <div class="badge">ATIVO</div>
+          <div style="position:absolute;bottom:0;right:0;width:20px;height:20px;background:var(--red);border-radius:50%;border:2px solid var(--card);display:flex;align-items:center;justify-content:center;font-size:11px;">✏️</div>
         </div>
+        <input type="file" id="fotoInput" accept="image/*" style="display:none;" />
+
+        <!-- Nome -->
+        <div style="flex:1;min-width:0;">
+          <div class="name" id="aNome" style="margin-bottom:0;">—</div>
+        </div>
+
+        <!-- Ações -->
         <div class="row-actions">
           <button class="btn-bell" id="btnBell" aria-label="Notificações">
             🔔
@@ -72,6 +85,7 @@
         </div>
       </div>
 
+      <!-- KV: Faixa, Grau, Último grau -->
       <div class="kv">
         <div class="k">Faixa</div><div class="v" id="aFaixa">—</div>
         <div class="k">Grau</div><div class="v" id="aGrau">—</div>
@@ -91,6 +105,7 @@
       </div>
 
       <div class="status" id="aStatus">—</div>
+
     </section>
 
     <!-- ── NOTIFICAÇÕES ───────────────────────────────────────── -->
