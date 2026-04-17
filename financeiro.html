@@ -664,16 +664,8 @@
           if (a.asaas_assinatura_id) acoes += '<button class="btn-acao cancelar" onclick="window._cancelar(\''+ie+'\')">❌ Cancelar Assinatura</button>';
           acoes += '<button class="btn-acao cartao" onclick="window._abrirCartao(\''+ie+'\')">💳 Cartão</button>';
         }
-        const tel = validarTelefone(a.resp_telefone || a.telefone);
         const primPag = a.primeiro_pagamento || '';
         const primPagConfirmado = primPag === 'pix_pago' || primPag === 'debito' || primPag === 'dinheiro';
-        if (a.asaas_id && !primPagConfirmado && tel) {
-          acoes += '<button class="btn-acao wpp" onclick="window._wppPix(\''+ie+'\')">📲 Gerar Pix 1º mês</button>';
-        }
-      } else if (a.plano === 'Mensal' || a.plano === 'Semestral') {
-        if (st !== 'pago') {
-          acoes += '<button class="btn-acao pix" onclick="window._confirmarPagManual(\''+ie+'\')">✅ Confirmar Pagamento</button>';
-        }
       }
 
       acoes += '<button class="btn-acao historico" onclick="window._historico(\''+ie+'\',\''+escAttr(a.nome||'')+'\')">📋 Histórico</button>';
@@ -964,79 +956,7 @@
     document.getElementById('btnFecharCartao').addEventListener('click', () => { fecharModalCartao(); renderListaFiltrada(); });
     document.getElementById('modalCartao').addEventListener('click', function(e) { if (e.target===this) fecharModalCartao(); });
 
-    // ── Pix WhatsApp ───────────────────────────────────────────
-    window._wppPix = async function(alunoId) {
-      await recarregarAluno(alunoId);
-      const a = todosRegistros.find(r => r.id === alunoId);
-      if (!a) return;
-      const tel = validarTelefone(a.telefone);
-      if (!tel) { alert('Telefone inválido.'); return; }
-      document.getElementById('pixWppNome').textContent        = a.nome||'';
-      document.getElementById('pixWppInfo').textContent        = 'Gerando cobrança Pix…';
-      document.getElementById('pixWppInfo').style.display      = '';
-      document.getElementById('pixWppResultado').style.display = 'none';
-      document.getElementById('pixWppErr').textContent         = '';
-      document.getElementById('modalPixWpp').classList.add('open');
-
-      function exibirQr(pixCopiaECola, pixQrCodeImage, paymentLink) {
-        document.getElementById('pixWppInfo').style.display = 'none';
-        document.getElementById('pixWppResultado').style.display = '';
-        const qrImg = document.getElementById('pixWppQrImg');
-        if (pixQrCodeImage) { qrImg.src='data:image/png;base64,'+pixQrCodeImage; qrImg.style.display=''; }
-        else qrImg.style.display='none';
-        document.getElementById('pixWppKey').textContent = pixCopiaECola || '(código não disponível)';
-        document.getElementById('btnCopiarPixWpp').onclick = function() {
-          navigator.clipboard.writeText(pixCopiaECola||'').then(()=>{this.textContent='✅ Copiado!';setTimeout(()=>{this.textContent='📋 Copiar código Pix';},2000);}).catch(()=>alert('Código Pix: '+pixCopiaECola));
-        };
-        document.getElementById('btnEnviarPixWpp').onclick = function() {
-          const aAtual = todosRegistros.find(r=>r.id===a.id)||a;
-          const nomeContato = aAtual.resp_nome || aAtual.nome;
-          const valor  = calcularValorFinal(aAtual).toFixed(2).replace('.',',');
-          const dataVenc = a.data_contrato ? formatData(a.data_contrato) : String(DIA_VENCIMENTO).padStart(2,'0')+'/'+String(mesSelecionado).padStart(2,'0')+'/'+anoSelecionado;
-          const msg = pixCopiaECola
-            ? 'Olá '+nomeContato+'! 😊\nSua mensalidade Riva BJJ de R$ '+valor+' foi gerada.\n\n📲 *Pague via Pix (copia e cola):*\n'+pixCopiaECola+'\n\nVencimento: '+dataVenc+'\nEm caso de dúvidas, estamos à disposição! 🥋'
-            : 'Olá '+nomeContato+'! 😊\nSua mensalidade Riva BJJ de R$ '+valor+' foi gerada.\nLink: '+(paymentLink||'')+'\nVencimento: '+dataVenc+'\nEm caso de dúvidas, estamos à disposição! 🥋';
-          window.open('https://wa.me/55'+tel+'?text='+encodeURIComponent(msg),'_blank');
-        };
-        renderListaFiltrada();
-      }
-
-      try {
-        if (a.asaas_cobranca_id) {
-          const respStatus = await gasCall('asaasStatus', { asaasId: a.asaas_cobranca_id, tipo: 'cobranca', mes: mesSelecionado, ano: anoSelecionado });
-          document.getElementById('pixWppInfo').style.display = 'none';
-          if (!respStatus.ok) { document.getElementById('pixWppErr').textContent='Erro: '+(respStatus.erro||'desconhecido'); return; }
-          exibirQr(respStatus.pixCopiaECola || '', respStatus.pixQrCodeImage || '', respStatus.invoiceUrl || a.asaas_paymentLink || '');
-          return;
-        }
-
-        const temDesc      = detectarDesconto(a);
-        const dataContrato = a.data_contrato || new Date().toISOString().slice(0,10);
-        const resp = await gasCall('asaasVincular', { 
-          alunoId: a.id, nome: a.nome, email: a.email, telefone: a.telefone, cpf: a.cpf, 
-          plano: a.plano, formaPag: 'PIX', grupoFamiliar: a.grupo_familiar, 
-          temDesconto: temDesc?'true':'false', dataContrato,
-          resp_nome: a.resp_nome || '', resp_email: a.resp_email || '',
-          resp_telefone: a.resp_telefone || '', resp_cpf: a.resp_cpf || ''
-        });
-        document.getElementById('pixWppInfo').style.display = 'none';
-        if (!resp.ok) { document.getElementById('pixWppErr').textContent='Erro: '+(resp.erro||'desconhecido'); return; }
-        const upd = { asaas_cobranca_id: resp.cobranca_id||'', asaas_paymentLink: resp.paymentLink||'' };
-        if (resp.customerId && !a.asaas_id) upd.asaas_id = resp.customerId;
-        await updateDoc(doc(db,'alunos',a.id), upd);
-        const idx = todosRegistros.findIndex(r => r.id === a.id);
-        if (idx >= 0) Object.assign(todosRegistros[idx], upd);
-        if (resp.pixCopiaECola) asaasStatusMap[a.id] = Object.assign(asaasStatusMap[a.id]||{}, { pixCopiaECola: resp.pixCopiaECola, invoiceUrl: resp.paymentLink||'' });
-        exibirQr(resp.pixCopiaECola || '', resp.pixQrCodeImage || '', resp.paymentLink || '');
-      } catch(e) {
-        document.getElementById('pixWppInfo').style.display='none';
-        document.getElementById('pixWppErr').textContent='Erro: '+e.message;
-      }
-    };
-
-    document.getElementById('btnFecharPixWpp').addEventListener('click', () => { document.getElementById('modalPixWpp').classList.remove('open'); });
-    document.getElementById('modalPixWpp').addEventListener('click', function(e) { if (e.target===this) this.classList.remove('open'); });
-
+    
     // ── Cobrar (mantido para compatibilidade futura) ───────────
     window._cobrar = async function(alunoId, formaPag) {
       await recarregarAluno(alunoId);
