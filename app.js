@@ -1953,18 +1953,33 @@ function init() {
   }
   // Contrato
   document.getElementById('chkContratoLeitura').addEventListener('change', verificarBotaoContrato);
-  ocument.getElementById('btnAssinarContrato').addEventListener('click', async () => {
+  document.getElementById('btnAssinarContrato').addEventListener('click', async () => {
   if (!alunoData) return;
   document.getElementById('btnAssinarContrato').disabled = true;
   document.getElementById('contratoInfo').textContent = 'Salvando assinatura…';
   try {
     await salvarAssinaturaContrato(alunoData);
 
-    // -- RECUPERAR do Firestore: --
+    // Reler do Firestore e normalizar campos (igual ao fbLogin)
     const snap = await getDoc(doc(db, 'alunos', alunoData.id));
     if (snap.exists()) {
-      alunoData = { id: snap.id, ...snap.data() };
-      preencherCard(alunoData); // <- agora preenche o card com nome/faixa/grau/contrato etc.
+      const d = snap.data();
+      alunoData = {
+        id:             snap.id,
+        nome:           d.nome_aluno || '',
+        faixa:          d.faixa || '',
+        grau:           d.grau_atual ?? 0,
+        dataGrau:       d.data_ultimo_grau || '',
+        status:         d.status || '',
+        statusExame:    d.statusExame || '',
+        aulasNoGrau:    d.aulas_no_grau ?? 0,
+        aulasRestantes: d.aulas_restantes ?? null,
+        metaGrau:       d.meta_grau ?? 0,
+        email:          d.email || alunoData.email,
+        foto_url:       d.foto_url || '',
+        contrato_assinado: d.contrato_assinado || false,
+      };
+      preencherCard(alunoData);
     }
 
     document.getElementById('contratoInfo').textContent = '';
@@ -1977,9 +1992,5 @@ function init() {
     document.getElementById('btnAssinarContrato').disabled = false;
   }
 });
-
-  // No session → show login
-  showTab('Home');
-}
 
 document.addEventListener('DOMContentLoaded', init);
