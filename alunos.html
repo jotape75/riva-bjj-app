@@ -313,7 +313,22 @@
         });
       });
     }
-
+    async function enviarContratoWhatsApp(a) {
+      const token  = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+      const expira = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      const tel    = (a.resp_telefone || a.telefone || '').replace(/\D/g,'');
+      if (!tel) { alert('Telefone do responsável não cadastrado.'); return; }
+      try {
+        await updateDoc(doc(db,'alunos',a.id), {
+          contrato_token:        token,
+          contrato_token_expira: expira,
+        });
+        const link = `https://rivabjj.com.br/contrato.html?token=${token}`;
+        const msg  = `Olá! 😊 Segue o link para assinar o contrato de matrícula de *${a.nome_aluno}* na Riva BJJ:\n\n${link}\n\nO link é válido por 7 dias.`;
+        window.open(`https://wa.me/55${tel}?text=${encodeURIComponent(msg)}`, '_blank');
+      } catch(e) { alert('Erro ao gerar link: ' + e.message); }
+    }
+    
     /* ── Modal ── */
     async function abrirModalAluno(a) {
       alunoModalAtual = a;
@@ -358,6 +373,9 @@
           <button class="btn-remover" id="modal-btnRemover-${id}">🗑️ Remover</button>
           <button class="btn-faixa"   id="modal-btnFaixa-${id}">Trocar Faixa</button>
           <button class="btn-toggle"  id="modal-btnToggle-${id}" data-status="${esc(a.status)}">${toggleLabel}</button>
+          ${(['Kids','Infantil','Juvenil'].includes(a.categoria) && !a.contrato_assinado) ? `
+            <button class="btn-editar" id="modal-btnContrato-${id}" style="background:#25D366;">📲 Enviar contrato</button>
+          ` : ''}
         </div>
 
         <!-- Trocar faixa -->
@@ -404,6 +422,19 @@
           <div class="detalhe-row"><span class="detalhe-label">Email</span><span class="detalhe-valor">${esc(a.resp_email||'—')}</span></div>
           <div class="detalhe-row"><span class="detalhe-label">Telefone</span><span class="detalhe-valor">${esc(a.resp_telefone||'—')}</span></div>
           ` : ''}
+          <div class="detalhe-row full-width" style="border-top:1px solid #2a2a2a;margin-top:8px;padding-top:8px;">
+          <span class="detalhe-label">Contrato</span>
+          <span class="detalhe-valor" id="modal-contrato-${id}">
+            ${a.contrato_assinado
+              ? `✅ Assinado em ${a.contrato_assinado_em ? new Date(a.contrato_assinado_em).toLocaleDateString('pt-BR') : '—'}`
+              : '⚠️ Não assinado'}
+          </span>
+        </div>
+        ${a.contrato_assinatura ? `
+        <div class="detalhe-row full-width">
+          <span class="detalhe-label">Assinatura</span>
+          <img src="${a.contrato_assinatura}" style="max-width:200px;border:1px solid #333;border-radius:8px;background:#fff;margin-top:4px;" />
+        </div>` : ''}
         </div>
 
         <!-- Editar inline -->
@@ -495,7 +526,10 @@
       document.getElementById(`modal-btnCancelarEdit-${id}`).addEventListener('click', () => {
         document.getElementById(`modal-editarArea-${id}`).style.display = 'none';
       });
-
+      const btnContrato = document.getElementById(`modal-btnContrato-${id}`);
+      if (btnContrato) {
+        btnContrato.addEventListener('click', () => enviarContratoWhatsApp(a));
+      }
       document.getElementById('modalAluno').classList.add('open');
     }
 
@@ -654,6 +688,7 @@
       if (/^\d{4}-\d{2}-\d{2}/.test(val)) { const p=val.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
       return val;
     }
+    
 
     document.getElementById('searchBox').addEventListener('input', async (e) => {
       const q = e.target.value.trim().toLowerCase();
