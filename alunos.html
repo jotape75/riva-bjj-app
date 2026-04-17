@@ -301,6 +301,14 @@
     /* ── Modal ── */
     function abrirModalAluno(a) {
       alunoModalAtual = a;
+      // Busca foto_url direto do Firestore se não tiver no cache
+      if (!a.foto_url) {
+        try {
+          const snap = await getDoc(doc(db, 'alunos', a.id));
+          if (snap.exists()) a.foto_url = snap.data().foto_url || '';
+        } catch(e) {}
+      }
+    
       const id = esc(String(a.id));
       const box = document.getElementById('modalAlunoBox');
 
