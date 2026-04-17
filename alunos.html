@@ -782,19 +782,19 @@
       y += 8;
     
       const clausulas = [
-        ['Cláusula Primeira – Dos Planos', 'Frequência mínima de 02 aulas semanais. Não haverá reposição exceto por justificativa médica ou falta da CONTRATADA.'],
-        ['Cláusula Segunda – Dos Valores', 'Pagamento mensal via cartão de crédito ou Pix. Poderá sofrer reajustes a critério da CONTRATADA.'],
-        ['Cláusula Terceira – Do Prazo', 'O contrato poderá ser renovado automaticamente.'],
-        ['Cláusula Quarta – Da Rescisão', 'Comunicar com 30 dias de antecedência, sob pena de pagamento do mês vigente.'],
-        ['Cláusula Quinta – Do Termo de Responsabilidade', 'O CONTRATANTE declara estar apto para atividades físicas e compromete-se a apresentar atestado médico.'],
-        ['Cláusula Sexta – Dos Danos e Acidentes', 'A CONTRATADA não se responsabiliza por danos decorrentes da inobservância às orientações dos profissionais.'],
-        ['Cláusula Sétima – Da Imagem', 'A CONTRATADA poderá utilizar a imagem do CONTRATANTE para divulgação da academia.'],
-        ['Cláusula Oitava – Dos Danos Causados', 'O CONTRATANTE ressarcirá a CONTRATADA por danos causados em até 48 horas.'],
-        ['Cláusula Nona – Dos Armários', 'A CONTRATADA não se responsabiliza por objetos deixados nos armários.'],
-        ['Cláusula Décima – Do Estacionamento', 'A CONTRATADA não se responsabiliza por danos ou furtos de veículos.'],
-        ['Cláusula Décima Primeira – Do Foro', 'Foro da cidade de Indaiatuba/SP.'],
+        ['Cláusula Primeira – Dos Planos', 'As aulas terão frequência mínima de 02 aulas semanais, com planos mensais, recorrentes e anuais. Não haverá reposição e/ou troca de aula, exceto em caso de justificativa médica comprovada ou falta por parte da CONTRATADA. Nestes casos, o CONTRATANTE poderá repor a aula em horário que lhe seja conveniente, com prévia e expressa autorização da CONTRATADA.'],
+        ['Cláusula Segunda – Dos Valores', 'O valor correspondente a cada plano será pago a vencer, de forma mensal, mediante débito automático em cartão de crédito ou Pix, de acordo com a tabela de preço que segue em anexo, que poderá sofrer variações e reajustes a critério da CONTRATADA, limitados às disposições legais. Não será permitida qualquer espécie de cessão do presente contrato, transferência de créditos restantes ou do plano contratado, independente do grau de parentesco ou da relação existente com o CONTRATANTE.'],
+        ['Cláusula Terceira – Do Prazo', 'O presente contrato poderá ser renovado automaticamente. Quando da renovação, novos pagamentos deverão ser feitos de acordo com o plano escolhido.'],
+        ['Cláusula Quarta – Da Rescisão', 'O CONTRATANTE deverá comunicá-la com antecedência mínima de 30 (trinta) dias, sob pena de incidir o pagamento do mês vigente. Não ocorrendo o aviso de rescisão, nem o comparecimento na aula seguinte ao vencimento do plano, o CONTRATANTE renuncia o horário de suas aulas, facultando ao CONTRATADO disponibilização daquele horário.'],
+        ['Cláusula Quinta – Do Termo de Responsabilidade', 'O CONTRATANTE declara ter consultado médico de sua confiança, e estar apto para a prática de atividades físicas e esportivas de qualquer natureza, bem como, declara estar ciente de que deverá apresentar o respectivo atestado médico. O CONTRATANTE se responsabiliza pela manutenção e cuidados de sua saúde, bem como, pelo uso de qualquer medicamento e/ou substância. A validade do atestado médico e/ou laudo médico é de 01 (um) ano, sendo necessária sua renovação.'],
+        ['Cláusula Sexta – Dos Danos e Acidentes', 'O CONTRATANTE se obriga a observar estrita e exclusivamente as orientações dos profissionais da CONTRATADA para a prática das atividades físicas. A CONTRATADA não se responsabiliza por danos físicos de qualquer natureza resultantes da inobservância do CONTRATANTE às suas orientações, pelo acatamento à orientação de terceiros estranhos, ou ainda pelo uso inadequado dos aparelhos e equipamentos.'],
+        ['Cláusula Sétima – Da Imagem', 'A CONTRATADA, livre de quaisquer ônus junto ao CONTRATANTE, poderá utilizar-se da sua imagem para fins exclusivos de divulgação da Academia e suas atividades, podendo reproduzi-la ou divulgá-la junto à Internet, redes sociais, jornais e todos os demais meios de comunicação público ou privado. Em nenhuma hipótese poderá a imagem do CONTRATANTE ser utilizada de maneira contrária à moral ou aos bons costumes ou à ordem pública.'],
+        ['Cláusula Oitava – Dos Danos Causados', 'O CONTRATANTE se obriga a ressarcir a CONTRATADA por qualquer dano causado por ele, por dolo ou culpa, em até 48 horas após a constatação do evento e sua consequente comunicação formal ao CONTRATANTE.'],
+        ['Cláusula Nona – Dos Armários, Objetos e Pertences', 'A CONTRATADA disponibiliza aos seus usuários guarda-volumes e/ou armários, que deverão ser esvaziados diariamente. A CONTRATADA não se responsabiliza pelos objetos deixados no interior dos armários ou guarda-volumes, sendo a guarda, segurança e zelo dos pertences de inteira responsabilidade de seus proprietários.'],
+        ['Cláusula Décima – Do Estacionamento', 'O estacionamento é gratuito e de uso exclusivo dos CONTRATANTES, não sendo permitido deixar veículos estacionados sem que o usuário esteja na academia. A CONTRATADA não se responsabiliza por roubos, furtos, danos de veículos ou motos, ou por objetos deixados no interior deles.'],
+        ['Cláusula Décima Primeira – Do Foro', 'As partes elegem o foro da cidade de Indaiatuba/SP, desprezando qualquer outro, por mais privilegiado que seja, para dirimir eventual entrave decorrente do presente contrato.'],
       ];
-    
+          
       clausulas.forEach(([titulo, texto]) => {
         if (y > 260) { pdf.addPage(); y = 20; }
         pdf.setFont('helvetica', 'bold');
