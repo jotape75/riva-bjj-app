@@ -830,7 +830,7 @@
 
   if (a.contrato_assinatura) {
     try {
-      cconst match = a.contrato_assinatura.match(/text-anchor="middle">([^<]+)<\/text>/);
+      const match = a.contrato_assinatura.match(/text-anchor="middle">([^<]+)<\/text>/);
       const nomeAss = match ? decodeURIComponent(match[1]) : '';
       if (nomeAss) {
         pdf.setFont('helvetica', 'bolditalic');
