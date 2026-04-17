@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet" />
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#c0392b" />
@@ -115,13 +116,15 @@
         <span style="font-size:13px;color:#ddd;line-height:1.5;">Li e concordo com todos os termos do contrato.</span>
       </label>
     
-      <span style="font-size:13px;color:#aaa;display:block;margin-bottom:8px;">✍️ Assine abaixo com o dedo:</span>
-      <div id="contratoCanvasWrap" style="background:#fff;border-radius:12px;border:2px solid #2a2a2a;position:relative;overflow:hidden;margin-bottom:8px;">
-        <canvas id="contratoCanvas" height="160" style="display:block;width:100%;touch-action:none;cursor:crosshair;"></canvas>
-        <div id="contratoCanvasPlaceholder" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;color:#aaa;pointer-events:none;">Toque aqui para assinar</div>
-      </div>
-      <button id="btnLimparContrato" class="btn ghost" style="width:auto;padding:8px 16px;font-size:13px;margin-bottom:16px;">🗑️ Limpar</button>
-    
+      <span style="font-size:13px;color:#aaa;display:block;margin-bottom:8px;">✍️ Digite seu nome para assinar:</span>
+      <input type="text" id="contratoInputAssinatura" placeholder="Digite seu nome completo"
+        style="width:100%;padding:14px;font-size:16px;border-radius:12px;border:2px solid #2a2a2a;
+        background:#1a1a1a;color:#fff;outline:none;margin-bottom:10px;" />
+      <div style="background:#fff;border-radius:12px;border:2px solid #2a2a2a;min-height:70px;
+        display:flex;align-items:center;justify-content:center;padding:10px 20px;margin-bottom:16px;">
+        <span id="contratoTextoAssinatura" style="font-family:'Dancing Script',cursive;
+          font-size:32px;color:#1a1a1a;">—</span>
+      </div>    
       <p class="msg err"  id="contratoErr"></p>
       <p class="msg info" id="contratoInfo"></p>
     
