@@ -137,12 +137,6 @@ function preencherTextoContrato(a) {
 let contratoDesenhou  = false;
 let contratoDesenhando = false;
 
-function iniciarCanvasContrato() {
-  const canvas      = document.getElementById('contratoCanvas');
-  const ctx         = canvas.getContext('2d');
-  const placeholder = document.getElementById('contratoCanvasPlaceholder');
-  const wrap        = document.getElementById('contratoCanvasWrap');
-
   function resize() {
     const rect = canvas.getBoundingClientRect();
     canvas.width  = rect.width  * window.devicePixelRatio;
