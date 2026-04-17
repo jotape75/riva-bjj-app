@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#c0392b" />
   <title>Alunos – Riva BJJ</title>
@@ -438,6 +439,11 @@
           <span class="detalhe-label">Assinatura</span>
           <img src="${a.contrato_assinatura}" style="max-width:200px;border:1px solid #333;border-radius:8px;background:#fff;margin-top:4px;" />
         </div>` : ''}
+        ${a.contrato_assinado ? `
+        <div class="detalhe-row full-width" style="margin-top:8px;">
+          <button class="btn-faixa" style="background:#27ae60;font-size:12px;padding:6px 14px;"
+            onclick="window.baixarContrato('${id}')">📄 Baixar Contrato PDF</button>
+        </div>` : ''}
         </div>
 
         <!-- Editar inline -->
@@ -722,6 +728,124 @@
       sessionStorage.removeItem(TOKEN_KEY);
       location.href = './administrativo.html';
     });
+    window.baixarContrato = function(id) {
+      const a = todosAlunos.find(a => a.id === id);
+      if (!a) return;
+    
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    
+      const margin = 20;
+      const pageW  = 210;
+      const maxW   = pageW - margin * 2;
+      let y = 20;
+    
+      // Cabeçalho
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(14);
+      pdf.text('CONTRATO DE PRESTAÇÃO DE SERVIÇOS', pageW / 2, y, { align: 'center' });
+      y += 6;
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      pdf.text('Riva BJJ Brazilian Jiu Jitsu Ltda — CNPJ 66.256.625/0001-27', pageW / 2, y, { align: 'center' });
+      y += 10;
+    
+      // Linha separadora
+      pdf.setDrawColor(180);
+      pdf.line(margin, y, pageW - margin, y);
+      y += 8;
+    
+      // Dados do contratante
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(10);
+      pdf.text('DADOS DO CONTRATANTE', margin, y);
+      y += 6;
+      pdf.setFont('helvetica', 'normal');
+    
+      const endereco = [a.rua, a.numero, a.bairro, a.cidade, a.estado].filter(Boolean).join(', ') || '—';
+      const dados = [
+        `Nome: ${a.nome_aluno || '—'}`,
+        `CPF: ${a.cpf || '—'}`,
+        `Endereço: ${endereco}`,
+        `Plano: ${a.plano || '—'}`,
+        `Início: ${a.data_contrato || a.data_inicio || '—'}`,
+      ];
+      dados.forEach(linha => {
+        pdf.text(linha, margin, y);
+        y += 6;
+      });
+      y += 4;
+    
+      // Cláusulas
+      pdf.setDrawColor(180);
+      pdf.line(margin, y, pageW - margin, y);
+      y += 8;
+    
+      const clausulas = [
+        ['Cláusula Primeira – Dos Planos', 'Frequência mínima de 02 aulas semanais. Não haverá reposição exceto por justificativa médica ou falta da CONTRATADA.'],
+        ['Cláusula Segunda – Dos Valores', 'Pagamento mensal via cartão de crédito ou Pix. Poderá sofrer reajustes a critério da CONTRATADA.'],
+        ['Cláusula Terceira – Do Prazo', 'O contrato poderá ser renovado automaticamente.'],
+        ['Cláusula Quarta – Da Rescisão', 'Comunicar com 30 dias de antecedência, sob pena de pagamento do mês vigente.'],
+        ['Cláusula Quinta – Do Termo de Responsabilidade', 'O CONTRATANTE declara estar apto para atividades físicas e compromete-se a apresentar atestado médico.'],
+        ['Cláusula Sexta – Dos Danos e Acidentes', 'A CONTRATADA não se responsabiliza por danos decorrentes da inobservância às orientações dos profissionais.'],
+        ['Cláusula Sétima – Da Imagem', 'A CONTRATADA poderá utilizar a imagem do CONTRATANTE para divulgação da academia.'],
+        ['Cláusula Oitava – Dos Danos Causados', 'O CONTRATANTE ressarcirá a CONTRATADA por danos causados em até 48 horas.'],
+        ['Cláusula Nona – Dos Armários', 'A CONTRATADA não se responsabiliza por objetos deixados nos armários.'],
+        ['Cláusula Décima – Do Estacionamento', 'A CONTRATADA não se responsabiliza por danos ou furtos de veículos.'],
+        ['Cláusula Décima Primeira – Do Foro', 'Foro da cidade de Indaiatuba/SP.'],
+      ];
+    
+      clausulas.forEach(([titulo, texto]) => {
+        if (y > 260) { pdf.addPage(); y = 20; }
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(9);
+        pdf.text(titulo, margin, y);
+        y += 5;
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(9);
+        const linhas = pdf.splitTextToSize(texto, maxW);
+        pdf.text(linhas, margin, y);
+        y += linhas.length * 5 + 4;
+      });
+    
+      // Assinatura
+      if (y > 220) { pdf.addPage(); y = 20; }
+      y += 4;
+      pdf.setDrawColor(180);
+      pdf.line(margin, y, pageW - margin, y);
+      y += 8;
+    
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(10);
+      pdf.text('ASSINATURA', margin, y);
+      y += 6;
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
+    
+      if (a.contrato_assinado_em) {
+        const dataAss = new Date(a.contrato_assinado_em).toLocaleString('pt-BR');
+        pdf.text(`Assinado digitalmente em: ${dataAss}`, margin, y);
+        y += 6;
+      }
+    
+      // Imagem da assinatura
+      if (a.contrato_assinatura) {
+        try {
+          pdf.addImage(a.contrato_assinatura, 'PNG', margin, y, 80, 20);
+          y += 24;
+        } catch(e) {
+          pdf.text('[Assinatura digital registrada]', margin, y);
+          y += 6;
+        }
+      }
+    
+      // Rodapé
+      pdf.setFontSize(8);
+      pdf.setTextColor(150);
+      pdf.text('Indaiatuba/SP — Riva BJJ Brazilian Jiu Jitsu Ltda', pageW / 2, 290, { align: 'center' });
+    
+      pdf.save(`contrato_${(a.nome_aluno || 'aluno').replace(/\s+/g,'_')}.pdf`);
+    };
   </script>
 </body>
 </html>
