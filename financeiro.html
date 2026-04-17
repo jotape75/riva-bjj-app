@@ -821,7 +821,7 @@
       document.getElementById('cartaoInfo').textContent   = 'Cadastrando cartão…';
       document.getElementById('btnSalvarCartao').disabled = true;
       try {
-        const resp = await gasCall('asaasCartao', { customerId, alunoId, numero, nome, mesValidade:mesVal, anoValidade:'20'+anoVal, cvv, cpfTitular:cpf, email:_cartaoAlunoData?(_cartaoAlunoData.resp_email||_cartaoAlunoData.email||')':'', telefone:_cartaoAlunoData?(_cartaoAlunoData.resp_telefone||_cartaoAlunoData.telefone||''):'', cep, addressNumber:_cartaoAlunoData?(_cartaoAlunoData.numero||'S/N'):'S/N' });
+        const resp = await gasCall('asaasCartao', { customerId, alunoId, numero, nome, mesValidade:mesVal, anoValidade:'20'+anoVal, cvv, cpfTitular:cpf, email:_cartaoAlunoData?(_cartaoAlunoData.resp_email||_cartaoAlunoData.email||''):'', telefone:_cartaoAlunoData?(_cartaoAlunoData.resp_telefone||_cartaoAlunoData.telefone||''):'', cep, addressNumber:_cartaoAlunoData?(_cartaoAlunoData.numero||'S/N'):'S/N' });
         document.getElementById('cartaoInfo').textContent = '';
         if (!resp.ok) { document.getElementById('cartaoErr').textContent='Erro: '+(resp.erro||'desconhecido'); document.getElementById('btnSalvarCartao').disabled=false; return; }
         await updateDoc(doc(db,'alunos',alunoId), { asaas_cartao_token: resp.creditCardToken||'' });
