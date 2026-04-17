@@ -1799,8 +1799,7 @@ function profLogout() {
   hide('cardProf');
   showTab('Home');
 }
-
-/* ── Init ─────────────────────────────────────────────────────── */
+/* ── init ─────────────────────────────────────────── */
 function init() {
   // 1) WebAuthn support check (mandatory)
   if (!webAuthnAvailable()) {
@@ -1847,7 +1846,7 @@ function init() {
   $('navHome').addEventListener('click',    () => showTab('Home'));
   $('navAgendar').addEventListener('click', () => showTab('Agendar'));
 
-   // 6) Listener foto de perfil
+  // 6) Listener foto de perfil
   const fotoInput = document.getElementById('fotoInput');
   if (fotoInput) {
     fotoInput.addEventListener('change', async function () {
@@ -1857,7 +1856,6 @@ function init() {
         alert('Imagem muito grande. Máximo 5 MB.');
         return;
       }
-      // Feedback visual imediato com URL local
       const localUrl = URL.createObjectURL(file);
       atualizarAvatar(localUrl, alunoData.nome || '');
       try {
@@ -1865,7 +1863,6 @@ function init() {
         alunoData.foto_url = url;
         atualizarAvatar(url, alunoData.nome || '');
       } catch (e) {
-        // Reverte se falhar
         atualizarAvatar(alunoData.foto_url || '', alunoData.nome || '');
         alert('Erro ao salvar foto. Tente novamente.');
       } finally {
@@ -1873,11 +1870,59 @@ function init() {
       }
     });
   }
-  // 7) Enable mouse drag-to-scroll on days-of-week rows
+
+  // 7) Enable mouse drag-to-scroll
   enableDragScroll($('diasRow'));
   enableDragScroll($('profDiasRow'));
 
-  // 8) Check for existing session and decide initial screen
+  // 8) Contrato — registrar AQUI para funcionar em qualquer fluxo
+  document.getElementById('chkContratoLeitura').addEventListener('change', verificarBotaoContrato);
+  const contratoInput    = document.getElementById('contratoInputAssinatura');
+  const contratoTextoAss = document.getElementById('contratoTextoAssinatura');
+  contratoInput.addEventListener('input', () => {
+    const val = contratoInput.value.trim();
+    contratoTextoAss.textContent = val || '—';
+    verificarBotaoContrato();
+  });
+  document.getElementById('btnAssinarContrato').addEventListener('click', async () => {
+    if (!alunoData) return;
+    document.getElementById('btnAssinarContrato').disabled = true;
+    document.getElementById('contratoInfo').textContent = 'Salvando assinatura…';
+    try {
+      await salvarAssinaturaContrato(alunoData);
+      const snap = await getDoc(doc(db, 'alunos', alunoData.id));
+      if (snap.exists()) {
+        const d = snap.data();
+        alunoData = {
+          id:             snap.id,
+          nome:           d.nome_aluno || '',
+          nome_aluno:     d.nome_aluno || '',
+          faixa:          d.faixa || '',
+          grau:           d.grau_atual ?? 0,
+          dataGrau:       d.data_ultimo_grau || '',
+          status:         d.status || '',
+          statusExame:    d.statusExame || '',
+          aulasNoGrau:    d.aulas_no_grau ?? 0,
+          aulasRestantes: d.aulas_restantes ?? null,
+          metaGrau:       d.meta_grau ?? 0,
+          email:          d.email || alunoData.email,
+          foto_url:       d.foto_url || '',
+          contrato_assinado: d.contrato_assinado || false,
+        };
+        preencherCard(alunoData);
+      }
+      document.getElementById('contratoInfo').textContent = '';
+      hide('cardContrato');
+      show('cardAluno');
+      show('mainNav');
+    } catch(e) {
+      document.getElementById('contratoErr').textContent  = 'Erro ao salvar. Tente novamente.';
+      document.getElementById('contratoInfo').textContent = '';
+      document.getElementById('btnAssinarContrato').disabled = false;
+    }
+  });
+
+  // 9) Check for existing session and decide initial screen
   const email  = localStorage.getItem(LS_EMAIL);
   const nome   = localStorage.getItem(LS_NOME);
   const pEmail = localStorage.getItem(LS_PROF_EMAIL);
@@ -1885,7 +1930,7 @@ function init() {
   const bioOk  = localStorage.getItem(LS_BIO_ATIVADA) === '1';
   const credId = localStorage.getItem(LS_CREDENTIAL);
   const bioTs    = parseInt(localStorage.getItem(LS_BIO_TS) || '0', 10);
-  const bioGrace = Date.now() - bioTs < BIO_GRACE_MS; // 30 minutes
+  const bioGrace = Date.now() - bioTs < BIO_GRACE_MS;
 
   if (email && nome) {
     alunoData = { nome };
@@ -1901,47 +1946,8 @@ function init() {
     showBioLock(bioOk && credId ? 'unlock' : 'register');
     return;
   }
+
   show('cardLogin');
-    // Contrato
-  document.getElementById('chkContratoLeitura').addEventListener('change', verificarBotaoContrato);
-  document.getElementById('btnAssinarContrato').addEventListener('click', async () => {
-    if (!alunoData) return;
-    document.getElementById('btnAssinarContrato').disabled = true;
-    document.getElementById('contratoInfo').textContent = 'Salvando assinatura…';
-    try {
-      await salvarAssinaturaContrato(alunoData);
-
-      const snap = await getDoc(doc(db, 'alunos', alunoData.id));
-      if (snap.exists()) {
-        const d = snap.data();
-        alunoData = {
-          id:             snap.id,
-          nome:           d.nome_aluno || '',
-          faixa:          d.faixa || '',
-          grau:           d.grau_atual ?? 0,
-          dataGrau:       d.data_ultimo_grau || '',
-          status:         d.status || '',
-          statusExame:    d.statusExame || '',
-          aulasNoGrau:    d.aulas_no_grau ?? 0,
-          aulasRestantes: d.aulas_restantes ?? null,
-          metaGrau:       d.meta_grau ?? 0,
-          email:          d.email || alunoData.email,
-          foto_url:       d.foto_url || '',
-          contrato_assinado: d.contrato_assinado || false,
-        };
-        preencherCard(alunoData);
-      }
-
-      document.getElementById('contratoInfo').textContent = '';
-      hide('cardContrato');
-      show('cardAluno');
-      show('mainNav');
-    } catch(e) {
-      document.getElementById('contratoErr').textContent  = 'Erro ao salvar. Tente novamente.';
-      document.getElementById('contratoInfo').textContent = '';
-      document.getElementById('btnAssinarContrato').disabled = false;
-    }
-  }); // fecha addEventListener btnAssinarContrato
 
 } // fecha function init()
 
