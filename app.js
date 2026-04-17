@@ -203,32 +203,33 @@ function verificarBotaoContrato() {
 }
 
 async function mostrarTelaContrato(a) {
-  // Preenche texto
   document.getElementById('contratoTexto').innerHTML = preencherTextoContrato(a);
-
-  // Reseta canvas
-  contratoDesenhou = false;
-  contratoDesenhando = false;
   document.getElementById('chkContratoLeitura').checked = false;
   document.getElementById('btnAssinarContrato').disabled = true;
   document.getElementById('contratoErr').textContent  = '';
   document.getElementById('contratoInfo').textContent = '';
+  // Limpa campo de assinatura
+  const input = document.getElementById('contratoInputAssinatura');
+  const preview = document.getElementById('contratoTextoAssinatura');
+  if (input)   input.value = '';
+  if (preview) preview.textContent = '—';
 
-  // Esconde tudo e mostra contrato
   ['cardLogin','cardAluno','cardAgendar','cardNotificacoes','cardSessao'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.add('hidden');
   });
   hide('mainNav');
   show('cardContrato');
-
-  // Iniciar canvas (após mostrar para ter dimensões corretas)
-  setTimeout(iniciarCanvasContrato, 150);
 }
 
 async function salvarAssinaturaContrato(a) {
-  const canvas = document.getElementById('contratoCanvas');
-  const assinaturaBase64 = canvas.toDataURL('image/png');
+  const nome = document.getElementById('contratoInputAssinatura').value.trim();
+  const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="100">
+    <rect width="400" height="100" fill="white"/>
+    <text x="200" y="70" font-family="Dancing Script, cursive" font-size="48"
+      font-weight="700" fill="#1a1a1a" text-anchor="middle">${nome}</text>
+  </svg>`;
+  const assinaturaBase64 = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgStr)));
   const agora = new Date().toISOString();
   await updateDoc(doc(db, 'alunos', a.id), {
     contrato_assinado:    true,
@@ -236,7 +237,6 @@ async function salvarAssinaturaContrato(a) {
     contrato_assinatura:  assinaturaBase64,
   });
 }
-
 /* ── localStorage key constants ──────────────────────────────── */
 const LS_EMAIL        = 'rv_email';
 const LS_NOME         = 'rv_nome';
