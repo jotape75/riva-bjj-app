@@ -1953,24 +1953,30 @@ function init() {
   }
   // Contrato
   document.getElementById('chkContratoLeitura').addEventListener('change', verificarBotaoContrato);
-  document.getElementById('btnAssinarContrato').addEventListener('click', async () => {
-    if (!alunoData) return;
-    document.getElementById('btnAssinarContrato').disabled = true;
-    document.getElementById('contratoInfo').textContent = 'Salvando assinatura…';
-    try {
-      await salvarAssinaturaContrato(alunoData);
-      alunoData.contrato_assinado = true;
-      document.getElementById('contratoInfo').textContent = '';
-      // Vai para tela principal
-      hide('cardContrato');
-      show('cardAluno');
-      show('mainNav');
-    } catch(e) {
-      document.getElementById('contratoErr').textContent  = 'Erro ao salvar. Tente novamente.';
-      document.getElementById('contratoInfo').textContent = '';
-      document.getElementById('btnAssinarContrato').disabled = false;
+  ocument.getElementById('btnAssinarContrato').addEventListener('click', async () => {
+  if (!alunoData) return;
+  document.getElementById('btnAssinarContrato').disabled = true;
+  document.getElementById('contratoInfo').textContent = 'Salvando assinatura…';
+  try {
+    await salvarAssinaturaContrato(alunoData);
+
+    // -- RECUPERAR do Firestore: --
+    const snap = await getDoc(doc(db, 'alunos', alunoData.id));
+    if (snap.exists()) {
+      alunoData = { id: snap.id, ...snap.data() };
+      preencherCard(alunoData); // <- agora preenche o card com nome/faixa/grau/contrato etc.
     }
-  });
+
+    document.getElementById('contratoInfo').textContent = '';
+    hide('cardContrato');
+    show('cardAluno');
+    show('mainNav');
+  } catch(e) {
+    document.getElementById('contratoErr').textContent  = 'Erro ao salvar. Tente novamente.';
+    document.getElementById('contratoInfo').textContent = '';
+    document.getElementById('btnAssinarContrato').disabled = false;
+  }
+});
 
   // No session → show login
   showTab('Home');
