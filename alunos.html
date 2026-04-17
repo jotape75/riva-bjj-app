@@ -729,122 +729,136 @@
       location.href = './administrativo.html';
     });
     window.baixarContrato = function(id) {
-      const a = todosAlunos.find(a => a.id === id);
-      if (!a) return;
-    
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-    
-      const margin = 20;
-      const pageW  = 210;
-      const maxW   = pageW - margin * 2;
-      let y = 20;
-    
-      // Cabeçalho
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(14);
-      pdf.text('CONTRATO DE PRESTAÇÃO DE SERVIÇOS', pageW / 2, y, { align: 'center' });
-      y += 6;
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(10);
-      pdf.text('Riva BJJ Brazilian Jiu Jitsu Ltda — CNPJ 66.256.625/0001-27', pageW / 2, y, { align: 'center' });
-      y += 10;
-    
-      // Linha separadora
-      pdf.setDrawColor(180);
-      pdf.line(margin, y, pageW - margin, y);
-      y += 8;
-    
-      // Dados do contratante
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(10);
-      pdf.text('DADOS DO CONTRATANTE', margin, y);
-      y += 6;
-      pdf.setFont('helvetica', 'normal');
-    
-      const endereco = [a.rua, a.numero, a.bairro, a.cidade, a.estado].filter(Boolean).join(', ') || '—';
-      const dados = [
-        `Nome: ${a.nome_aluno || '—'}`,
-        `CPF: ${a.cpf || '—'}`,
-        `Endereço: ${endereco}`,
-        `Plano: ${a.plano || '—'}`,
-        `Início: ${a.data_contrato || a.data_inicio || '—'}`,
-      ];
-      dados.forEach(linha => {
-        pdf.text(linha, margin, y);
+  const a = todosAlunos.find(a => a.id === id);
+  if (!a) return;
+
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+
+  const margin = 20;
+  const pageW  = 210;
+  const maxW   = pageW - margin * 2;
+  let y = 20;
+
+  // Cabeçalho
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(14);
+  pdf.text('CONTRATO DE PRESTAÇÃO DE SERVIÇOS', pageW / 2, y, { align: 'center' });
+  y += 6;
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(10);
+  pdf.text('Riva BJJ Brazilian Jiu Jitsu Ltda — CNPJ 66.256.625/0001-27', pageW / 2, y, { align: 'center' });
+  y += 10;
+
+  // Linha separadora
+  pdf.setDrawColor(180);
+  pdf.line(margin, y, pageW - margin, y);
+  y += 8;
+
+  // Dados do contratante
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(10);
+  pdf.text('DADOS DO CONTRATANTE', margin, y);
+  y += 6;
+  pdf.setFont('helvetica', 'normal');
+
+  const endereco = [a.rua, a.numero, a.bairro, a.cidade, a.estado].filter(Boolean).join(', ') || '—';
+  const dados = [
+    `Nome: ${a.nome_aluno || '—'}`,
+    `CPF: ${a.cpf || '—'}`,
+    `Endereço: ${endereco}`,
+    `Plano: ${a.plano || '—'}`,
+    `Início: ${a.data_contrato || a.data_inicio || '—'}`,
+  ];
+  dados.forEach(linha => {
+    pdf.text(linha, margin, y);
+    y += 6;
+  });
+  y += 4;
+
+  // Cláusulas
+  pdf.setDrawColor(180);
+  pdf.line(margin, y, pageW - margin, y);
+  y += 8;
+
+  const clausulas = [
+    ['Cláusula Primeira – Dos Planos', 'As aulas terão frequência mínima de 02 aulas semanais, com planos mensais, recorrentes e anuais. Não haverá reposição e/ou troca de aula, exceto em caso de justificativa médica comprovada ou falta por parte da CONTRATADA. Nestes casos, o CONTRATANTE poderá repor a aula em horário que lhe seja conveniente, com prévia e expressa autorização da CONTRATADA.'],
+    ['Cláusula Segunda – Dos Valores', 'O valor correspondente a cada plano será pago a vencer, de forma mensal, mediante débito automático em cartão de crédito ou Pix, de acordo com a tabela de preço que segue em anexo, que poderá sofrer variações e reajustes a critério da CONTRATADA, limitados às disposições legais. Não será permitida qualquer espécie de cessão do presente contrato, transferência de créditos restantes ou do plano contratado, independente do grau de parentesco ou da relação existente com o CONTRATANTE.'],
+    ['Cláusula Terceira – Do Prazo', 'O presente contrato poderá ser renovado automaticamente. Quando da renovação, novos pagamentos deverão ser feitos de acordo com o plano escolhido.'],
+    ['Cláusula Quarta – Da Rescisão', 'O CONTRATANTE deverá comunicá-la com antecedência mínima de 30 (trinta) dias, sob pena de incidir o pagamento do mês vigente. Não ocorrendo o aviso de rescisão, nem o comparecimento na aula seguinte ao vencimento do plano, o CONTRATANTE renuncia o horário de suas aulas, facultando ao CONTRATADO disponibilização daquele horário.'],
+    ['Cláusula Quinta – Do Termo de Responsabilidade', 'O CONTRATANTE declara ter consultado médico de sua confiança, e estar apto para a prática de atividades físicas e esportivas de qualquer natureza, bem como, declara estar ciente de que deverá apresentar o respectivo atestado médico. O CONTRATANTE se responsabiliza pela manutenção e cuidados de sua saúde, bem como, pelo uso de qualquer medicamento e/ou substância. A validade do atestado médico e/ou laudo médico é de 01 (um) ano, sendo necessária sua renovação.'],
+    ['Cláusula Sexta – Dos Danos e Acidentes', 'O CONTRATANTE se obriga a observar estrita e exclusivamente as orientações dos profissionais da CONTRATADA para a prática das atividades físicas. A CONTRATADA não se responsabiliza por danos físicos de qualquer natureza resultantes da inobservância do CONTRATANTE às suas orientações, pelo acatamento à orientação de terceiros estranhos, ou ainda pelo uso inadequado dos aparelhos e equipamentos.'],
+    ['Cláusula Sétima – Da Imagem', 'A CONTRATADA, livre de quaisquer ônus junto ao CONTRATANTE, poderá utilizar-se da sua imagem para fins exclusivos de divulgação da Academia e suas atividades, podendo reproduzi-la ou divulgá-la junto à Internet, redes sociais, jornais e todos os demais meios de comunicação público ou privado. Em nenhuma hipótese poderá a imagem do CONTRATANTE ser utilizada de maneira contrária à moral ou aos bons costumes ou à ordem pública.'],
+    ['Cláusula Oitava – Dos Danos Causados', 'O CONTRATANTE se obriga a ressarcir a CONTRATADA por qualquer dano causado por ele, por dolo ou culpa, em até 48 horas após a constatação do evento e sua consequente comunicação formal ao CONTRATANTE.'],
+    ['Cláusula Nona – Dos Armários, Objetos e Pertences', 'A CONTRATADA disponibiliza aos seus usuários guarda-volumes e/ou armários, que deverão ser esvaziados diariamente. A CONTRATADA não se responsabiliza pelos objetos deixados no interior dos armários ou guarda-volumes, sendo a guarda, segurança e zelo dos pertences de inteira responsabilidade de seus proprietários.'],
+    ['Cláusula Décima – Do Estacionamento', 'O estacionamento é gratuito e de uso exclusivo dos CONTRATANTES, não sendo permitido deixar veículos estacionados sem que o usuário esteja na academia. A CONTRATADA não se responsabiliza por roubos, furtos, danos de veículos ou motos, ou por objetos deixados no interior deles.'],
+    ['Cláusula Décima Primeira – Do Foro', 'As partes elegem o foro da cidade de Indaiatuba/SP, desprezando qualquer outro, por mais privilegiado que seja, para dirimir eventual entrave decorrente do presente contrato.'],
+  ];
+
+  clausulas.forEach(([titulo, texto]) => {
+    if (y > 260) { pdf.addPage(); y = 20; }
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(9);
+    pdf.text(titulo, margin, y);
+    y += 5;
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9);
+    const linhas = pdf.splitTextToSize(texto, maxW);
+    pdf.text(linhas, margin, y);
+    y += linhas.length * 5 + 4;
+  });
+
+  // Assinatura
+  if (y > 220) { pdf.addPage(); y = 20; }
+  y += 4;
+  pdf.setDrawColor(180);
+  pdf.line(margin, y, pageW - margin, y);
+  y += 8;
+
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(10);
+  pdf.text('ASSINATURA', margin, y);
+  y += 6;
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(9);
+
+  if (a.contrato_assinado_em) {
+    const dataAss = new Date(a.contrato_assinado_em).toLocaleString('pt-BR');
+    pdf.text(`Assinado digitalmente em: ${dataAss}`, margin, y);
+    y += 6;
+  }
+
+  if (a.contrato_assinatura) {
+    try {
+      const match = a.contrato_assinatura.match(/>(.*?)<\/text>/);
+      const nomeAss = match ? decodeURIComponent(match[1]) : '';
+      if (nomeAss) {
+        pdf.setFont('helvetica', 'bolditalic');
+        pdf.setFontSize(32);
+        const nomeLinhas = pdf.splitTextToSize(nomeAss, maxW);
+        pdf.text(nomeLinhas, margin, y);
+        y += nomeLinhas.length * 12;
+        pdf.setDrawColor(0);
+        pdf.line(margin, y, margin + 120, y);
         y += 6;
-      });
-      y += 4;
-    
-      // Cláusulas
-      pdf.setDrawColor(180);
-      pdf.line(margin, y, pageW - margin, y);
-      y += 8;
-    
-      const clausulas = [
-        ['Cláusula Primeira – Dos Planos', 'As aulas terão frequência mínima de 02 aulas semanais, com planos mensais, recorrentes e anuais. Não haverá reposição e/ou troca de aula, exceto em caso de justificativa médica comprovada ou falta por parte da CONTRATADA. Nestes casos, o CONTRATANTE poderá repor a aula em horário que lhe seja conveniente, com prévia e expressa autorização da CONTRATADA.'],
-        ['Cláusula Segunda – Dos Valores', 'O valor correspondente a cada plano será pago a vencer, de forma mensal, mediante débito automático em cartão de crédito ou Pix, de acordo com a tabela de preço que segue em anexo, que poderá sofrer variações e reajustes a critério da CONTRATADA, limitados às disposições legais. Não será permitida qualquer espécie de cessão do presente contrato, transferência de créditos restantes ou do plano contratado, independente do grau de parentesco ou da relação existente com o CONTRATANTE.'],
-        ['Cláusula Terceira – Do Prazo', 'O presente contrato poderá ser renovado automaticamente. Quando da renovação, novos pagamentos deverão ser feitos de acordo com o plano escolhido.'],
-        ['Cláusula Quarta – Da Rescisão', 'O CONTRATANTE deverá comunicá-la com antecedência mínima de 30 (trinta) dias, sob pena de incidir o pagamento do mês vigente. Não ocorrendo o aviso de rescisão, nem o comparecimento na aula seguinte ao vencimento do plano, o CONTRATANTE renuncia o horário de suas aulas, facultando ao CONTRATADO disponibilização daquele horário.'],
-        ['Cláusula Quinta – Do Termo de Responsabilidade', 'O CONTRATANTE declara ter consultado médico de sua confiança, e estar apto para a prática de atividades físicas e esportivas de qualquer natureza, bem como, declara estar ciente de que deverá apresentar o respectivo atestado médico. O CONTRATANTE se responsabiliza pela manutenção e cuidados de sua saúde, bem como, pelo uso de qualquer medicamento e/ou substância. A validade do atestado médico e/ou laudo médico é de 01 (um) ano, sendo necessária sua renovação.'],
-        ['Cláusula Sexta – Dos Danos e Acidentes', 'O CONTRATANTE se obriga a observar estrita e exclusivamente as orientações dos profissionais da CONTRATADA para a prática das atividades físicas. A CONTRATADA não se responsabiliza por danos físicos de qualquer natureza resultantes da inobservância do CONTRATANTE às suas orientações, pelo acatamento à orientação de terceiros estranhos, ou ainda pelo uso inadequado dos aparelhos e equipamentos.'],
-        ['Cláusula Sétima – Da Imagem', 'A CONTRATADA, livre de quaisquer ônus junto ao CONTRATANTE, poderá utilizar-se da sua imagem para fins exclusivos de divulgação da Academia e suas atividades, podendo reproduzi-la ou divulgá-la junto à Internet, redes sociais, jornais e todos os demais meios de comunicação público ou privado. Em nenhuma hipótese poderá a imagem do CONTRATANTE ser utilizada de maneira contrária à moral ou aos bons costumes ou à ordem pública.'],
-        ['Cláusula Oitava – Dos Danos Causados', 'O CONTRATANTE se obriga a ressarcir a CONTRATADA por qualquer dano causado por ele, por dolo ou culpa, em até 48 horas após a constatação do evento e sua consequente comunicação formal ao CONTRATANTE.'],
-        ['Cláusula Nona – Dos Armários, Objetos e Pertences', 'A CONTRATADA disponibiliza aos seus usuários guarda-volumes e/ou armários, que deverão ser esvaziados diariamente. A CONTRATADA não se responsabiliza pelos objetos deixados no interior dos armários ou guarda-volumes, sendo a guarda, segurança e zelo dos pertences de inteira responsabilidade de seus proprietários.'],
-        ['Cláusula Décima – Do Estacionamento', 'O estacionamento é gratuito e de uso exclusivo dos CONTRATANTES, não sendo permitido deixar veículos estacionados sem que o usuário esteja na academia. A CONTRATADA não se responsabiliza por roubos, furtos, danos de veículos ou motos, ou por objetos deixados no interior deles.'],
-        ['Cláusula Décima Primeira – Do Foro', 'As partes elegem o foro da cidade de Indaiatuba/SP, desprezando qualquer outro, por mais privilegiado que seja, para dirimir eventual entrave decorrente do presente contrato.'],
-      ];
-          
-      clausulas.forEach(([titulo, texto]) => {
-        if (y > 260) { pdf.addPage(); y = 20; }
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(9);
-        pdf.text(titulo, margin, y);
-        y += 5;
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(9);
-        const linhas = pdf.splitTextToSize(texto, maxW);
-        pdf.text(linhas, margin, y);
-        y += linhas.length * 5 + 4;
-      });
-    
-      // Assinatura
-      if (y > 220) { pdf.addPage(); y = 20; }
-      y += 4;
-      pdf.setDrawColor(180);
-      pdf.line(margin, y, pageW - margin, y);
-      y += 8;
-    
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(10);
-      pdf.text('ASSINATURA', margin, y);
-      y += 6;
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(9);
-    
-      if (a.contrato_assinado_em) {
-        const dataAss = new Date(a.contrato_assinado_em).toLocaleString('pt-BR');
-        pdf.text(`Assinado digitalmente em: ${dataAss}`, margin, y);
+        pdf.text('Assinatura digital — ' + (a.nome_aluno || ''), margin, y);
         y += 6;
       }
-    
-      // Imagem da assinatura
-      if (a.contrato_assinatura) {
-        try {
-          pdf.addImage(a.contrato_assinatura, 'PNG', margin, y, 80, 20);
-          y += 24;
-        } catch(e) {
-          pdf.text('[Assinatura digital registrada]', margin, y);
-          y += 6;
-        }
-      }
-    
-      // Rodapé
-      pdf.setFontSize(8);
-      pdf.setTextColor(150);
-      pdf.text('Indaiatuba/SP — Riva BJJ Brazilian Jiu Jitsu Ltda', pageW / 2, 290, { align: 'center' });
-    
-      pdf.save(`contrato_${(a.nome_aluno || 'aluno').replace(/\s+/g,'_')}.pdf`);
+    } catch(e) {
+      pdf.text('[Assinatura digital registrada]', margin, y);
+      y += 6;
+    }
+  }
+
+  // Rodapé
+  pdf.setFontSize(8);
+  pdf.setTextColor(150);
+  pdf.text('Indaiatuba/SP — Riva BJJ Brazilian Jiu Jitsu Ltda', pageW / 2, 290, { align: 'center' });
+
+  pdf.save(`contrato_${(a.nome_aluno || 'aluno').replace(/\s+/g,'_')}.pdf`);
+};
     };
   </script>
 </body>
