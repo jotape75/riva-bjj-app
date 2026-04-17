@@ -86,7 +86,156 @@ async function uploadFotoPerfil(file, alunoId) {
   await updateDoc(doc(db, 'alunos', alunoId), { foto_url: base64 });
   return base64;
 }
+/* ── Contrato ─────────────────────────────────────────────── */
 
+function valorDePlanoContrato(plano) {
+  if (!plano) return '—';
+  const p = plano.toLowerCase();
+  if (p.includes('recorrente')) return 'R$ 200,00/mês';
+  if (p.includes('semestral'))  return 'R$ 220,00/mês';
+  if (p.includes('mensal'))     return 'R$ 240,00/mês';
+  return '—';
+}
+
+function dataAtualBR() {
+  const d = new Date();
+  const dia = String(d.getDate()).padStart(2,'0');
+  const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  return `${dia} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
+}
+
+function preencherTextoContrato(a) {
+  const endereco = [a.rua||'', a.numero||'', a.bairro||'', a.cidade||'', a.estado||''].filter(Boolean).join(', ') || '—';
+  const cpf      = a.cpf || '—';
+  const plano    = a.plano || '—';
+  const valor    = valorDePlanoContrato(a.plano);
+  const inicio   = a.data_contrato || a.data_inicio || '';
+  const inicioFmt = inicio ? (() => { const [y,m,d] = inicio.split('-'); return `${d}/${m}/${y}`; })() : '—';
+  const data     = dataAtualBR();
+
+  const campo = (v) => `<span style="background:#222;border-radius:4px;padding:1px 6px;color:#f39c12;font-weight:700;">${v}</span>`;
+
+  return `
+    <p style="font-weight:900;text-align:center;color:#fff;margin-bottom:14px;">CONTRATO DE PRESTAÇÃO DE SERVIÇOS</p>
+    <p>Pelo presente instrumento particular, de um lado, <strong>RIVA BJJ BRAZILIAN JIU JITSU LTDA</strong>, CNPJ 66.256.625/0001-27, e de outro lado, ${campo(a.nome_aluno||'—')}, CPF ${campo(cpf)}, residente em ${campo(endereco)}, aqui denominado(a) <strong>CONTRATANTE</strong>.</p>
+    <p><strong>Cláusula Primeira – Dos Planos:</strong> Plano: ${campo(plano)} &nbsp; Valor: ${campo(valor)} &nbsp; Início: ${campo(inicioFmt)}</p>
+    <p>Parágrafo único – Não haverá reposição de aula, exceto em caso de justificativa médica ou falta da CONTRATADA.</p>
+    <p><strong>Cláusula Segunda – Dos Valores:</strong> Pagamento mensal via cartão de crédito ou Pix. Poderá sofrer reajustes a critério da CONTRATADA.</p>
+    <p><strong>Cláusula Terceira – Do Prazo:</strong> O contrato poderá ser renovado automaticamente.</p>
+    <p><strong>Cláusula Quarta – Da Rescisão:</strong> Comunicar com 30 dias de antecedência, sob pena de pagamento do mês vigente.</p>
+    <p><strong>Cláusula Quinta – Do Termo de Responsabilidade:</strong> O CONTRATANTE declara estar apto para atividades físicas e compromete-se a apresentar atestado médico.</p>
+    <p><strong>Cláusula Sexta – Dos Danos e Acidentes:</strong> A CONTRATADA não se responsabiliza por danos decorrentes da inobservância às orientações dos profissionais.</p>
+    <p><strong>Cláusula Sétima – Da Imagem:</strong> A CONTRATADA poderá utilizar a imagem do CONTRATANTE para divulgação da academia.</p>
+    <p><strong>Cláusula Oitava – Dos Danos Causados:</strong> O CONTRATANTE ressarcirá a CONTRATADA por danos causados em até 48 horas.</p>
+    <p><strong>Cláusula Nona – Dos Armários:</strong> A CONTRATADA não se responsabiliza por objetos deixados nos armários.</p>
+    <p><strong>Cláusula Décima – Do Estacionamento:</strong> A CONTRATADA não se responsabiliza por danos ou furtos de veículos.</p>
+    <p><strong>Cláusula Décima Primeira – Do Foro:</strong> Foro da cidade de Indaiatuba/SP.</p>
+    <p style="text-align:center;margin-top:14px;">Indaiatuba, ${data}</p>
+  `;
+}
+
+let contratoDesenhou  = false;
+let contratoDesenhando = false;
+
+function iniciarCanvasContrato() {
+  const canvas      = document.getElementById('contratoCanvas');
+  const ctx         = canvas.getContext('2d');
+  const placeholder = document.getElementById('contratoCanvasPlaceholder');
+  const wrap        = document.getElementById('contratoCanvasWrap');
+
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width  = rect.width  * window.devicePixelRatio;
+    canvas.height = rect.height * window.devicePixelRatio;
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth   = 2.5;
+    ctx.lineCap     = 'round';
+    ctx.lineJoin    = 'round';
+  }
+  setTimeout(resize, 100);
+
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    if (e.touches) return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  function startDraw(e) {
+    e.preventDefault();
+    contratoDesenhando = true;
+    const pos = getPos(e);
+    ctx.beginPath(); ctx.moveTo(pos.x, pos.y);
+    if (!contratoDesenhou) {
+      contratoDesenhou = true;
+      placeholder.style.display = 'none';
+      wrap.style.borderColor = '#c0392b';
+      verificarBotaoContrato();
+    }
+  }
+  function draw(e) {
+    if (!contratoDesenhando) return;
+    e.preventDefault();
+    const pos = getPos(e);
+    ctx.lineTo(pos.x, pos.y); ctx.stroke();
+  }
+  function endDraw() { contratoDesenhando = false; }
+
+  canvas.addEventListener('mousedown',  startDraw);
+  canvas.addEventListener('mousemove',  draw);
+  canvas.addEventListener('mouseup',    endDraw);
+  canvas.addEventListener('touchstart', startDraw, { passive: false });
+  canvas.addEventListener('touchmove',  draw,      { passive: false });
+  canvas.addEventListener('touchend',   endDraw);
+
+  document.getElementById('btnLimparContrato').addEventListener('click', () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    contratoDesenhou = false;
+    placeholder.style.display = '';
+    wrap.style.borderColor = '#2a2a2a';
+    verificarBotaoContrato();
+  });
+}
+
+function verificarBotaoContrato() {
+  const leu = document.getElementById('chkContratoLeitura').checked;
+  document.getElementById('btnAssinarContrato').disabled = !(leu && contratoDesenhou);
+}
+
+async function mostrarTelaContrato(a) {
+  // Preenche texto
+  document.getElementById('contratoTexto').innerHTML = preencherTextoContrato(a);
+
+  // Reseta canvas
+  contratoDesenhou = false;
+  contratoDesenhando = false;
+  document.getElementById('chkContratoLeitura').checked = false;
+  document.getElementById('btnAssinarContrato').disabled = true;
+  document.getElementById('contratoErr').textContent  = '';
+  document.getElementById('contratoInfo').textContent = '';
+
+  // Esconde tudo e mostra contrato
+  ['cardLogin','cardAluno','cardAgendar','cardNotificacoes','cardSessao'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
+  });
+  hide('mainNav');
+  show('cardContrato');
+
+  // Iniciar canvas (após mostrar para ter dimensões corretas)
+  setTimeout(iniciarCanvasContrato, 150);
+}
+
+async function salvarAssinaturaContrato(a) {
+  const canvas = document.getElementById('contratoCanvas');
+  const assinaturaBase64 = canvas.toDataURL('image/png');
+  const agora = new Date().toISOString();
+  await updateDoc(doc(db, 'alunos', a.id), {
+    contrato_assinado:    true,
+    contrato_assinado_em: agora,
+    contrato_assinatura:  assinaturaBase64,
+  });
+}
 
 /* ── localStorage key constants ──────────────────────────────── */
 const LS_EMAIL        = 'rv_email';
@@ -147,6 +296,7 @@ async function fbLogin(email) {
           metaGrau:       docData.meta_grau ?? 0,
           email:          docData.email || email,
           foto_url:       docData.foto_url || '',
+          contrato_assinado: docData.contrato_assinado || false,
         }
       };
     }
@@ -691,9 +841,11 @@ function afterBioSuccess(updateTs = true) {
       .then(r => { 
         if (r && r.ok) { 
           alunoData = r.data; 
-          preencherCard(alunoData);
-          localStorage.setItem('rv_foto_url', r.data.foto_url || '');
-        } 
+          // Verificar contrato
+          if (!alunoData.contrato_assinado) {
+            mostrarTelaContrato(alunoData);
+          }
+        }
       })
       .catch(() => {});
     if (savedPage === 'sessaoAluno' && savedSessao) {
@@ -1799,6 +1951,26 @@ function init() {
     showBioLock(bioOk && credId ? 'unlock' : 'register');
     return;
   }
+  // Contrato
+  document.getElementById('chkContratoLeitura').addEventListener('change', verificarBotaoContrato);
+  document.getElementById('btnAssinarContrato').addEventListener('click', async () => {
+    if (!alunoData) return;
+    document.getElementById('btnAssinarContrato').disabled = true;
+    document.getElementById('contratoInfo').textContent = 'Salvando assinatura…';
+    try {
+      await salvarAssinaturaContrato(alunoData);
+      alunoData.contrato_assinado = true;
+      document.getElementById('contratoInfo').textContent = '';
+      // Vai para tela principal
+      hide('cardContrato');
+      show('cardAluno');
+      show('mainNav');
+    } catch(e) {
+      document.getElementById('contratoErr').textContent  = 'Erro ao salvar. Tente novamente.';
+      document.getElementById('contratoInfo').textContent = '';
+      document.getElementById('btnAssinarContrato').disabled = false;
+    }
+  });
 
   // No session → show login
   showTab('Home');
