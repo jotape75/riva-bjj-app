@@ -1951,46 +1951,47 @@ function init() {
     showBioLock(bioOk && credId ? 'unlock' : 'register');
     return;
   }
-  // Contrato
+    // Contrato
   document.getElementById('chkContratoLeitura').addEventListener('change', verificarBotaoContrato);
   document.getElementById('btnAssinarContrato').addEventListener('click', async () => {
-  if (!alunoData) return;
-  document.getElementById('btnAssinarContrato').disabled = true;
-  document.getElementById('contratoInfo').textContent = 'Salvando assinatura…';
-  try {
-    await salvarAssinaturaContrato(alunoData);
+    if (!alunoData) return;
+    document.getElementById('btnAssinarContrato').disabled = true;
+    document.getElementById('contratoInfo').textContent = 'Salvando assinatura…';
+    try {
+      await salvarAssinaturaContrato(alunoData);
 
-    // Reler do Firestore e normalizar campos (igual ao fbLogin)
-    const snap = await getDoc(doc(db, 'alunos', alunoData.id));
-    if (snap.exists()) {
-      const d = snap.data();
-      alunoData = {
-        id:             snap.id,
-        nome:           d.nome_aluno || '',
-        faixa:          d.faixa || '',
-        grau:           d.grau_atual ?? 0,
-        dataGrau:       d.data_ultimo_grau || '',
-        status:         d.status || '',
-        statusExame:    d.statusExame || '',
-        aulasNoGrau:    d.aulas_no_grau ?? 0,
-        aulasRestantes: d.aulas_restantes ?? null,
-        metaGrau:       d.meta_grau ?? 0,
-        email:          d.email || alunoData.email,
-        foto_url:       d.foto_url || '',
-        contrato_assinado: d.contrato_assinado || false,
-      };
-      preencherCard(alunoData);
+      const snap = await getDoc(doc(db, 'alunos', alunoData.id));
+      if (snap.exists()) {
+        const d = snap.data();
+        alunoData = {
+          id:             snap.id,
+          nome:           d.nome_aluno || '',
+          faixa:          d.faixa || '',
+          grau:           d.grau_atual ?? 0,
+          dataGrau:       d.data_ultimo_grau || '',
+          status:         d.status || '',
+          statusExame:    d.statusExame || '',
+          aulasNoGrau:    d.aulas_no_grau ?? 0,
+          aulasRestantes: d.aulas_restantes ?? null,
+          metaGrau:       d.meta_grau ?? 0,
+          email:          d.email || alunoData.email,
+          foto_url:       d.foto_url || '',
+          contrato_assinado: d.contrato_assinado || false,
+        };
+        preencherCard(alunoData);
+      }
+
+      document.getElementById('contratoInfo').textContent = '';
+      hide('cardContrato');
+      show('cardAluno');
+      show('mainNav');
+    } catch(e) {
+      document.getElementById('contratoErr').textContent  = 'Erro ao salvar. Tente novamente.';
+      document.getElementById('contratoInfo').textContent = '';
+      document.getElementById('btnAssinarContrato').disabled = false;
     }
+  }); // fecha addEventListener btnAssinarContrato
 
-    document.getElementById('contratoInfo').textContent = '';
-    hide('cardContrato');
-    show('cardAluno');
-    show('mainNav');
-  } catch(e) {
-    document.getElementById('contratoErr').textContent  = 'Erro ao salvar. Tente novamente.';
-    document.getElementById('contratoInfo').textContent = '';
-    document.getElementById('btnAssinarContrato').disabled = false;
-  }
-});
+} // fecha function init()
 
 document.addEventListener('DOMContentLoaded', init);
