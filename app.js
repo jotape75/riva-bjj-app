@@ -1,11 +1,10 @@
-import { db, auth, storage } from './firebase-config.js';
+import { db, auth } from './firebase-config.js';
 import {
   collection, doc, query, where, orderBy, limit,
   getDocs, getDoc, addDoc, updateDoc, deleteDoc, serverTimestamp,
   Timestamp
 } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 import { signInAnonymously } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-storage.js";
 
 const anonAuthPromise = signInAnonymously(auth).catch(() => {});
 
@@ -63,13 +62,29 @@ function atualizarAvatar(fotoUrl, nome) {
 }
 
 async function uploadFotoPerfil(file, alunoId) {
-  const ext      = (file.name.split('.').pop() || 'jpg').toLowerCase();
-  const path     = `fotos_perfil/${alunoId}.${ext}`;
-  const stRef    = ref(storage, path);
-  await uploadBytes(stRef, file);
-  const url = await getDownloadURL(stRef);
-  await updateDoc(doc(db, 'alunos', alunoId), { foto_url: url });
-  return url;
+  // Redimensiona para 200x200 e converte para Base64
+  const base64 = await new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width  = 200;
+      canvas.height = 200;
+      const ctx = canvas.getContext('2d');
+      // Crop centralizado
+      const size = Math.min(img.width, img.height);
+      const sx   = (img.width  - size) / 2;
+      const sy   = (img.height - size) / 2;
+      ctx.drawImage(img, sx, sy, size, size, 0, 0, 200, 200);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/jpeg', 0.7));
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+
+  await updateDoc(doc(db, 'alunos', alunoId), { foto_url: base64 });
+  return base64;
 }
 
 
