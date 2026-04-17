@@ -133,55 +133,6 @@ function preencherTextoContrato(a) {
     <p style="text-align:center;margin-top:14px;">Indaiatuba, ${data}</p>
   `;
 }
-
-let contratoDesenhou  = false;
-let contratoDesenhando = false;
-
-  function resize() {
-    const rect = canvas.getBoundingClientRect();
-    canvas.width  = rect.width  * window.devicePixelRatio;
-    canvas.height = rect.height * window.devicePixelRatio;
-    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-    ctx.strokeStyle = '#1a1a1a';
-    ctx.lineWidth   = 2.5;
-    ctx.lineCap     = 'round';
-    ctx.lineJoin    = 'round';
-  }
-  setTimeout(resize, 100);
-
-  function getPos(e) {
-    const rect = canvas.getBoundingClientRect();
-    if (e.touches) return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
-    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-  }
-
-  function startDraw(e) {
-    e.preventDefault();
-    contratoDesenhando = true;
-    const pos = getPos(e);
-    ctx.beginPath(); ctx.moveTo(pos.x, pos.y);
-    if (!contratoDesenhou) {
-      contratoDesenhou = true;
-      placeholder.style.display = 'none';
-      wrap.style.borderColor = '#c0392b';
-      verificarBotaoContrato();
-    }
-  }
-  function draw(e) {
-    if (!contratoDesenhando) return;
-    e.preventDefault();
-    const pos = getPos(e);
-    ctx.lineTo(pos.x, pos.y); ctx.stroke();
-  }
-  function endDraw() { contratoDesenhando = false; }
-
-  canvas.addEventListener('mousedown',  startDraw);
-  canvas.addEventListener('mousemove',  draw);
-  canvas.addEventListener('mouseup',    endDraw);
-  canvas.addEventListener('touchstart', startDraw, { passive: false });
-  canvas.addEventListener('touchmove',  draw,      { passive: false });
-  canvas.addEventListener('touchend',   endDraw);
-
 function verificarBotaoContrato() {
   const leu = document.getElementById('chkContratoLeitura').checked;
   document.getElementById('btnAssinarContrato').disabled = !(leu && contratoDesenhou);
