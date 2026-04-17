@@ -4,6 +4,7 @@ import {
   getDocs, getDoc, addDoc, updateDoc, deleteDoc, serverTimestamp,
   Timestamp
 } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+import { signInAnonymously } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-storage.js";
 
 const anonAuthPromise = signInAnonymously(auth).catch(() => {});
