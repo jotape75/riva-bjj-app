@@ -437,7 +437,7 @@
         ${a.contrato_assinatura ? `
         <div class="detalhe-row full-width">
           <span class="detalhe-label">Assinatura</span>
-          <img src="${a.contrato_assinatura}" style="max-width:200px;border:1px solid #333;border-radius:8px;background:#fff;margin-top:4px;" />
+          <img src="${a.contrato_assinatura}" style="width:100%;max-width:350px;border:1px solid #333;border-radius:8px;background:#fff;margin-top:4px;" />
         </div>` : ''}
         ${a.contrato_assinado ? `
         <div class="detalhe-row full-width" style="margin-top:8px;">
@@ -830,7 +830,7 @@
 
   if (a.contrato_assinatura) {
     try {
-      const match = a.contrato_assinatura.match(/>(.*?)<\/text>/);
+      cconst match = a.contrato_assinatura.match(/text-anchor="middle">([^<]+)<\/text>/);
       const nomeAss = match ? decodeURIComponent(match[1]) : '';
       if (nomeAss) {
         pdf.setFont('helvetica', 'bolditalic');
