@@ -139,7 +139,10 @@
     const CACHE_TTL_ALUNOS = 60 * 60 * 1000;
 
     function salvarCacheAlunos(alunos) {
-      try { localStorage.setItem(CACHE_KEY_ALUNOS, JSON.stringify({ ts: Date.now(), alunos })); } catch(e) {}
+      try {
+        const semFoto = alunos.map(a => ({ ...a, foto_url: '' }));
+        localStorage.setItem(CACHE_KEY_ALUNOS, JSON.stringify({ ts: Date.now(), alunos: semFoto }));
+      } catch(e) {}
     }
     function lerCacheAlunos() {
       try {
@@ -217,6 +220,7 @@
             resp_email:    a.resp_email    || '',
             resp_telefone: a.resp_telefone || '',
             resp_cpf:      a.resp_cpf      || '',
+            foto_url: a.foto_url || '',
           };
         });
         salvarCacheAlunos(todosAlunos);
@@ -261,19 +265,23 @@
         return `
         <div class="aluno-card" id="card-${id}">
           <div class="aluno-header">
-            <div>
-              <div class="aluno-nome">${esc(a.nome_aluno)}</div>
-              <div class="aluno-email">${esc(a.email || '—')}</div>
+              ${a.foto_url 
+                ? `<img src="${esc(a.foto_url)}" alt="" style="width:48px;height:48px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #444;" />`
+                : `<div style="width:48px;height:48px;border-radius:50%;background:#2a2a2a;border:2px solid #444;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#888;flex-shrink:0;">${esc((a.nome_aluno||'?')[0].toUpperCase())}</div>`
+              }
+              <div style="flex:1;min-width:0;">
+                <div class="aluno-nome">${esc(a.nome_aluno)}</div>
+                <div class="aluno-email">${esc(a.email || '—')}</div>
+              </div>
+              <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;">
+                <button class="btn-editar"  data-id="${id}" id="btnEditar-${id}">✏️ Editar</button>
+                <button class="btn-remover" data-id="${id}" id="btnRemover-${id}">🗑️ Remover</button>
+                <button class="btn-faixa"   data-id="${id}" id="btnFaixa-${id}">Trocar Faixa</button>
+                <button class="btn-toggle"  data-id="${id}" data-status="${esc(a.status)}" id="btn-${id}">
+                  ${a.status === 'ATIVO' ? 'Desativar' : 'Ativar'}
+                </button>
+              </div>
             </div>
-            <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;">
-              <button class="btn-editar"  data-id="${id}" id="btnEditar-${id}">✏️ Editar</button>
-              <button class="btn-remover" data-id="${id}" id="btnRemover-${id}">🗑️ Remover</button>
-              <button class="btn-faixa"   data-id="${id}" id="btnFaixa-${id}">Trocar Faixa</button>
-              <button class="btn-toggle"  data-id="${id}" data-status="${esc(a.status)}" id="btn-${id}">
-                ${a.status === 'ATIVO' ? 'Desativar' : 'Ativar'}
-              </button>
-            </div>
-          </div>
           <div class="aluno-meta">
             <span class="aluno-faixa" id="faixaLabel-${id}">${esc(a.faixa||'—')} G${esc(String(a.grau_atual??'—'))}</span>
             <span class="${a.status==='ATIVO'?'badge-ativo':'badge-inativo'}" id="badge-${id}">${esc(a.status||'—')}</span>
