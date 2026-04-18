@@ -1857,8 +1857,8 @@ function init() {
   $('navAgendar').addEventListener('click', () => showTab('Agendar'));
 
   // 6) Sobre
-  $('navSobre').addEventListener('click', () => {
-    sessionStorage.setItem(SS_PAGE, 'sobre');
+   $('navSobre').addEventListener('click', () => {
+    sessionStorage.removeItem(SS_PAGE);
     ['cardAluno','cardAgendar','cardNotificacoes','cardSessao','cardSobre'].forEach(hide);
     ['navHome','navAgendar','navSobre'].forEach(id => $(id).classList.remove('on'));
     $('navSobre').classList.add('on');
@@ -1866,6 +1866,7 @@ function init() {
   });
 
   $('btnSobreBack').addEventListener('click', () => {
+    sessionStorage.removeItem(SS_PAGE);
     ['navHome','navAgendar','navSobre'].forEach(id => $(id).classList.remove('on'));
     $('navHome').classList.add('on');
     showTab('Home');
