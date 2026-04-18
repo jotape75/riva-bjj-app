@@ -817,6 +817,7 @@ function afterBioSuccess(updateTs = true) {
       showTab('Home');
       loadNotificacoes();
     } else {
+      sessionStorage.removeItem(SS_PAGE);
       showTab('Home');
     }
     checkBellBadge();
