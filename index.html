@@ -19,6 +19,7 @@
   </header>
 
   <main class="page">
+
     <!-- ── BIOMETRIA – DESBLOQUEIO / REGISTRO ────────────────────── -->
     <section class="card hidden" id="cardBioLock">
       <div class="bio-icon" aria-hidden="true" id="bioIcon">🔒</div>
@@ -46,88 +47,75 @@
     <!-- ── LOGIN ─────────────────────────────────────────────────── -->
     <section class="card hidden" id="cardLogin">
       <h1 class="title">Acesso</h1>
-
       <label class="label" for="email">Email</label>
       <input id="email" class="input" type="email" inputmode="email" autocomplete="email" placeholder="Digite seu email" />
-
       <button class="btn primary" id="btnLogin">Entrar</button>
-
       <p class="msg err" id="err"></p>
       <p class="msg info" id="info"></p>
     </section>
 
+    <!-- ── ALUNO ──────────────────────────────────────────────────── -->
     <section class="card hidden" id="cardAluno">
+      <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:10px;">
+        <button class="btn-bell" id="btnBell" aria-label="Notificações">
+          🔔
+          <span class="bell-badge hidden" id="bellBadge"></span>
+        </button>
+        <button class="btn ghost" id="btnSair">Sair</button>
+      </div>
 
-    <!-- Sino + Sair no topo direito -->
-    <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:10px;">
-      <button class="btn-bell" id="btnBell" aria-label="Notificações">
-        🔔
-        <span class="bell-badge hidden" id="bellBadge"></span>
-      </button>
-      <button class="btn ghost" id="btnSair">Sair</button>
-    </div>
-  
-    <!-- Avatar + Nome -->
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
-      <div style="position:relative;flex-shrink:0;cursor:pointer;" onclick="document.getElementById('fotoInput').click()">
-        <div id="avatarCircle" style="width:96px;height:96px;border-radius:50%;background:#2a2a2a;border:2.5px solid var(--red);display:flex;align-items:center;justify-content:center;overflow:hidden;">
-          <img id="avatarImg" src="" alt="" style="width:96px;height:96px;object-fit:cover;display:none;" />
-          <span id="avatarInitials" style="font-size:32px;font-weight:900;color:var(--red);">—</span>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+        <div style="position:relative;flex-shrink:0;cursor:pointer;" onclick="document.getElementById('fotoInput').click()">
+          <div id="avatarCircle" style="width:96px;height:96px;border-radius:50%;background:#2a2a2a;border:2.5px solid var(--red);display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <img id="avatarImg" src="" alt="" style="width:96px;height:96px;object-fit:cover;display:none;" />
+            <span id="avatarInitials" style="font-size:32px;font-weight:900;color:var(--red);">—</span>
+          </div>
+          <div style="position:absolute;bottom:0;right:0;width:20px;height:20px;background:var(--red);border-radius:50%;border:2px solid var(--card);display:flex;align-items:center;justify-content:center;font-size:11px;">✏️</div>
         </div>
-        <div style="position:absolute;bottom:0;right:0;width:20px;height:20px;background:var(--red);border-radius:50%;border:2px solid var(--card);display:flex;align-items:center;justify-content:center;font-size:11px;">✏️</div>
+        <input type="file" id="fotoInput" accept="image/*" style="display:none;" />
+        <div class="name" id="aNome" style="margin-bottom:0;">—</div>
       </div>
-      <input type="file" id="fotoInput" accept="image/*" style="display:none;" />
-      <div class="name" id="aNome" style="margin-bottom:0;">—</div>
-    </div>
-  
-    <!-- KV -->
-    <div class="kv">
-      <div class="k">Faixa</div><div class="v" id="aFaixa">—</div>
-      <div class="k">Grau</div><div class="v" id="aGrau">—</div>
-      <div class="k">Último grau em</div><div class="v" id="aData">—</div>
-    </div>
-  
-    <!-- Stats -->
-    <div class="stats-row">
-      <div class="stat-card" id="statAulas">
-        <div class="stat-num" id="statAulasNum">—</div>
-        <div class="stat-label">Aulas realizadas na faixa atual</div>
+
+      <div class="kv">
+        <div class="k">Faixa</div><div class="v" id="aFaixa">—</div>
+        <div class="k">Grau</div><div class="v" id="aGrau">—</div>
+        <div class="k">Último grau em</div><div class="v" id="aData">—</div>
       </div>
-      <div class="stat-card stat-card--red" id="statRestantes">
-        <div class="stat-num" id="statRestantesNum">—</div>
-        <div class="stat-label">Aulas para a próxima graduação</div>
+
+      <div class="stats-row">
+        <div class="stat-card" id="statAulas">
+          <div class="stat-num" id="statAulasNum">—</div>
+          <div class="stat-label">Aulas realizadas na faixa atual</div>
+        </div>
+        <div class="stat-card stat-card--red" id="statRestantes">
+          <div class="stat-num" id="statRestantesNum">—</div>
+          <div class="stat-label">Aulas para a próxima graduação</div>
+        </div>
       </div>
-    </div>
-  
-    <div class="status" id="aStatus">—</div>
-  
-  </section>
+
+      <div class="status" id="aStatus">—</div>
+    </section>
+
     <!-- ── CONTRATO ──────────────────────────────────────────── -->
     <section class="card hidden" id="cardContrato">
       <h2 class="title" style="margin-bottom:6px;">📋 Contrato de Adesão</h2>
       <p style="font-size:13px;color:#aaa;margin-bottom:16px;">Leia e assine o contrato para continuar usando o app.</p>
-    
-      <div id="contratoTexto" style="background:#111;border:1px solid #2a2a2a;border-radius:12px;padding:14px;max-height:40vh;overflow-y:auto;font-size:12px;line-height:1.7;color:#ddd;margin-bottom:14px;">
-        <!-- preenchido dinamicamente pelo app.js -->
-      </div>
-    
+
+      <div id="contratoTexto" style="background:#111;border:1px solid #2a2a2a;border-radius:12px;padding:14px;max-height:40vh;overflow-y:auto;font-size:12px;line-height:1.7;color:#ddd;margin-bottom:14px;"></div>
+
       <label style="display:flex;align-items:flex-start;gap:10px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:12px;margin-bottom:16px;cursor:pointer;">
         <input type="checkbox" id="chkContratoLeitura" style="width:18px;height:18px;accent-color:#c0392b;flex-shrink:0;margin-top:2px;" />
         <span style="font-size:13px;color:#ddd;line-height:1.5;">Li e concordo com todos os termos do contrato.</span>
       </label>
-    
+
       <span style="font-size:13px;color:#aaa;display:block;margin-bottom:8px;">✍️ Digite seu nome para assinar:</span>
       <input type="text" id="contratoInputAssinatura" placeholder="Digite seu nome completo"
-        style="width:100%;padding:14px;font-size:16px;border-radius:12px;border:2px solid #2a2a2a;
-        background:#1a1a1a;color:#fff;outline:none;margin-bottom:10px;" />
-      <div style="background:#fff;border-radius:12px;border:2px solid #2a2a2a;min-height:70px;
-        display:flex;align-items:center;justify-content:center;padding:10px 20px;margin-bottom:16px;">
-        <span id="contratoTextoAssinatura" style="font-family:'Dancing Script',cursive;
-          font-size:32px;color:#1a1a1a;">—</span>
-      </div>    
+        style="width:100%;padding:14px;font-size:16px;border-radius:12px;border:2px solid #2a2a2a;background:#1a1a1a;color:#fff;outline:none;margin-bottom:10px;" />
+      <div style="background:#fff;border-radius:12px;border:2px solid #2a2a2a;min-height:70px;display:flex;align-items:center;justify-content:center;padding:10px 20px;margin-bottom:16px;">
+        <span id="contratoTextoAssinatura" style="font-family:'Dancing Script',cursive;font-size:32px;color:#1a1a1a;">—</span>
+      </div>
       <p class="msg err"  id="contratoErr"></p>
       <p class="msg info" id="contratoInfo"></p>
-    
       <button class="btn primary" id="btnAssinarContrato" disabled>✅ Confirmar Assinatura</button>
     </section>
 
@@ -143,12 +131,9 @@
     <!-- ── AGENDAR ─────────────────────────────────────────── -->
     <section class="card hidden" id="cardAgendar">
       <h2 class="title title-lg">Agendar Treino</h2>
-
       <div class="mes-header" id="diasMesLabel"></div>
       <div id="diasRow" class="dias-row"></div>
-
       <div id="sessoesLista" class="sessoes-lista hidden"></div>
-
       <div id="presencaBox" class="hidden">
         <div class="presenca-header">
           <span class="presenca-titulo" id="presencaTitulo"></span>
@@ -174,7 +159,6 @@
 
     <!-- ── PROFESSOR ──────────────────────────────────────── -->
     <section class="card hidden" id="cardProf">
-
       <div class="row">
         <div>
           <div class="name" id="pNome">—</div>
@@ -182,123 +166,94 @@
         </div>
         <button class="btn ghost" id="btnProfSair">Sair</button>
       </div>
-
       <div class="mes-header" id="profDiasMesLabel"></div>
       <div id="profDiasRow" class="dias-row"></div>
-
       <div id="profSessoesLista" class="sessoes-lista hidden"></div>
-
       <div id="profPresencaBox" class="hidden">
         <div class="presenca-titulo mb8" id="profPresencaTitulo"></div>
         <div id="profPresencaLista"></div>
       </div>
-
       <hr class="divider">
       <button class="btn secondary" id="btnGraduandos">🥋 Graduandos - Faixa</button>
       <div id="profGraduandosBox" class="hidden">
         <div id="profGraduandosLista"></div>
       </div>
-
     </section>
 
-      <!-- ── SESSÃO PROFESSOR ──────────────────────────────── -->
-      <section class="card hidden" id="cardProfSessao">
-        <div class="sessao-header">
-          <button class="btn-back" id="btnProfSessaoBack" aria-label="Voltar">←</button>
-          <span class="presenca-titulo" id="profSessaoTitulo"></span>
+    <!-- ── SESSÃO PROFESSOR ──────────────────────────────── -->
+    <section class="card hidden" id="cardProfSessao">
+      <div class="sessao-header">
+        <button class="btn-back" id="btnProfSessaoBack" aria-label="Voltar">←</button>
+        <span class="presenca-titulo" id="profSessaoTitulo"></span>
+      </div>
+      <div id="profSessaoPresencaLista"></div>
+    </section>
+
+    <!-- ── SOBRE O APP ──────────────────────────────────────── -->
+    <section class="card hidden" id="cardSobre">
+      <div class="notif-header">
+        <button class="btn-back" id="btnSobreBack" aria-label="Voltar">←</button>
+        <h2 class="title title-lg">Sobre o App</h2>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #2a2a2a;">
+        <div style="width:48px;height:48px;border-radius:50%;border:2px solid var(--red);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <span style="color:var(--red);font-size:22px;font-weight:700;line-height:1;">i</span>
         </div>
-        <div id="profSessaoPresencaLista"></div>
-      </section>
-      <!-- ── SOBRE O APP ──────────────────────────────────────── -->
-      <section class="card hidden" id="cardSobre">
-        <div class="notif-header">
-          <button class="btn-back" id="btnSobreBack" aria-label="Voltar">←</button>
-          <h2 class="title title-lg">Sobre o App</h2>
-        </div>
-      
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #2a2a2a;">
-          <div style="width:48px;height:48px;border-radius:50%;border:2px solid var(--red);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <span style="color:var(--red);font-size:22px;font-weight:700;line-height:1;">i</span>
-          </div>
-          <div>
-            <div style="color:#fff;font-size:18px;font-weight:600;">Riva BJJ</div>
-            <div style="color:#aaa;font-size:14px;">Brazilian Jiu-Jitsu</div>
-          </div>
-        </div>
-      
-        <div style="background:#111;border:1px solid #2a2a2a;border-radius:12px;overflow:hidden;margin-bottom:14px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #2a2a2a;">
-            <span style="color:#aaa;font-size:15px;">Versão</span>
-            <span style="color:#fff;font-size:15px;font-weight:600;">1.0.0</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #2a2a2a;">
-            <span style="color:#aaa;font-size:15px;">Desenvolvido por</span>
-            <span style="color:#fff;font-size:15px;font-weight:600;">João Paulo C. Pinheiro</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;">
-            <span style="color:#aaa;font-size:15px;">Contato</span>
-            <a href="https://instagram.com/jotape_1980" target="_blank"
-               style="color:var(--red);font-size:15px;font-weight:600;text-decoration:none;">@jotape_1980</a>
-          </div>
-        </div>
-      
-        <div style="background:#111;border:1px solid #2a2a2a;border-radius:12px;padding:14px 16px;margin-bottom:20px;">
-          <p style="color:#aaa;font-size:14px;line-height:1.7;margin:0;text-align:center;">
-            Aplicativo oficial da Riva BJJ para acompanhamento de graduações, presenças e agendamento de treinos.
-          </p>
-        </div>
-      
-        <p style="color:#666;font-size:13px;text-align:center;margin:0;">© 2026 Riva BJJ — Todos os direitos reservados</p>
-      </section>
-    
-      <div style="background:#111;border:1px solid #2a2a2a;border-radius:12px;overflow:hidden;margin-bottom:14px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid #2a2a2a;">
-          <span style="color:#aaa;font-size:13px;">Versão</span>
-          <span style="color:#fff;font-size:13px;font-weight:600;">1.0.0</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid #2a2a2a;">
-          <span style="color:#aaa;font-size:13px;">Desenvolvido por</span>
-          <span style="color:#fff;font-size:13px;font-weight:600;">João Paulo C. Pinheiro</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;">
-          <span style="color:#aaa;font-size:13px;">Contato</span>
-          <a href="https://instagram.com/jotape_1980" target="_blank"
-             style="color:var(--red);font-size:13px;font-weight:600;text-decoration:none;">@jotape_1980</a>
+        <div>
+          <div style="color:#fff;font-size:18px;font-weight:600;">Riva BJJ</div>
+          <div style="color:#aaa;font-size:14px;">Brazilian Jiu-Jitsu</div>
         </div>
       </div>
-    
-      <div style="background:#111;border:1px solid #2a2a2a;border-radius:12px;padding:13px 14px;margin-bottom:20px;">
-        <p style="color:#aaa;font-size:12px;line-height:1.7;margin:0;text-align:center;">
+
+      <div style="background:#111;border:1px solid #2a2a2a;border-radius:12px;overflow:hidden;margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #2a2a2a;">
+          <span style="color:#aaa;font-size:16px;">Versão</span>
+          <span style="color:#fff;font-size:16px;font-weight:600;">1.0.0</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #2a2a2a;">
+          <span style="color:#aaa;font-size:16px;">Desenvolvido por</span>
+          <span style="color:#fff;font-size:16px;font-weight:600;">João Paulo C. Pinheiro</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;">
+          <span style="color:#aaa;font-size:16px;">Contato</span>
+          <a href="https://instagram.com/jotape_1980" target="_blank"
+             style="color:var(--red);font-size:16px;font-weight:600;text-decoration:none;">@jotape_1980</a>
+        </div>
+      </div>
+
+      <div style="background:#111;border:1px solid #2a2a2a;border-radius:12px;padding:14px 16px;margin-bottom:20px;">
+        <p style="color:#aaa;font-size:14px;line-height:1.7;margin:0;text-align:center;">
           Aplicativo oficial da Riva BJJ para acompanhamento de graduações, presenças e agendamento de treinos.
         </p>
       </div>
-    
-      <p style="color:#555;font-size:11px;text-align:center;margin:0;">© 2026 Riva BJJ — Todos os direitos reservados</p>
-  </section>
+
+      <p style="color:#666;font-size:13px;text-align:center;margin:0;">© 2026 Riva BJJ — Todos os direitos reservados</p>
+    </section>
+
   </main>
 
-    <nav class="bnav hidden" id="mainNav">
-      <button class="navbtn on" id="navHome" aria-label="Início" title="Início">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.5L12 3l9 6.5V21H3V9.5z"/><rect x="9" y="14" width="6" height="7"/></svg>
-      </button>
-      <button class="navbtn" id="navAgendar" aria-label="Agendar" title="Agendar">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      </button>
-      <a href="https://wa.me/5519999412212" target="_blank" class="navbtn" aria-label="Suporte WhatsApp" id="navWhatsApp">
-        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-        </svg>
-      </a>
-      <button class="navbtn" id="navSobre" aria-label="Sobre" title="Sobre">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8.5" stroke-width="2.5" stroke-linecap="round"/><line x1="12" y1="12" x2="12" y2="16"/>
-        </svg>
-      </button>
+  <nav class="bnav hidden" id="mainNav">
+    <button class="navbtn on" id="navHome" aria-label="Início" title="Início">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.5L12 3l9 6.5V21H3V9.5z"/><rect x="9" y="14" width="6" height="7"/></svg>
+    </button>
+    <button class="navbtn" id="navAgendar" aria-label="Agendar" title="Agendar">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    </button>
+    <a href="https://wa.me/5519999412212" target="_blank" class="navbtn" aria-label="Suporte WhatsApp" id="navWhatsApp">
+      <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+      </svg>
+    </a>
+    <button class="navbtn" id="navSobre" aria-label="Sobre" title="Sobre">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8.5" stroke-width="2.5" stroke-linecap="round"/><line x1="12" y1="12" x2="12" y2="16"/>
+      </svg>
+    </button>
   </nav>
 
   <script type="module" src="./app.js"></script>
   <script>
-    // registra service worker
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("./sw.js").catch(()=>{});
     }
