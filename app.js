@@ -730,7 +730,7 @@ async function bioAuthenticate() {
 
 function showBioLock(mode) {
   bioAction = mode;
-  ['cardLogin', 'cardContrato', 'cardAluno', 'cardAgendar', 'cardProf', 'cardBioLock', 'cardNoSupport', 'cardNotificacoes', 'cardSessao', 'cardProfSessao'].forEach(hide);
+  ['cardLogin', 'cardContrato', 'cardAluno', 'cardAgendar', 'cardProf', 'cardBioLock', 'cardNoSupport', 'cardNotificacoes', 'cardSessao', 'cardProfSessao', 'cardSobre'].forEach(hide);
   hide('mainNav');
   if (mode === 'unlock') {
     $('bioIcon').textContent     = '🔒';
