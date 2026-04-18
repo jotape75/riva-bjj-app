@@ -1829,6 +1829,7 @@ function init() {
   $('btnSessaoDeletarCheckin').addEventListener('click', deletarCheckin);
   $('btnSessaoBack').addEventListener('click', () => {
     hide('cardSessao');
+    hide('cardSobre');
     show('cardAgendar');
     show('mainNav');
   });
@@ -1858,7 +1859,7 @@ function init() {
   // 6) Sobre
   $('navSobre').addEventListener('click', () => {
     sessionStorage.setItem(SS_PAGE, 'sobre');
-    ['cardAluno','cardAgendar','cardNotificacoes','cardSessao'].forEach(hide);
+    ['cardAluno','cardAgendar','cardNotificacoes','cardSessao','cardSobre'].forEach(hide);
     ['navHome','navAgendar','navSobre'].forEach(id => $(id).classList.remove('on'));
     $('navSobre').classList.add('on');
     show('cardSobre');
