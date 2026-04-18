@@ -995,7 +995,7 @@ function showGraduandosSkeleton() {
 function showTab(tab) {
   sessionStorage.setItem(SS_PAGE, tab);
   sessionStorage.removeItem(SS_SESSAO);
-  ['cardLogin', 'cardContrato', 'cardAluno', 'cardAgendar', 'cardProf', 'cardBioLock', 'cardNoSupport', 'cardNotificacoes', 'cardSessao', 'cardProfSessao'].forEach(hide);
+  ['cardLogin', 'cardContrato', 'cardAluno', 'cardAgendar', 'cardProf', 'cardBioLock', 'cardNoSupport', 'cardNotificacoes', 'cardSessao', 'cardProfSessao', 'cardSobre'].forEach(hide);
   ['navHome', 'navAgendar', 'navSobre'].forEach(id => $(id).classList.remove('on'));
 
   // Show nav only for logged-in students; professors have no bottom nav (handled in showProfPage)
