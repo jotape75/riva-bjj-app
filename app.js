@@ -996,7 +996,7 @@ function showTab(tab) {
   sessionStorage.setItem(SS_PAGE, tab);
   sessionStorage.removeItem(SS_SESSAO);
   ['cardLogin', 'cardContrato', 'cardAluno', 'cardAgendar', 'cardProf', 'cardBioLock', 'cardNoSupport', 'cardNotificacoes', 'cardSessao', 'cardProfSessao'].forEach(hide);
-  ['navHome', 'navAgendar'].forEach(id => $(id).classList.remove('on'));
+  ['navHome', 'navAgendar', 'navSobre'].forEach(id => $(id).classList.remove('on'));
 
   // Show nav only for logged-in students; professors have no bottom nav (handled in showProfPage)
   if (alunoData) show('mainNav'); else hide('mainNav');
@@ -1855,7 +1855,22 @@ function init() {
   $('navHome').addEventListener('click',    () => showTab('Home'));
   $('navAgendar').addEventListener('click', () => showTab('Agendar'));
 
-  // 6) Listener foto de perfil
+  // 6) Sobre
+  $('navSobre').addEventListener('click', () => {
+    sessionStorage.setItem(SS_PAGE, 'sobre');
+    ['cardAluno','cardAgendar','cardNotificacoes','cardSessao'].forEach(hide);
+    ['navHome','navAgendar','navSobre'].forEach(id => $(id).classList.remove('on'));
+    $('navSobre').classList.add('on');
+    show('cardSobre');
+  });
+
+  $('btnSobreBack').addEventListener('click', () => {
+    ['navHome','navAgendar','navSobre'].forEach(id => $(id).classList.remove('on'));
+    $('navHome').classList.add('on');
+    showTab('Home');
+  });
+
+  // 7) Listener foto de perfil
   const fotoInput = document.getElementById('fotoInput');
   if (fotoInput) {
     fotoInput.addEventListener('change', async function () {
@@ -1880,11 +1895,11 @@ function init() {
     });
   }
 
-  // 7) Enable mouse drag-to-scroll
+  // 8) Enable mouse drag-to-scroll
   enableDragScroll($('diasRow'));
   enableDragScroll($('profDiasRow'));
 
-  // 8) Contrato — registrar AQUI para funcionar em qualquer fluxo
+  // 9) Contrato — registrar AQUI para funcionar em qualquer fluxo
   document.getElementById('chkContratoLeitura').addEventListener('change', verificarBotaoContrato);
   const contratoInput    = document.getElementById('contratoInputAssinatura');
   const contratoTextoAss = document.getElementById('contratoTextoAssinatura');
