@@ -552,7 +552,7 @@ async function fbReprovar(linhaId) {
   }
 }
 
-// graduandos: students ready for graduation (aulas_restantes <= 0)
+// graduacoesPendentes: alunos que acabaram de mudar de grau (aulas_no_grau === 0, grau entre 1 e 4)
 async function fbGraduandos() {
   try {
     const q = query(collection(db, 'alunos'), where('status', '==', 'ATIVO'));
@@ -560,16 +560,15 @@ async function fbGraduandos() {
     const data = [];
     snap.forEach(d => {
       const a = d.data();
+      const grauAtual  = a.grau_atual ?? 0;
       const aulasNoGrau = a.aulas_no_grau ?? 0;
-      const metaGrau = a.meta_grau ?? (a.faixa === 'Branca' ? 36 : 56);
-      const restantes = Math.max(0, metaGrau - aulasNoGrau);
-      const grauAtual = a.grau_atual ?? 0;
-      if (grauAtual >= MAX_GRAU_POR_FAIXA) {
+      if (aulasNoGrau === 0 && grauAtual >= 1 && grauAtual <= MAX_GRAU_POR_FAIXA) {
         data.push({
-          nome:      a.nome_aluno || '',
-          faixa:     a.faixa || '',
-          grau:      grauAtual,
-          restantes: restantes
+          id:           d.id,
+          nome:         a.nome_aluno || '',
+          faixa:        a.faixa || '',
+          grau:         grauAtual,
+          dataUltimoGrau: a.data_ultimo_grau || '',
         });
       }
     });
@@ -579,7 +578,6 @@ async function fbGraduandos() {
     return { ok: false, erro: e.message };
   }
 }
-
 // notificacoes: get validated/rejected check-ins for a student in last 30 days
 async function fbNotificacoes(email) {
   try {
@@ -1583,27 +1581,38 @@ async function carregarGraduandos(force = false) {
 function renderGraduandos(graduandos) {
   const el = $('profGraduandosLista');
   if (!graduandos.length) {
-    el.innerHTML = '<p class="presenca-vazia">Nenhum graduando no momento.</p>';
+    el.innerHTML = '<p class="presenca-vazia">Nenhuma graduação pendente.</p>';
     return;
   }
   el.innerHTML = graduandos.map(a => {
-    const grau = (a.grau != null && a.grau !== '')
-      ? `<span class="presenca-status status-ok">Grau ${a.grau}</span>`
+    const dataRef = a.dataUltimoGrau
+      ? `<span class="grad-data-ref">📅 ${formatarDataBR(a.dataUltimoGrau)}</span>`
       : '';
-    const restantes = (a.restantes != null && a.restantes !== '')
-      ? `<div class="prof-grad-restantes"><span class="presenca-status status-pend">${a.restantes} restantes</span></div>`
-      : '';
-    return `<div class="presenca-item">
+    return `<div class="presenca-item" id="grad-item-${a.id}">
       <div class="presenca-info grad-info">
-        <span class="presenca-nome grad-nome">${a.nome || ''}</span>
+        <span class="presenca-nome grad-nome">${a.nome}</span>
         <div class="grad-badges">
-          <span class="presenca-status status-ok">${a.faixa || ''}</span>
-          ${grau}
+          <span class="presenca-status status-ok">${a.faixa}</span>
+          <span class="presenca-status status-ok">Grau ${a.grau}</span>
+          ${dataRef}
         </div>
       </div>
-      ${restantes}
+      <div class="prof-actions">
+        <button class="btn-ap confirmar" data-id="${a.id}">✓ Confirmar</button>
+      </div>
     </div>`;
   }).join('');
+
+  el.querySelectorAll('.btn-ap.confirmar').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = document.getElementById(`grad-item-${btn.dataset.id}`);
+      if (item) item.remove();
+      // Se a lista ficou vazia, mostrar mensagem
+      if (!el.querySelector('.presenca-item')) {
+        el.innerHTML = '<p class="presenca-vazia">Nenhuma graduação pendente.</p>';
+      }
+    });
+  });
 }
 
 /* ── Notifications ────────────────────────────────────────────── */
