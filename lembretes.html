@@ -178,13 +178,7 @@
     function montarMensagem(aluno, vencimento) {
       const nomeAluno = aluno.nome_aluno || '—';
       const dataVenc  = formatarDataBR(vencimento.toISOString().slice(0,10));
-      const isPix     = !aluno.asaas_id; // sem Asaas = paga por PIX/débito manual
-
-      if (isPix) {
-        return `Olá ${nomeAluno}! 😊 Sua mensalidade da Riva BJJ vence no dia ${dataVenc}. Para realizar o pagamento via PIX, utilize a chave: *${CHAVE_PIX}*. Qualquer dúvida estamos à disposição! 🥋`;
-      } else {
-        return `Olá ${nomeAluno}! 😊 Sua mensalidade da Riva BJJ vence no dia ${dataVenc}. Passe na academia para realizar o pagamento. Qualquer dúvida estamos à disposição! 🥋`;
-      }
+      return `Olá ${nomeAluno}! 😊 Sua mensalidade da Riva BJJ vence no dia ${dataVenc}. Você pode realizar o pagamento via PIX utilizando a chave: *${CHAVE_PIX}* ou passar na academia para pagar no débito. Qualquer dúvida estamos à disposição! 🥋`;
     }
 
     function abrirWhatsApp(telefone, mensagem) {
