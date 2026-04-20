@@ -1589,8 +1589,8 @@ function renderGraduandos(graduandos) {
       ? `<span class="grad-data-ref">📅 ${formatarDataBR(a.dataUltimoGrau)}</span>`
       : '';
     return `<div class="presenca-item" id="grad-item-${a.id}">
-      <div class="presenca-info grad-info">
-        <span class="presenca-nome grad-nome">${a.nome}</span>
+      <div class="grad-info">
+        <span class="grad-nome" title="${a.nome}">${a.nome}</span>
         <div class="grad-badges">
           <span class="presenca-status status-ok">${a.faixa}</span>
           <span class="presenca-status status-ok">Grau ${a.grau}</span>
