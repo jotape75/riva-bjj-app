@@ -618,6 +618,13 @@ body{
   gap:8px;
 }
 
+/* ── botão confirmar ─────────────────────────────────────────────── */
+.btn-ap.confirmar {
+  flex: 1;
+  background: #1a3a26;
+  color: #4cd88a;
+}
+
 /* ── WhatsApp nav button ─────────────────────────────────────── */
 #navWhatsApp{color:#25D366}
 #navWhatsApp:active{opacity:.75}
