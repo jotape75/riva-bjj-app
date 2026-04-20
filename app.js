@@ -162,9 +162,10 @@ function dataAtualBR() {
 }
 
 function preencherTextoContrato(a) {
-  const nomeAluno = a.nome_aluno || a.nome || '—';
+  const isResponsavel = ['Kids','Infantil','Juvenil'].includes(a.categoria);
+  const nomeAluno = isResponsavel ? (a.resp_nome || a.nome_aluno || '—') : (a.nome_aluno || a.nome || '—');
   const endereco = [a.rua||'', a.numero||'', a.bairro||'', a.cidade||'', a.estado||''].filter(Boolean).join(', ') || '—';
-  const cpf      = a.cpf || '—';
+  const cpf      = isResponsavel ? (a.resp_cpf || '—') : (a.cpf || '—');
   const plano    = a.plano || '—';
   const valor    = valorDePlanoContrato(a.plano);
   const inicio   = a.data_contrato || a.data_inicio || '';
@@ -222,6 +223,20 @@ async function mostrarTelaContrato(a) {
     if (el) el.classList.add('hidden');
   });
   hide('mainNav');
+  // Atualizar label da assinatura para responsável
+  const isResponsavel = ['Kids','Infantil','Juvenil'].includes(a.categoria);
+  const labelAss = document.getElementById('contratoLabelAssinatura');
+  if (labelAss) {
+    const nomeResp = a.resp_nome || '';
+    labelAss.textContent = isResponsavel
+      ? `✍️ Assinatura do Responsável${nomeResp ? ' (' + nomeResp + ')' : ''}:`
+      : '✍️ Digite seu nome para assinar:';
+  }
+  const inputAss = document.getElementById('contratoInputAssinatura');
+  if (inputAss) {
+    inputAss.placeholder = isResponsavel ? 'Digite o nome do responsável' : 'Digite seu nome completo';
+  }
+
   show('cardContrato');
 }
 
