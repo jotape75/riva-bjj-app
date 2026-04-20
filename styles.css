@@ -450,30 +450,30 @@ body{
   word-break:break-word;
 }
 
-.grad-info{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:8px;
-  flex-wrap:nowrap;
+.grad-info {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
 }
 
-.grad-nome{
-  flex:1;
-  min-width:0;
-  white-space:normal;
-  word-break:break-word;
-  font-size:18px;
-  font-weight:700;
+.grad-nome {
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 130px;
 }
 
-.grad-badges{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  flex-shrink:0;
+.grad-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
-
 .presenca-status{
   font-size:15px;
   font-weight:900;
