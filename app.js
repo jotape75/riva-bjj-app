@@ -565,7 +565,8 @@ async function fbAprovar(linhaId) {
         const alunoSnap = await getDoc(alunoRef);
         if (alunoSnap.exists()) {
           const a               = alunoSnap.data();
-          const metaGrau = a.meta_grau ?? ((a.categoria === 'Juvenil') ? 30 : (a.faixa === 'Branca' ? 36 : 56));
+          const faixaNorm = (a.faixa || '').replace(' e ', '/').replace(' E ', '/');
+          const metaGrau = a.meta_grau ?? ((a.categoria === 'Juvenil') ? 30 : (faixaNorm === 'Branca' ? 36 : 56));
           const grauAtual       = a.grau_atual ?? 0;
           const novoAulasNoGrau = (a.aulas_no_grau ?? 0) + 1;
 
@@ -578,21 +579,24 @@ async function fbAprovar(linhaId) {
                   aulas_no_grau:    0,
                   aulas_restantes:  metaGrau,
                   meta_grau:        metaGrau,
-                  statusExame:      gerarStatus(a.faixa, novoGrau),
+                  statusExame:      gerarStatus(faixaNorm, novoGrau),
+
+                  
                   data_ultimo_grau: hojeDataBR(),
                 });
               } else {
                 // Grau máximo: apenas zera restantes e atualiza status
                 await updateDoc(alunoRef, {
                   aulas_restantes: 0,
-                  statusExame:     gerarStatus(a.faixa, MAX_GRAU_POR_FAIXA),
+                  statusExame:     gerarStatus(faixaNorm, MAX_GRAU_POR_FAIXA),
+
                 });
               }
             } else {
               await updateDoc(alunoRef, {
                 aulas_no_grau:   novoAulasNoGrau,
                 aulas_restantes: Math.max(0, metaGrau - novoAulasNoGrau),
-                statusExame:     gerarStatus(a.faixa, grauAtual),
+                statusExame:     gerarStatus(faixaNorm, grauAtual),
               });
             }
           } catch (permErr) {
@@ -1797,7 +1801,8 @@ function formatarDataBR(val) {
 /* ── Student card ─────────────────────────────────────────────── */
 function preencherCard(d) {
   $('aNome').textContent  = d.nome  || '—';
-  $('aFaixa').textContent = d.faixa || '—';
+  const faixaNorm = (d.faixa || '').replace(' e ', '/').replace(' E ', '/');
+  $('aFaixa').textContent = faixaNorm || '—';
   const g = (d.grau != null && d.grau !== '') ? Number(d.grau) : null;
   $('aGrau').textContent = (g === 0) ? 'Iniciante' : (g != null ? String(g) : '—');
   $('aData').textContent  = d.dataGrau ? formatarDataBR(d.dataGrau) : '—';
@@ -1805,14 +1810,14 @@ function preencherCard(d) {
   // Status badge: INATIVO aparece em vermelho, ATIVO mostra statusExame
   const statusEl = $('aStatus');
   statusEl.className = 'status';
-    if (d.status === 'INATIVO') {
-      statusEl.innerHTML = 'INATIVO';
-      statusEl.style.color = '#e74c3c';
-    } else {
-      statusEl.innerHTML = (d.faixa && d.grau != null)
-        ? gerarStatusHTML(d.faixa, d.grau)
-        : (d.statusExame || d.status || '—');
-      statusEl.style.color = '';
+  if (d.status === 'INATIVO') {
+    statusEl.innerHTML   = 'INATIVO';
+    statusEl.style.color = '#e74c3c';
+  } else {
+    statusEl.innerHTML   = (faixaNorm && g != null)
+      ? gerarStatusHTML(faixaNorm, g)
+      : (d.statusExame || d.status || '—');
+    statusEl.style.color = '';
   }
 
   // Stats cards
@@ -1826,6 +1831,7 @@ function preencherCard(d) {
     $('statAulasNum').textContent = '—';
     $('statRestantesNum').textContent = '—';
   }
+
   atualizarAvatar(d.fotoUrl || d.foto_url || '', d.nome || '');
 }
 
