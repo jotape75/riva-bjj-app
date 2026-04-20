@@ -567,10 +567,26 @@
       const eid   = esc(String(id));
       const label = document.getElementById(`modal-faixaLabel-${eid}`);
       try {
-        const aluno = todosAlunos.find(a => String(a.id) === String(id));
-        await updateDoc(doc(db,'alunos',id), { faixa:novaFaixa, grau_atual:0, aulas_no_grau:0, aulas_restantes:metaGrau, meta_grau:metaGrau, statusExame:'', data_ultimo_grau:new Date().toISOString().slice(0,10) });
-        const aluno = todosAlunos.find(a => String(a.id) === String(id));
-        if (aluno) { aluno.faixa=novaFaixa; aluno.grau_atual=0; aluno.meta_grau=metaGrau; aluno.aulas_restantes=metaGrau; aluno.aulas_no_grau=0; }
+        const alunoTroca = todosAlunos.find(a => String(a.id) === String(id));
+        const metaGrau = (alunoTroca?.categoria === 'Juvenil')
+          ? 30
+          : (novaFaixa === 'Branca' ? 36 : 56);
+        await updateDoc(doc(db,'alunos',id), {
+          faixa:            novaFaixa,
+          grau_atual:       0,
+          aulas_no_grau:    0,
+          aulas_restantes:  metaGrau,
+          meta_grau:        metaGrau,
+          statusExame:      '',
+          data_ultimo_grau: new Date().toISOString().slice(0,10)
+        });
+        if (alunoTroca) {
+          alunoTroca.faixa          = novaFaixa;
+          alunoTroca.grau_atual     = 0;
+          alunoTroca.meta_grau      = metaGrau;
+          alunoTroca.aulas_restantes = metaGrau;
+          alunoTroca.aulas_no_grau  = 0;
+        }
         salvarCacheAlunos(todosAlunos);
         if (label) label.textContent = novaFaixa + ' G0';
         const area = document.getElementById(`modal-trocaFaixaArea-${eid}`);
@@ -590,7 +606,8 @@
         const grauAtual   = parseInt(document.getElementById(`modal-editGrauAtual-${eid}`).value) || 0;
         const aulasNoGrau = parseInt(document.getElementById(`modal-editAulasNoGrau-${eid}`).value) || 0;
         const aluno = todosAlunos.find(a => String(a.id) === String(id));
-        const metaGrau = (aluno?.categoria === 'Juvenil')? 30: (novaFaixa === 'Branca' ? 36 : 56);
+        const categoriaEdit = document.getElementById(`modal-editCategoria-${eid}`)?.value || aluno?.categoria || '';
+        const metaGrau = (categoriaEdit === 'Juvenil') ? 30 : (aluno?.faixa === 'Branca' ? 36 : 56);
         const cepRaw = (document.getElementById(`modal-editCep-${eid}`).value || '').replace(/\D/g,'');
         const updates = {
           nome_aluno:      document.getElementById(`modal-editNome-${eid}`).value.trim(),
@@ -758,9 +775,12 @@
   pdf.setFont('helvetica', 'normal');
 
   const endereco = [a.rua, a.numero, a.bairro, a.cidade, a.estado].filter(Boolean).join(', ') || '—';
+  const isResp = ['Kids','Infantil','Juvenil'].includes(a.categoria);
+  const nomeContrato = isResp ? (a.resp_nome || a.nome_aluno || '—') : (a.nome_aluno || '—');
+  const cpfContrato  = isResp ? (a.resp_cpf  || '—') : (a.cpf || '—');
   const dados = [
-    `Nome: ${a.nome_aluno || '—'}`,
-    `CPF: ${a.cpf || '—'}`,
+    `Nome: ${nomeContrato}`,
+    `CPF: ${cpfContrato}`,
     `Endereço: ${endereco}`,
     `Plano: ${a.plano || '—'}`,
     `Início: ${a.data_contrato || a.data_inicio || '—'}`,
