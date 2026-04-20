@@ -377,7 +377,7 @@
           <button class="btn-remover" id="modal-btnRemover-${id}">🗑️ Remover</button>
           <button class="btn-faixa"   id="modal-btnFaixa-${id}">Trocar Faixa</button>
           <button class="btn-toggle"  id="modal-btnToggle-${id}" data-status="${esc(a.status)}">${toggleLabel}</button>
-          ${(['Kids','Infantil','Juvenil'].includes(a.categoria) && !a.contrato_assinado) ? `
+          ${!a.contrato_assinado ? `
             <button class="btn-editar" id="modal-btnContrato-${id}" style="background:#25D366;">📲 Enviar contrato</button>
           ` : ''}
         </div>
