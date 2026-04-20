@@ -77,12 +77,12 @@
     .msg-err  { color: #e74c3c; font-size: 13px; text-align: center; margin-bottom: 8px; min-height: 18px; }
     .msg-info { color: #aaa;    font-size: 13px; text-align: center; margin-bottom: 8px; min-height: 18px; }
 
-    .sucesso-wrap { text-align: center; padding: 40px 20px; display: none; }
+    .sucesso-wrap { text-align: center; padding: 40px 20px; }
     .sucesso-icon { font-size: 64px; margin-bottom: 16px; }
     .sucesso-titulo { font-size: 22px; font-weight: 900; color: #2ecc71; margin-bottom: 8px; }
     .sucesso-sub    { font-size: 15px; color: #aaa; line-height: 1.6; }
 
-    .erro-wrap { text-align: center; padding: 60px 20px; display: none; }
+    .erro-wrap { text-align: center; padding: 60px 20px; }
     .erro-icon   { font-size: 56px; margin-bottom: 16px; }
     .erro-titulo { font-size: 20px; font-weight: 900; color: #e74c3c; margin-bottom: 8px; }
     .erro-sub    { font-size: 14px; color: #aaa; }
@@ -118,14 +118,14 @@
   </div>
 
   <!-- Erro / expirado -->
-  <div class="erro-wrap" id="erroWrap">
+  <div class="erro-wrap" id="erroWrap" style="display:none;">
     <div class="erro-icon">⚠️</div>
     <div class="erro-titulo" id="erroTitulo">Link inválido</div>
     <div class="erro-sub"   id="erroSub">Este link de assinatura não é válido ou já expirou.</div>
   </div>
 
   <!-- Sucesso -->
-  <div class="sucesso-wrap" id="sucessoWrap">
+  <div class="sucesso-wrap" id="sucessoWrap" style="display:none;">
     <div class="sucesso-icon">✅</div>
     <div class="sucesso-titulo">Contrato assinado!</div>
     <div class="sucesso-sub">O contrato foi assinado com sucesso.<br>Guarde este comprovante.</div>
@@ -339,7 +339,7 @@
   function mostrarSucesso() {
     hide('loadingWrap');
     hide('contratoWrap');
-    show('sucessoWrap');
+    document.getElementById('sucessoWrap').style.display = 'block';
   }
 
   // ── Assinatura por texto ───────────────────────────────────
