@@ -287,7 +287,8 @@
       document.getElementById('btnCadastrar').disabled = true;
 
       try {
-        const metaGrau    = faixa === 'Branca' ? 36 : 56;
+        const categoria = document.getElementById('fCategoria').value;
+        const metaGrau = (categoria === 'Juvenil' || categoria === 'Kids' || categoria === 'Infantil')? 30: (faixa === 'Branca' ? 36 : 56);
         const aulasNoGrau = parseInt(document.getElementById('fAulasNoGrau').value) || 0;
         await addDoc(collection(db, 'alunos'), {
           nome_aluno:       nome,
