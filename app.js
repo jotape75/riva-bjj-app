@@ -867,12 +867,16 @@ function afterBioSuccess(updateTs = true) {
     preencherCard(alunoData);
     showAlunoSkeleton();
     fbLogin(email)
-      .then(r => { 
-        if (r && r.ok) { 
+      .then(r => {
+        if (r && r.ok) {
           alunoData = r.data;
-          preencherCard(alunoData); // ← ADICIONE ESTA LINHA
+          preencherCard(alunoData);
           if (!alunoData.contrato_assinado) {
             mostrarTelaContrato(alunoData);
+          } else {
+            hide('cardContrato');
+            show('cardAluno');
+            show('mainNav');
           }
         }
       })
