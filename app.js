@@ -14,23 +14,80 @@ const GRADUANDOS_TTL      = 300000; // 5 min
 const NOTIF_TTL           = 900000;   // 15 min
 const BIO_GRACE_MS        = 1800000;  // 30 min
 const RP_NAME             = 'Riva BJJ';
-const MAX_GRAU_POR_FAIXA  = 4;
+const MAX_GRAU_POR_FAIXA = 4;
 
-// Mapa de emojis por faixa (igual ao Apps Script original)
+// Faixas juvenis (36 aulas por grau)
+const FAIXAS_JUVENIS = new Set([
+  'Cinza/Branca','Cinza','Cinza/Preta',
+  'Amarela/Branca','Amarela','Amarela/Preta',
+  'Laranja/Branca','Laranja','Laranja/Preta',
+  'Verde/Branca','Verde','Verde/Preta',
+]);
+
+// Ícones: emoji para monocores com emoji disponível, HTML para o resto
 const EMOJI_FAIXA = {
   'Branca':  '🔲',
   'Azul':    '🟦',
   'Roxa':    '🟪',
   'Marrom':  '🟫',
-  'Preta':   '⬛',
+  'Amarela': '🟨',
+  'Laranja': '🟧',
+  'Verde':   '🟩',
 };
 
-function gerarStatus(faixa, grau) {
-  const emoji = EMOJI_FAIXA[faixa] || '🔲';
-  const g = Math.min(Math.max(Number(grau) || 0, 0), 4);
-  if (g === 0) return 'Iniciante';
-  return emoji.repeat(g);
+// Cores para quadradinhos HTML
+const COR_FAIXA = {
+  'Cinza':   '#9E9E9E',
+  'Preta':   '#111111',
+  'Branca':  '#FFFFFF',
+  'Amarela': '#FFD600',
+  'Laranja': '#FF6D00',
+  'Verde':   '#2E7D32',
+};
+function _quadrado(cor, borda = false) {
+  const b = borda ? 'border:1.5px solid #fff;' : '';
+  return `<span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:${cor};${b}vertical-align:middle;"></span>`;
 }
+
+function _quadradoBicolor(cor1, cor2, borda = false) {
+  const b = borda ? 'border:1.5px solid #fff;' : '';
+  return `<span style="display:inline-block;width:16px;height:16px;border-radius:3px;background:linear-gradient(to right,${cor1} 50%,${cor2} 50%);${b}vertical-align:middle;"></span>`;
+}
+
+function iconeGrau(faixa) {
+  // Monocores com emoji
+  if (EMOJI_FAIXA[faixa]) return EMOJI_FAIXA[faixa];
+  // Bicolores
+  if (faixa.includes('/')) {
+    const [c1, c2] = faixa.split('/');
+    const cor1 = COR_FAIXA[c1] || '#888';
+    const cor2 = COR_FAIXA[c2] || '#888';
+    const borda = c2 === 'Preta';
+    return _quadradoBicolor(cor1, cor2, borda);
+  }
+  // Monocores sem emoji (Cinza, Preta)
+  const cor  = COR_FAIXA[faixa] || '#888';
+  const borda = faixa === 'Preta';
+  return _quadrado(cor, borda);
+}
+
+function gerarStatusHTML(faixa, grau) {
+  const g = Math.min(Math.max(Number(grau) || 0, 0), MAX_GRAU_POR_FAIXA);
+  if (g === 0) return 'Iniciante';
+  const icone = iconeGrau(faixa);
+  // Se for emoji (string sem HTML), repete normalmente
+  if (!icone.includes('<')) return icone.repeat(g);
+  // Se for HTML, repete o span
+  return Array(g).fill(icone).join(' ');
+}
+
+// gerarStatus continua existindo para gravar no Firestore (texto simples)
+// mas agora é só um texto auxiliar — o visual vem de gerarStatusHTML
+function gerarStatus(faixa, grau) {
+  return gerarStatusHTML(faixa, grau);
+}
+
+
 
 function hojeDataBR() {
   const now = new Date();
@@ -493,7 +550,7 @@ async function fbAprovar(linhaId) {
         const alunoSnap = await getDoc(alunoRef);
         if (alunoSnap.exists()) {
           const a               = alunoSnap.data();
-          const metaGrau        = a.meta_grau ?? (a.faixa === 'Branca' ? 36 : 56);
+          const metaGrau = a.meta_grau ?? ((a.faixa === 'Branca' || FAIXAS_JUVENIS.has(a.faixa)) ? 36 : 56);
           const grauAtual       = a.grau_atual ?? 0;
           const novoAulasNoGrau = (a.aulas_no_grau ?? 0) + 1;
 
@@ -1729,12 +1786,14 @@ function preencherCard(d) {
   // Status badge: INATIVO aparece em vermelho, ATIVO mostra statusExame
   const statusEl = $('aStatus');
   statusEl.className = 'status';
-  if (d.status === 'INATIVO') {
-    statusEl.textContent = 'INATIVO';
-    statusEl.style.color = '#e74c3c';
-  } else {
-    statusEl.textContent = d.statusExame || d.status || '—';
-    statusEl.style.color = '';
+    if (d.status === 'INATIVO') {
+      statusEl.innerHTML = 'INATIVO';
+      statusEl.style.color = '#e74c3c';
+    } else {
+      statusEl.innerHTML = (d.faixa && d.grau != null)
+        ? gerarStatusHTML(d.faixa, d.grau)
+        : (d.statusExame || d.status || '—');
+      statusEl.style.color = '';
   }
 
   // Stats cards
