@@ -24,7 +24,6 @@
     h1 { font-size: 20px; font-weight: 900; text-align: center; margin-bottom: 6px; }
     .subtitle { font-size: 13px; color: #aaa; text-align: center; margin-bottom: 24px; }
 
-    /* Contrato */
     .contrato-box {
       background: var(--card);
       border: 1px solid var(--border);
@@ -43,15 +42,10 @@
     .contrato-box .campo { background: #222; border-radius: 4px; padding: 1px 6px; color: #f39c12; font-weight: 700; }
     .clausula { font-weight: 900; color: #fff; margin-bottom: 4px; display: block; }
 
-    /* Scroll indicator */
-    .scroll-hint { font-size: 12px; color: #aaa; text-align: center; margin-bottom: 12px; }
-
-    /* Checkbox leitura */
     .check-leitura { display: flex; align-items: flex-start; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 20px; cursor: pointer; }
     .check-leitura input { width: 18px; height: 18px; accent-color: var(--red); flex-shrink: 0; margin-top: 2px; }
     .check-leitura span { font-size: 13px; color: #ddd; line-height: 1.5; }
 
-       /* Assinatura */
     .assinatura-wrap { margin-bottom: 20px; }
     .assinatura-label { font-size: 13px; color: #aaa; margin-bottom: 8px; display: block; }
     .input-assinatura {
@@ -66,21 +60,12 @@
       min-height: 80px; display: flex; align-items: center;
       justify-content: center; padding: 12px 20px;
     }
-    .canvas-container.ativo { border-color: var(--red); }
-    canvas { display: block; width: 100%; touch-action: none; cursor: crosshair; }
-    .canvas-placeholder {
-      position: absolute; inset: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px; color: #aaa; pointer-events: none;
+    .preview-assinatura span {
+      font-family: 'Dancing Script', cursive;
+      font-size: 36px;
+      color: #1a1a1a;
     }
-    .btn-limpar {
-      background: transparent; border: 1px solid var(--border); color: #aaa;
-      border-radius: 8px; padding: 6px 14px; font-size: 13px; cursor: pointer;
-      margin-top: 8px;
-    }
-    .btn-limpar:active { opacity: .75; }
 
-    /* Botão confirmar */
     .btn-assinar {
       width: 100%; padding: 16px; border: none; border-radius: 12px;
       background: var(--red); color: #fff; font-size: 17px; font-weight: 900;
@@ -92,23 +77,31 @@
     .msg-err  { color: #e74c3c; font-size: 13px; text-align: center; margin-bottom: 8px; min-height: 18px; }
     .msg-info { color: #aaa;    font-size: 13px; text-align: center; margin-bottom: 8px; min-height: 18px; }
 
-    /* Sucesso */
     .sucesso-wrap { text-align: center; padding: 40px 20px; display: none; }
     .sucesso-icon { font-size: 64px; margin-bottom: 16px; }
     .sucesso-titulo { font-size: 22px; font-weight: 900; color: #2ecc71; margin-bottom: 8px; }
     .sucesso-sub    { font-size: 15px; color: #aaa; line-height: 1.6; }
 
-    /* Expirado / erro */
     .erro-wrap { text-align: center; padding: 60px 20px; display: none; }
     .erro-icon   { font-size: 56px; margin-bottom: 16px; }
     .erro-titulo { font-size: 20px; font-weight: 900; color: #e74c3c; margin-bottom: 8px; }
     .erro-sub    { font-size: 14px; color: #aaa; }
 
-    /* Loading */
     .loading-wrap { text-align: center; padding: 60px 20px; }
     .loading-wrap p { color: #aaa; font-size: 15px; margin-top: 16px; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .spinner { width: 36px; height: 36px; border: 3px solid #333; border-top-color: var(--red); border-radius: 50%; animation: spin .8s linear infinite; display: inline-block; }
+
+    .responsavel-badge {
+      background: #1a2e1a;
+      border: 1px solid #2a4a2a;
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: #4cd88a;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -143,60 +136,62 @@
     <h1>Contrato de Prestação de Serviços</h1>
     <p class="subtitle">Leia o contrato abaixo e assine digitalmente</p>
 
+    <!-- Badge responsável (visível apenas para menores) -->
+    <div class="responsavel-badge" id="responsavelBadge">
+      👨‍👩‍👦 Este contrato deve ser assinado pelo responsável legal do aluno.
+    </div>
+
     <div class="contrato-box" id="contratoBox">
       <h2>CONTRATO DE PRESTAÇÃO DE SERVIÇOS</h2>
 
       <p>Pelo presente instrumento particular, de um lado, <strong>RIVA BJJ BRAZILIAN JIU JITSU LTDA</strong>, com sede na Rua Jose Ramos, nº 4181, Loja 07, Parque Barnabé, Indaiatuba/SP, inscrita no CNPJ/MF sob nº 66.256.625/0001-27, aqui denominada simplesmente <strong>CONTRATADA</strong>, e de outro lado, <span class="campo" id="c-nome">—</span>, inscrito(a) no CPF/MF sob o nº <span class="campo" id="c-cpf">—</span>, residente e domiciliado(a) na <span class="campo" id="c-endereco">—</span>, aqui denominado(a) simplesmente <strong>CONTRATANTE</strong>, fica ajustada a prestação de serviços específicos na área de preparação física, onde serão ministradas aulas de acordo com as cláusulas abaixo especificadas:</p>
-      
-      <p><span class="clausula">Cláusula Primeira – Dos Planos:</span> As aulas terão frequência mínima de 02 aulas semanais, com planos mensais, recorrentes e anuais. Conforme opção contratada e firmada abaixo:</p>
-      
-      <p>Plano contratado: <span class="campo" id="c-plano">—</span> &nbsp;&nbsp; Valor: <span class="campo" id="c-valor">—</span> &nbsp;&nbsp; Início em: <span class="campo" id="c-inicio">—</span></p>
-      
-      <p>Parágrafo único – Não haverá reposição e/ou troca de aula, exceto em caso de justificativa médica comprovada ou falta por parte da CONTRATADA. Nestes casos, o CONTRATANTE poderá repor a aula em horário que lhe seja conveniente, com prévia e expressa autorização da CONTRATADA.</p>
-      
-      <p><span class="clausula">Cláusula Segunda – Dos Valores:</span> O valor correspondente a cada plano será pago a vencer, de forma mensal, mediante débito automático em cartão de crédito ou Pix, de acordo com a tabela de preço que segue em anexo, que poderá sofrer variações e reajustes a critério da CONTRATADA, limitados às disposições legais.</p>
-      
-      <p>Parágrafo único – Não será permitida qualquer espécie de cessão do presente contrato, transferência de créditos restantes ou do plano contratado, independente do grau de parentesco ou da relação existente com o CONTRATANTE.</p>
-      
-      <p><span class="clausula">Cláusula Terceira – Do Prazo:</span> O presente contrato poderá ser renovado automaticamente.</p>
-      
-      <p>Parágrafo único – Quando da renovação, novos pagamentos deverão ser feitos de acordo com o plano escolhido.</p>
-      
-      <p><span class="clausula">Cláusula Quarta – Da Rescisão:</span> O CONTRATANTE deverá comunicá-la com antecedência mínima de 30 (trinta) dias, sob pena de incidir o pagamento do mês vigente.</p>
-      
-      <p>Parágrafo único – Não ocorrendo o aviso de rescisão, nem o comparecimento na aula seguinte ao vencimento do plano, o CONTRATANTE renuncia o horário de suas aulas, facultando ao CONTRATADO disponibilização daquele horário.</p>
-      
-      <p><span class="clausula">Cláusula Quinta – Do Termo de Responsabilidade:</span> O CONTRATANTE declara ter consultado médico de sua confiança, e estar apto para a prática de atividades físicas e esportivas de qualquer natureza, bem como, declara estar ciente de que deverá apresentar o respectivo atestado médico.</p>
-      
-      <p>Parágrafo 1º – O CONTRATANTE se responsabiliza pela manutenção e cuidados de sua saúde, bem como, pelo uso de qualquer medicamento e/ou substância que faça uso ou passe a utilizar, sob prescrição médica ou não.</p>
-      
-      <p>Parágrafo 2º – O CONTRATANTE deverá apresentar também, caso seja portador de alguma deficiência ou enfermidade que imponha limitações à atividade física, laudo médico informando tal estado.</p>
-      
-      <p>Parágrafo 3º – A validade do atestado médico e/ou laudo médico é de 01 (um) ano, sendo necessária sua renovação.</p>
-      
-      <p><span class="clausula">Cláusula Sexta – Dos Danos e Acidentes:</span> O CONTRATANTE se obriga a observar estrita e exclusivamente as orientações dos profissionais da CONTRATADA para a prática das atividades físicas.</p>
-      
-      <p>Parágrafo único – A CONTRATADA não se responsabiliza por danos físicos de qualquer natureza resultantes da inobservância do CONTRATANTE às suas orientações, pelo acatamento à orientação de terceiros estranhos, ou ainda pelo uso inadequado dos aparelhos e equipamentos, bem como qualquer outro acidente dentro das dependências que não tenha decorrido da prática orientada de atividade física.</p>
-      
-      <p><span class="clausula">Cláusula Sétima – Da Imagem:</span> A CONTRATADA, livre de quaisquer ônus junto ao CONTRATANTE, poderá utilizar-se da sua imagem para fins exclusivos de divulgação da Academia e suas atividades, podendo reproduzi-la ou divulgá-la junto à Internet, redes sociais, jornais e todos os demais meios de comunicação público ou privado.</p>
-      
-      <p>Parágrafo único – Em nenhuma hipótese poderá a imagem do CONTRATANTE ser utilizada de maneira contrária à moral ou aos bons costumes ou à ordem pública.</p>
-      
-      <p><span class="clausula">Cláusula Oitava – Dos Danos Causados:</span> O CONTRATANTE se obriga a ressarcir a CONTRATADA por qualquer dano causado por ele, por dolo ou culpa, em até 48 horas após a constatação do evento e sua consequente comunicação formal ao CONTRATANTE.</p>
-      
-      <p><span class="clausula">Cláusula Nona – Dos Armários, Objetos e Pertences:</span> A CONTRATADA disponibiliza aos seus usuários guarda-volumes e/ou armários, que deverão ser esvaziados diariamente.</p>
-      
-      <p>Parágrafo único – A CONTRATADA não se responsabiliza pelos objetos deixados no interior dos armários ou guarda-volumes, sendo a guarda, segurança e zelo dos pertences de inteira responsabilidade de seus proprietários.</p>
-      
-      <p><span class="clausula">Cláusula Décima – Do Estacionamento:</span> O estacionamento é gratuito e de uso exclusivo dos CONTRATANTES, não sendo permitido deixar veículos estacionados sem que o usuário esteja na academia. A CONTRATADA não se responsabiliza por roubos, furtos, danos de veículos ou motos, ou por objetos deixados no interior deles.</p>
-      
-      <p><span class="clausula">Cláusula Décima Primeira – Do Foro:</span> As partes elegem o foro da cidade de Indaiatuba/SP, desprezando qualquer outro, por mais privilegiado que seja, para dirimir eventual entrave decorrente do presente contrato.</p>
-      
-      <p>E por estarem justos e contratados, assinam o presente instrumento em 02 (duas) vias de igual teor.</p>
-      
-      <p style="margin-top:16px;text-align:center;">Indaiatuba, <span class="campo" id="c-data">—</span></p>
 
-    <p class="scroll-hint">↑ Role para cima para ler o contrato completo</p>
+      <p><span class="clausula">Cláusula Primeira – Dos Planos:</span> As aulas terão frequência mínima de 02 aulas semanais, com planos mensais, recorrentes e anuais. Conforme opção contratada e firmada abaixo:</p>
+
+      <p>Plano contratado: <span class="campo" id="c-plano">—</span> &nbsp;&nbsp; Valor: <span class="campo" id="c-valor">—</span> &nbsp;&nbsp; Início em: <span class="campo" id="c-inicio">—</span></p>
+
+      <p>Parágrafo único – Não haverá reposição e/ou troca de aula, exceto em caso de justificativa médica comprovada ou falta por parte da CONTRATADA. Nestes casos, o CONTRATANTE poderá repor a aula em horário que lhe seja conveniente, com prévia e expressa autorização da CONTRATADA.</p>
+
+      <p><span class="clausula">Cláusula Segunda – Dos Valores:</span> O valor correspondente a cada plano será pago a vencer, de forma mensal, mediante débito automático em cartão de crédito ou Pix, de acordo com a tabela de preço que segue em anexo, que poderá sofrer variações e reajustes a critério da CONTRATADA, limitados às disposições legais.</p>
+
+      <p>Parágrafo único – Não será permitida qualquer espécie de cessão do presente contrato, transferência de créditos restantes ou do plano contratado, independente do grau de parentesco ou da relação existente com o CONTRATANTE.</p>
+
+      <p><span class="clausula">Cláusula Terceira – Do Prazo:</span> O presente contrato poderá ser renovado automaticamente.</p>
+
+      <p>Parágrafo único – Quando da renovação, novos pagamentos deverão ser feitos de acordo com o plano escolhido.</p>
+
+      <p><span class="clausula">Cláusula Quarta – Da Rescisão:</span> O CONTRATANTE deverá comunicá-la com antecedência mínima de 30 (trinta) dias, sob pena de incidir o pagamento do mês vigente.</p>
+
+      <p>Parágrafo único – Não ocorrendo o aviso de rescisão, nem o comparecimento na aula seguinte ao vencimento do plano, o CONTRATANTE renuncia o horário de suas aulas, facultando ao CONTRATADO disponibilização daquele horário.</p>
+
+      <p><span class="clausula">Cláusula Quinta – Do Termo de Responsabilidade:</span> O CONTRATANTE declara ter consultado médico de sua confiança, e estar apto para a prática de atividades físicas e esportivas de qualquer natureza, bem como, declara estar ciente de que deverá apresentar o respectivo atestado médico.</p>
+
+      <p>Parágrafo 1º – O CONTRATANTE se responsabiliza pela manutenção e cuidados de sua saúde, bem como, pelo uso de qualquer medicamento e/ou substância que faça uso ou passe a utilizar, sob prescrição médica ou não.</p>
+
+      <p>Parágrafo 2º – O CONTRATANTE deverá apresentar também, caso seja portador de alguma deficiência ou enfermidade que imponha limitações à atividade física, laudo médico informando tal estado.</p>
+
+      <p>Parágrafo 3º – A validade do atestado médico e/ou laudo médico é de 01 (um) ano, sendo necessária sua renovação.</p>
+
+      <p><span class="clausula">Cláusula Sexta – Dos Danos e Acidentes:</span> O CONTRATANTE se obriga a observar estrita e exclusivamente as orientações dos profissionais da CONTRATADA para a prática das atividades físicas.</p>
+
+      <p>Parágrafo único – A CONTRATADA não se responsabiliza por danos físicos de qualquer natureza resultantes da inobservância do CONTRATANTE às suas orientações, pelo acatamento à orientação de terceiros estranhos, ou ainda pelo uso inadequado dos aparelhos e equipamentos.</p>
+
+      <p><span class="clausula">Cláusula Sétima – Da Imagem:</span> A CONTRATADA, livre de quaisquer ônus junto ao CONTRATANTE, poderá utilizar-se da sua imagem para fins exclusivos de divulgação da Academia e suas atividades, podendo reproduzi-la ou divulgá-la junto à Internet, redes sociais, jornais e todos os demais meios de comunicação público ou privado.</p>
+
+      <p>Parágrafo único – Em nenhuma hipótese poderá a imagem do CONTRATANTE ser utilizada de maneira contrária à moral ou aos bons costumes ou à ordem pública.</p>
+
+      <p><span class="clausula">Cláusula Oitava – Dos Danos Causados:</span> O CONTRATANTE se obriga a ressarcir a CONTRATADA por qualquer dano causado por ele, por dolo ou culpa, em até 48 horas após a constatação do evento e sua consequente comunicação formal ao CONTRATANTE.</p>
+
+      <p><span class="clausula">Cláusula Nona – Dos Armários, Objetos e Pertences:</span> A CONTRATADA disponibiliza aos seus usuários guarda-volumes e/ou armários, que deverão ser esvaziados diariamente. A CONTRATADA não se responsabiliza pelos objetos deixados no interior dos armários ou guarda-volumes.</p>
+
+      <p><span class="clausula">Cláusula Décima – Do Estacionamento:</span> O estacionamento é gratuito e de uso exclusivo dos CONTRATANTES. A CONTRATADA não se responsabiliza por roubos, furtos, danos de veículos ou motos, ou por objetos deixados no interior deles.</p>
+
+      <p><span class="clausula">Cláusula Décima Primeira – Do Foro:</span> As partes elegem o foro da cidade de Indaiatuba/SP, desprezando qualquer outro, por mais privilegiado que seja, para dirimir eventual entrave decorrente do presente contrato.</p>
+
+      <p>E por estarem justos e contratados, assinam o presente instrumento em 02 (duas) vias de igual teor.</p>
+
+      <p style="margin-top:16px;text-align:center;">Indaiatuba, <span class="campo" id="c-data">—</span></p>
+    </div>
 
     <label class="check-leitura">
       <input type="checkbox" id="chkLeitura" />
@@ -204,12 +199,11 @@
     </label>
 
     <div class="assinatura-wrap">
-      <span class="assinatura-label" id="assinaturaLabel">✍️ Assine abaixo com o dedo:</span>
-      <div class="canvas-container" id="canvasContainer">
-        <canvas id="canvasAssinatura" height="160"></canvas>
-        <div class="canvas-placeholder" id="canvasPlaceholder">Toque aqui para assinar</div>
+      <span class="assinatura-label" id="assinaturaLabel">✍️ Digite seu nome para assinar:</span>
+      <input type="text" id="inputAssinatura" class="input-assinatura" placeholder="Digite o nome completo" />
+      <div class="preview-assinatura">
+        <span id="textoAssinatura">—</span>
       </div>
-      <button class="btn-limpar" id="btnLimpar">🗑️ Limpar assinatura</button>
     </div>
 
     <p class="msg-err"  id="msgErr"></p>
@@ -222,7 +216,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-  import { getFirestore, doc, getDoc, updateDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+  import { getFirestore, doc, updateDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDj9SIhTF4-8oun-eACP179aUjSpMAR3So",
@@ -236,7 +230,6 @@
   const app = initializeApp(firebaseConfig);
   const db  = getFirestore(app);
 
-  // ── Helpers ────────────────────────────────────────────────
   function show(id) { document.getElementById(id).style.display = ''; }
   function hide(id) { document.getElementById(id).style.display = 'none'; }
 
@@ -265,19 +258,17 @@
     return `${dia} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
   }
 
-  // ── Pegar token da URL ─────────────────────────────────────
   const params = new URLSearchParams(location.search);
   const token  = params.get('token');
 
   let alunoId   = null;
   let alunoData = null;
-  let assinado  = false;
+  let assinou   = false;
 
   async function init() {
     if (!token) { mostrarErro('Link inválido', 'Este link não contém um token de assinatura válido.'); return; }
 
     try {
-      // Busca aluno pelo token
       const q = query(collection(db, 'alunos'), where('contrato_token', '==', token));
       const snap = await getDocs(q);
 
@@ -287,10 +278,7 @@
       alunoId   = docSnap.id;
       alunoData = docSnap.data();
 
-      // Verificar se já assinou
-      if (alunoData.contrato_assinado) {
-        mostrarSucesso(); return;
-      }
+      if (alunoData.contrato_assinado) { mostrarSucesso(); return; }
 
       // Verificar expiração (7 dias)
       const expira = alunoData.contrato_token_expira;
@@ -302,7 +290,6 @@
         }
       }
 
-      // Preencher contrato
       preencherContrato(alunoData);
       hide('loadingWrap');
       show('contratoWrap');
@@ -313,23 +300,28 @@
   }
 
   function preencherContrato(a) {
-    // Nome: responsável para menores, aluno para adultos
     const isResponsavel = ['Kids','Infantil','Juvenil'].includes(a.categoria);
     const nome = isResponsavel ? (a.resp_nome || a.nome_aluno || '—') : (a.nome_aluno || '—');
     const cpf  = isResponsavel ? (a.resp_cpf  || '—') : (a.cpf || '—');
-
     const endereco = [a.rua, a.numero, a.bairro, a.cidade, a.estado].filter(Boolean).join(', ') || '—';
 
-    document.getElementById('c-nome').textContent    = nome;
-    document.getElementById('c-cpf').textContent     = cpf;
-    document.getElementById('c-endereco').textContent= endereco;
-    document.getElementById('c-plano').textContent   = a.plano || '—';
-    document.getElementById('c-valor').textContent   = valorDePlano(a.plano);
-    document.getElementById('c-inicio').textContent  = formatarData(a.data_contrato || a.data_inicio);
-    document.getElementById('c-data').textContent    = dataAtualBR();
+    document.getElementById('c-nome').textContent     = nome;
+    document.getElementById('c-cpf').textContent      = cpf;
+    document.getElementById('c-endereco').textContent = endereco;
+    document.getElementById('c-plano').textContent    = a.plano || '—';
+    document.getElementById('c-valor').textContent    = valorDePlano(a.plano);
+    document.getElementById('c-inicio').textContent   = formatarData(a.data_contrato || a.data_inicio);
+    document.getElementById('c-data').textContent     = dataAtualBR();
 
     if (isResponsavel) {
-      document.getElementById('assinaturaLabel').textContent = `✍️ Assinatura do Responsável (${nome}):`;
+      // Mostra badge de responsável
+      const badge = document.getElementById('responsavelBadge');
+      badge.style.display = 'block';
+      // Atualiza label da assinatura
+      document.getElementById('assinaturaLabel').textContent =
+        `✍️ Assinatura do Responsável${nome !== '—' ? ' (' + nome + ')' : ''}:`;
+      // Atualiza placeholder
+      document.getElementById('inputAssinatura').placeholder = 'Digite o nome do responsável';
     }
   }
 
@@ -349,22 +341,22 @@
   // ── Assinatura por texto ───────────────────────────────────
   const inputAss = document.getElementById('inputAssinatura');
   const textoAss = document.getElementById('textoAssinatura');
-  let assinou    = false;
-  
+
   inputAss.addEventListener('input', () => {
     const val = inputAss.value.trim();
     textoAss.textContent = val || '—';
     assinou = val.length >= 3;
     verificarBotao();
   });
-  
+
   // ── Checkbox leitura ───────────────────────────────────────
   document.getElementById('chkLeitura').addEventListener('change', verificarBotao);
-  
+
   function verificarBotao() {
     const leu = document.getElementById('chkLeitura').checked;
     document.getElementById('btnAssinar').disabled = !(leu && assinou);
   }
+
   // ── Confirmar assinatura ───────────────────────────────────
   document.getElementById('btnAssinar').addEventListener('click', async () => {
     if (!alunoId) return;
