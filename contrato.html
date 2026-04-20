@@ -227,8 +227,12 @@
     appId: "1:196632623313:web:9a7a3c1fee0795d7302df0"
   };
 
-  const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
+  import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+  const app  = initializeApp(firebaseConfig);
+  const db   = getFirestore(app);
+  const auth = getAuth(app);
+  signInAnonymously(auth).catch(() => {});
+
 
   function show(id) { document.getElementById(id).style.display = ''; }
   function hide(id) { document.getElementById(id).style.display = 'none'; }
@@ -358,8 +362,9 @@
   }
 
   // ── Confirmar assinatura ───────────────────────────────────
-  document.getElementById('btnAssinar').addEventListener('click', async () => {
-    if (!alunoId) return;
+    document.getElementById('btnAssinar').addEventListener('click', async () => {
+      if (!alunoId) return;
+      await signInAnonymously(auth).catch(() => {});
     document.getElementById('btnAssinar').disabled = true;
     document.getElementById('msgInfo').textContent = 'Salvando assinatura…';
     document.getElementById('msgErr').textContent  = '';
