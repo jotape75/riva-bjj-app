@@ -550,7 +550,7 @@ async function fbAprovar(linhaId) {
         const alunoSnap = await getDoc(alunoRef);
         if (alunoSnap.exists()) {
           const a               = alunoSnap.data();
-          const metaGrau = a.meta_grau ?? ((a.faixa === 'Branca' || FAIXAS_JUVENIS.has(a.faixa)) ? 36 : 56);
+          const metaGrau = a.meta_grau ?? ((a.categoria === 'Juvenil') ? 30 : (a.faixa === 'Branca' ? 36 : 56));
           const grauAtual       = a.grau_atual ?? 0;
           const novoAulasNoGrau = (a.aulas_no_grau ?? 0) + 1;
 
