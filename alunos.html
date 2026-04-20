@@ -567,7 +567,7 @@
       const eid   = esc(String(id));
       const label = document.getElementById(`modal-faixaLabel-${eid}`);
       try {
-        const metaGrau = novaFaixa === 'Branca' ? 36 : 56;
+        const aluno = todosAlunos.find(a => String(a.id) === String(id));
         await updateDoc(doc(db,'alunos',id), { faixa:novaFaixa, grau_atual:0, aulas_no_grau:0, aulas_restantes:metaGrau, meta_grau:metaGrau, statusExame:'', data_ultimo_grau:new Date().toISOString().slice(0,10) });
         const aluno = todosAlunos.find(a => String(a.id) === String(id));
         if (aluno) { aluno.faixa=novaFaixa; aluno.grau_atual=0; aluno.meta_grau=metaGrau; aluno.aulas_restantes=metaGrau; aluno.aulas_no_grau=0; }
@@ -590,7 +590,7 @@
         const grauAtual   = parseInt(document.getElementById(`modal-editGrauAtual-${eid}`).value) || 0;
         const aulasNoGrau = parseInt(document.getElementById(`modal-editAulasNoGrau-${eid}`).value) || 0;
         const aluno = todosAlunos.find(a => String(a.id) === String(id));
-        const metaGrau = aluno ? (aluno.meta_grau || (aluno.faixa === 'Branca' ? 36 : 56)) : 56;
+        const metaGrau = (aluno?.categoria === 'Juvenil')? 30: (novaFaixa === 'Branca' ? 36 : 56);
         const cepRaw = (document.getElementById(`modal-editCep-${eid}`).value || '').replace(/\D/g,'');
         const updates = {
           nome_aluno:      document.getElementById(`modal-editNome-${eid}`).value.trim(),
