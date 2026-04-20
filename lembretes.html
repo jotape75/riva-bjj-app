@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#c0392b" />
+  <title>Lembretes de Pagamento – Riva BJJ</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    .admin-hdr-left { display: flex; align-items: center; gap: 14px; }
+    .admin-hdr-titulo { display: none; }
+    .admin-hdr-sair { display: none; }
+    .btn-logout { background: transparent; border: 1px solid var(--border); color: #fff; border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+    .btn-logout:active { opacity: .75; }
+    @media (min-width: 769px) {
+      .admin-hdr-inner { max-width: 1100px; justify-content: space-between; padding: 0 24px; }
+      .admin-logo { width: 48px !important; height: 48px !important; margin-top: 0 !important; }
+      .admin-hdr-titulo { display: inline; font-size: 20px; font-weight: 900; color: #fff; letter-spacing: 0.5px; }
+      .admin-hdr-sair { display: inline-block; }
+      .admin-page { max-width: 1100px; padding: 32px 32px 64px; }
+    }
+    @media (max-width: 768px) { .admin-hdr-inner { justify-content: center; } }
+
+    .page-title { font-size: 24px; font-weight: 900; color: #fff; margin-bottom: 4px; }
+    .page-subtitle { font-size: 14px; color: #aaa; margin-bottom: 20px; }
+
+    .aviso-teste {
+      background: #2a1a00;
+      border: 1px solid #f39c12;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #f39c12;
+      margin-bottom: 16px;
+    }
+
+    .lembrete-item {
+      background: #222;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .lembrete-info { flex: 1; min-width: 0; }
+    .lembrete-nome { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lembrete-detalhe { font-size: 12px; color: #aaa; }
+    .lembrete-venc { font-size: 12px; color: #f39c12; font-weight: 700; margin-top: 2px; }
+
+    .btn-wpp {
+      background: #25D366;
+      border: none;
+      color: #fff;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-wpp:active { opacity: .75; }
+
+    .resumo-box {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .resumo-num { font-size: 28px; font-weight: 900; color: #f39c12; }
+    .resumo-label { font-size: 13px; color: #aaa; margin-top: 2px; }
+
+    .rodape-fixo { position: sticky; bottom: 0; background: var(--bg); border-top: 1px solid var(--border); padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); }
+    .lista-lembretes { padding-bottom: 80px; }
+  </style>
+</head>
+<body>
+  <header class="hdr admin-hdr">
+    <div class="hdr-inner admin-hdr-inner">
+      <div class="admin-hdr-left">
+        <img class="logo admin-logo" src="./logo.png" alt="Riva BJJ" />
+        <span class="admin-hdr-titulo">Portal Administrativo</span>
+      </div>
+      <button class="btn-logout admin-hdr-sair" id="btnHdrSair">Sair</button>
+    </div>
+  </header>
+
+  <main class="page admin-page">
+    <section id="sectionLembretes">
+      <div class="page-title">📲 Lembretes de Pagamento</div>
+      <div class="page-subtitle">Alunos com mensalidade vencendo em breve</div>
+
+      <div class="aviso-teste">
+        ⚠️ <strong>Modo de teste:</strong> mostrando alunos com vencimento em 2 dias após o contrato.
+        Em produção, alterar para calcular pelo dia do mês do contrato.
+      </div>
+
+      <div class="resumo-box" id="resumoBox" style="display:none;">
+        <div>
+          <div class="resumo-num" id="resumoCount">0</div>
+          <div class="resumo-label">alunos para lembrar hoje</div>
+        </div>
+        <button class="btn primary" id="btnEnviarTodos" style="margin-top:0;">📲 Enviar todos</button>
+      </div>
+
+      <p class="msg info" id="pageInfo">Carregando…</p>
+      <div id="listaLembretes" class="lista-lembretes"></div>
+
+      <div class="rodape-fixo">
+        <button class="btn secondary" onclick="location.href='./administrativo.html'">← Voltar ao Portal</button>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { db, auth } from './firebase-config.js';
+    import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+
+    const TOKEN_KEY = 'rv_prof_token';
+    const CHAVE_PIX = '66.256.625/0001-27'; // ← substituir pela chave PIX real
+    const DIAS_AVISO = 3; // dias antes do vencimento para enviar lembrete
+    const MODO_TESTE = true; // true = vencimento 2 dias após contrato; false = produção
+
+    function esc(str) {
+      return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function formatarDataBR(dateStr) {
+      if (!dateStr) return '—';
+      if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+        const [y,m,d] = dateStr.slice(0,10).split('-');
+        return `${d}/${m}/${y}`;
+      }
+      return dateStr;
+    }
+
+    function calcularProxVencimento(dataContrato) {
+      if (!dataContrato) return null;
+      const dc = new Date(dataContrato + 'T00:00:00');
+      if (isNaN(dc.getTime())) return null;
+
+      if (MODO_TESTE) {
+        // TESTE: vencimento = data_contrato + 2 dias
+        const venc = new Date(dc);
+        venc.setDate(venc.getDate() + 2);
+        return venc;
+      } else {
+        // PRODUÇÃO: próximo vencimento = mesmo dia do mês
+        const hoje = new Date();
+        hoje.setHours(0,0,0,0);
+        const diaVenc = dc.getDate();
+        const prox = new Date(hoje.getFullYear(), hoje.getMonth(), diaVenc);
+        if (prox <= hoje) prox.setMonth(prox.getMonth() + 1);
+        return prox;
+      }
+    }
+
+    function diasAteVencimento(vencimento) {
+      const hoje = new Date();
+      hoje.setHours(0,0,0,0);
+      vencimento.setHours(0,0,0,0);
+      return Math.round((vencimento - hoje) / (1000 * 60 * 60 * 24));
+    }
+
+    function montarMensagem(aluno, vencimento) {
+      const nomeAluno = aluno.nome_aluno || '—';
+      const dataVenc  = formatarDataBR(vencimento.toISOString().slice(0,10));
+      const isPix     = !aluno.asaas_id; // sem Asaas = paga por PIX/débito manual
+
+      if (isPix) {
+        return `Olá ${nomeAluno}! 😊 Sua mensalidade da Riva BJJ vence no dia ${dataVenc}. Para realizar o pagamento via PIX, utilize a chave: *${CHAVE_PIX}*. Qualquer dúvida estamos à disposição! 🥋`;
+      } else {
+        return `Olá ${nomeAluno}! 😊 Sua mensalidade da Riva BJJ vence no dia ${dataVenc}. Passe na academia para realizar o pagamento. Qualquer dúvida estamos à disposição! 🥋`;
+      }
+    }
+
+    function abrirWhatsApp(telefone, mensagem) {
+      const tel = (telefone || '').replace(/\D/g,'');
+      if (!tel) { alert('Telefone não cadastrado.'); return; }
+      const url = `https://wa.me/55${tel}?text=${encodeURIComponent(mensagem)}`;
+      window.open(url, '_blank');
+    }
+
+    let lembretes = [];
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) carregarLembretes();
+      else location.href = './administrativo.html';
+    });
+
+    async function carregarLembretes() {
+      const info  = document.getElementById('pageInfo');
+      const lista = document.getElementById('listaLembretes');
+
+      try {
+        const q    = query(collection(db, 'alunos'), where('status', '==', 'ATIVO'), where('plano', '==', 'Mensal'));
+        const snap = await getDocs(q);
+
+        lembretes = [];
+        snap.forEach(d => {
+          const a = d.data();
+          if (!a.data_contrato) return;
+
+          const venc = calcularProxVencimento(a.data_contrato);
+          if (!venc) return;
+
+          const dias = diasAteVencimento(new Date(venc));
+          if (dias >= 0 && dias <= DIAS_AVISO) {
+            lembretes.push({
+              id:         d.id,
+              nome_aluno: a.nome_aluno || '',
+              telefone:   a.telefone   || '',
+              plano:      a.plano      || '',
+              asaas_id:   a.asaas_id   || '',
+              vencimento: new Date(venc),
+              dias,
+            });
+          }
+        });
+
+        lembretes.sort((a, b) => a.dias - b.dias);
+        info.textContent = '';
+
+        if (!lembretes.length) {
+          lista.innerHTML = '<p class="presenca-vazia">Nenhum aluno com vencimento nos próximos dias.</p>';
+          return;
+        }
+
+        // Resumo
+        document.getElementById('resumoCount').textContent = lembretes.length;
+        document.getElementById('resumoBox').style.display = '';
+
+        renderLista();
+
+      } catch(e) {
+        info.textContent = '';
+        lista.innerHTML = `<p class="msg err">Erro ao carregar: ${esc(e.message)}</p>`;
+      }
+    }
+
+    function renderLista() {
+      const lista = document.getElementById('listaLembretes');
+      lista.innerHTML = lembretes.map(a => {
+        const dataVencStr = formatarDataBR(a.vencimento.toISOString().slice(0,10));
+        const diasLabel   = a.dias === 0 ? 'Vence hoje!' : a.dias === 1 ? 'Vence amanhã!' : `Vence em ${a.dias} dias`;
+        const temTel      = !!(a.telefone || '').replace(/\D/g,'');
+        return `<div class="lembrete-item">
+          <div class="lembrete-info">
+            <div class="lembrete-nome" title="${esc(a.nome_aluno)}">${esc(a.nome_aluno)}</div>
+            <div class="lembrete-detalhe">${esc(a.plano)} · ${temTel ? esc(a.telefone) : '⚠️ Sem telefone'}</div>
+            <div class="lembrete-venc">📅 ${diasLabel} — ${dataVencStr}</div>
+          </div>
+          <button class="btn-wpp" data-id="${esc(a.id)}" onclick="enviarLembrete('${esc(a.id)}')">
+            📲 Enviar
+          </button>
+        </div>`;
+      }).join('');
+    }
+
+    window.enviarLembrete = function(id) {
+      const a = lembretes.find(x => x.id === id);
+      if (!a) return;
+      // Busca dados completos para montar mensagem correta
+      const snap = lembretes.find(x => x.id === id);
+      const msg  = montarMensagem(a, a.vencimento);
+      abrirWhatsApp(a.telefone, msg);
+    };
+
+    document.getElementById('btnEnviarTodos').addEventListener('click', () => {
+      if (!lembretes.length) return;
+      if (!confirm(`Enviar lembretes para ${lembretes.length} aluno(s)?`)) return;
+      let i = 0;
+      function enviarProximo() {
+        if (i >= lembretes.length) return;
+        const a   = lembretes[i];
+        const msg = montarMensagem(a, a.vencimento);
+        abrirWhatsApp(a.telefone, msg);
+        i++;
+        if (i < lembretes.length) setTimeout(enviarProximo, 1500);
+      }
+      enviarProximo();
+    });
+
+    document.getElementById('btnHdrSair').addEventListener('click', () => {
+      signOut(auth).catch(() => {});
+      sessionStorage.removeItem(TOKEN_KEY);
+      location.href = './administrativo.html';
+    });
+  </script>
+</body>
+</html>
