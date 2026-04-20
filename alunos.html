@@ -607,7 +607,8 @@
         const aulasNoGrau = parseInt(document.getElementById(`modal-editAulasNoGrau-${eid}`).value) || 0;
         const aluno = todosAlunos.find(a => String(a.id) === String(id));
         const categoriaEdit = document.getElementById(`modal-editCategoria-${eid}`)?.value || aluno?.categoria || '';
-        const metaGrau = (categoriaEdit === 'Juvenil') ? 30 : (aluno?.faixa === 'Branca' ? 36 : 56);
+        const faixaEdit = aluno?.faixa || '';
+        const metaGrau = (categoriaEdit === 'Juvenil')? 30: (faixaEdit === 'Branca' ? 36 : 56);
         const cepRaw = (document.getElementById(`modal-editCep-${eid}`).value || '').replace(/\D/g,'');
         const updates = {
           nome_aluno:      document.getElementById(`modal-editNome-${eid}`).value.trim(),
