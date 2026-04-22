@@ -26,10 +26,7 @@
     .addr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 0; }
     .addr-grid .input { margin-bottom: 0; background: #1a1a1a; color: #bbb; }
     .addr-readonly { background: #1a1a1a !important; color: #bbb !important; }
-    .avista-wrap { display: none !important; background: rgba(52,152,219,0.08); border: 1px solid rgba(52,152,219,0.3); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
-    .avista-titulo { font-size: 13px; font-weight: 900; color: #3498db; margin-bottom: 10px; }
-    .avista-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .avista-row .input { margin-bottom: 0; }
+
   </style>
 </head>
 <body>
@@ -163,30 +160,6 @@
           <option value="Avista">À Vista</option>
         </select>
 
-        <!-- ── Campos exclusivos À Vista ── -->
-        <div class="avista-wrap" id="secaoAvista">
-          <div class="avista-titulo">💳 Pagamento À Vista</div>
-          <div class="avista-row">
-            <div>
-              <label class="label" for="fAvistaValor">Valor pago (R$)</label>
-              <input id="fAvistaValor" class="input" type="number" min="0" step="0.01" placeholder="0,00" />
-            </div>
-            <div>
-              <label class="label" for="fAvistaFormaPag">Forma de pagamento</label>
-              <select id="fAvistaFormaPag" class="input">
-                <option value="dinheiro">💵 Dinheiro</option>
-                <option value="pix">📲 Pix</option>
-                <option value="debito">💳 Débito</option>
-                <option value="credito">💳 Crédito</option>
-              </select>
-            </div>
-          </div>
-          <div style="height:10px;"></div>
-          <label class="label" for="fPagoAte">Pago até (mês/ano) *</label>
-          <input id="fPagoAte" class="input" type="month" style="max-width:200px;" />
-          <p style="font-size:11px;color:#888;margin-top:4px;">Selecione o último mês pago. Ex: dezembro/2026</p>
-        </div>
-
         <label class="label" for="fGrupoFamiliar">Grupo Familiar (opcional)</label>
         <input id="fGrupoFamiliar" class="input" type="text" placeholder="Ex: Família Silva" />
 
@@ -236,16 +209,6 @@
         .replace(/(\d{3})(\d{1,2})$/,'$1-$2');
     }
 
-    // ── Mostrar/ocultar seção À Vista ──
-    document.getElementById('fPlano').addEventListener('change', function() {
-      const secao = document.getElementById('secaoAvista');
-      if (this.value === 'Avista') {
-        secao.style.setProperty('display', 'block', 'important');
-      } else {
-        secao.style.setProperty('display', 'none', 'important');
-      }
-    });
-
     document.getElementById('fCpf').addEventListener('input', function() { this.value = formatarCpf(this.value); });
 
     // ── ViaCEP ──
@@ -293,11 +256,6 @@
       if (!nome)  { setErr('formErr', 'Nome é obrigatório.'); return; }
       if (!email || email.indexOf('@') < 1) { setErr('formErr', 'Email inválido.'); return; }
 
-      if (plano === 'Avista') {
-        const pagoAte = document.getElementById('fPagoAte').value;
-        if (!pagoAte) { setErr('formErr', 'Informe até quando foi pago (mês/ano).'); return; }
-      }
-
       const categoria = document.getElementById('fCategoria').value;
       const categoriasMenor = ['Kids', 'Infantil', 'Juvenil'];
       if (categoriasMenor.includes(categoria)) {
@@ -318,7 +276,6 @@
       try {
         const metaGrau    = (categoria === 'Juvenil' || categoria === 'Kids' || categoria === 'Infantil') ? 30 : (faixa === 'Branca' ? 36 : 56);
         const aulasNoGrau = parseInt(document.getElementById('fAulasNoGrau').value) || 0;
-        const pagoAte     = document.getElementById('fPagoAte').value; // "YYYY-MM"
 
         await addDoc(collection(db, 'alunos'), {
           nome_aluno:       nome,
@@ -337,9 +294,9 @@
           data_inicio:      document.getElementById('fDataInicio').value,
           categoria,
           plano,
-          pago_ate:         plano === 'Avista' ? pagoAte : '',
-          avista_valor:     plano === 'Avista' ? (parseFloat(document.getElementById('fAvistaValor').value) || 0) : 0,
-          avista_forma_pag: plano === 'Avista' ? document.getElementById('fAvistaFormaPag').value : '',
+          pago_ate:         '',
+          avista_valor:     0,
+          avista_forma_pag: '',
           grupo_familiar:   document.getElementById('fGrupoFamiliar').value.trim(),
           data_contrato:    document.getElementById('fDataContrato').value,
           cep:              document.getElementById('fCep').value.replace(/\D/g,''),
@@ -358,7 +315,7 @@
 
         setInfo('formInfo', '✅ Aluno cadastrado com sucesso!');
         ['fNome','fEmail','fGrupoFamiliar','fCep','fRua','fBairro','fCidade','fEstado','fNumero',
-         'fCpf','fTelefone','fPagoAte','fAvistaValor'].forEach(id => { document.getElementById(id).value = ''; });
+         'fCpf','fTelefone'].forEach(id => { document.getElementById(id).value = ''; });
         document.getElementById('fFaixa').value        = 'Branca';
         document.getElementById('fGrau').value         = '0';
         document.getElementById('fAulasNoGrau').value  = '0';
@@ -368,7 +325,6 @@
         document.getElementById('fDataInicio').value   = '';
         document.getElementById('fPlano').value        = '';
         document.getElementById('fDataContrato').value = '';
-        document.getElementById('secaoAvista').style.display      = 'none';
         document.getElementById('secaoResponsavel').style.display = 'none';
         document.getElementById('fRespNome').value     = '';
         document.getElementById('fRespCpf').value      = '';
