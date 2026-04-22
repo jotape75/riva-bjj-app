@@ -124,6 +124,13 @@
     .dot-preta,  .fill-preta  { background: #888; }
     .dot-kids,   .fill-kids   { background: linear-gradient(90deg,#f39c12,#e67e22); }
 
+    /* ── SELETOR DE DIAS ── */
+    .day-selector { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+    .day-btn { padding: 5px 11px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: #888; font-size: 11px; font-weight: 700; cursor: pointer; font-family: var(--font-body); transition: background 0.15s, color 0.15s, border-color 0.15s; white-space: nowrap; }
+    .day-btn:hover { border-color: var(--red); color: #fff; }
+    .day-btn.active { background: var(--red); border-color: var(--red); color: #fff; }
+    .day-btn.hoje { border-color: rgba(192,57,43,0.4); color: #ddd; }
+
     /* ── BARRAS VERTICAIS — horários ── */
     .bar-v-area { display: flex; align-items: flex-end; gap: 8px; height: 130px; padding-top: 10px; }
     .bar-v-col  { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; min-width: 0; }
@@ -280,8 +287,9 @@
             <div class="chart-card">
               <div class="chart-header">
                 <div class="chart-title">Alunos por Horário</div>
-                <div class="chart-subtitle">Check-ins por faixa de horário</div>
+                <div class="chart-subtitle" id="horarioSubtitle">Check-ins do dia</div>
               </div>
+              <div class="day-selector" id="daySelectorHorario"></div>
               <div class="bar-v-area" id="chartHorarios">
                 <div class="skel" style="width:100%;height:100%;border-radius:6px;"></div>
               </div>
@@ -474,46 +482,119 @@
       }
     }
 
-    /* ── 2. Alunos por horário ── */
-    async function carregarHorarios() {
+    /* ── 2. Alunos por horário (por dia da semana) ── */
+    let _checkinsCache = null; // cache dos checkins carregados
+
+    function formatarDataBR(d) {
+      return String(d.getDate()).padStart(2,'0') + '/' +
+             String(d.getMonth()+1).padStart(2,'0') + '/' +
+             d.getFullYear();
+    }
+
+    function getSemanaAtual() {
+      const hoje = new Date();
+      const diaSemana = hoje.getDay(); // 0=dom
+      const diffSeg = diaSemana === 0 ? -6 : 1 - diaSemana;
+      const seg = new Date(hoje);
+      seg.setDate(hoje.getDate() + diffSeg);
+      seg.setHours(0,0,0,0);
+
+      const nomes = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+      return nomes.map((nome, i) => {
+        const d = new Date(seg);
+        d.setDate(seg.getDate() + i);
+        return {
+          nome,
+          data: d,
+          dataStr: formatarDataBR(d),
+          ehHoje: d.toDateString() === hoje.toDateString(),
+        };
+      });
+    }
+
+    function toMin(s) {
+      const m = s.replace(/[^0-9:H]/g,'').replace('H',':');
+      const [h, min='0'] = m.split(':');
+      return parseInt(h)*60 + parseInt(min);
+    }
+
+    function renderBarrasHorario(checkins, dataStr) {
       const container = document.getElementById('chartHorarios');
+      const subtitle  = document.getElementById('horarioSubtitle');
+
+      // Filtrar pelo dia selecionado
+      const contagem = {};
+      checkins.forEach(d => {
+        const dt = (d.data_treino || '').trim();
+        if (dt !== dataStr) return;
+        const h = (d.horario || '').trim().toUpperCase();
+        if (!h) return;
+        contagem[h] = (contagem[h] || 0) + 1;
+      });
+
+      const lista = Object.entries(contagem).sort((a,b) => toMin(a[0]) - toMin(b[0]));
+
+      const total = lista.reduce((s, x) => s + x[1], 0);
+      subtitle.textContent = total > 0
+        ? `${total} check-in${total > 1 ? 's' : ''} em ${dataStr}`
+        : `Sem check-ins em ${dataStr}`;
+
+      if (!lista.length) {
+        container.innerHTML = '<p style="color:var(--muted);font-size:12px;padding:16px 0;text-align:center;">Nenhum check-in neste dia.</p>';
+        return;
+      }
+
+      const max = Math.max(...lista.map(x => x[1]));
+      const trackH = 106;
+
+      container.innerHTML = lista.map(([hor, qtd]) => {
+        const pct = Math.round((qtd / max) * 100);
+        return `
+          <div class="bar-v-col">
+            <div class="bar-v-val">${qtd}</div>
+            <div class="bar-v-bar" style="height:0px" data-pct="${pct}"></div>
+            <div class="bar-v-label">${hor}</div>
+          </div>`;
+      }).join('');
+
+      requestAnimationFrame(() => {
+        container.querySelectorAll('.bar-v-bar').forEach(el => {
+          el.style.height = Math.max(4, Math.round((el.dataset.pct / 100) * trackH)) + 'px';
+        });
+      });
+    }
+
+    async function carregarHorarios() {
+      const container   = document.getElementById('chartHorarios');
+      const selectorEl  = document.getElementById('daySelectorHorario');
+
       try {
+        // Buscar todos os checkins uma vez
         const snap = await getDocs(collection(db, 'checkins'));
-        const contagem = {};
-        snap.forEach(d => {
-          const h = (d.data().horario || '').trim().toUpperCase();
-          if (!h) return;
-          contagem[h] = (contagem[h] || 0) + 1;
-        });
+        _checkinsCache = snap.docs.map(d => d.data());
 
-        // Ordenar horários cronologicamente
-        const lista = Object.entries(contagem).sort((a, b) => {
-          const toMin = s => {
-            const m = s.replace(/[^0-9:H]/g,'').replace('H',':');
-            const [h, min='0'] = m.split(':');
-            return parseInt(h)*60 + parseInt(min);
-          };
-          return toMin(a[0]) - toMin(b[0]);
-        });
+        // Montar seletor de dias da semana
+        const semana = getSemanaAtual();
+        const hoje   = semana.find(d => d.ehHoje) || semana[0];
 
-        if (!lista.length) { container.innerHTML = '<p style="color:var(--muted);font-size:12px;padding:8px;">Sem dados.</p>'; return; }
+        selectorEl.innerHTML = semana.map((dia, i) => `
+          <button
+            class="day-btn${dia.ehHoje ? ' hoje' : ''}${dia.ehHoje ? ' active' : ''}"
+            data-data="${dia.dataStr}"
+            data-idx="${i}">
+            ${dia.nome} ${dia.data.getDate()}
+          </button>`
+        ).join('');
 
-        const max = Math.max(...lista.map(x => x[1]));
+        // Renderizar o dia atual por padrão
+        renderBarrasHorario(_checkinsCache, hoje.dataStr);
 
-        container.innerHTML = lista.map(([hor, total]) => {
-          const pct = Math.round((total / max) * 100);
-          return `
-            <div class="bar-v-col">
-              <div class="bar-v-val">${total}</div>
-              <div class="bar-v-bar" style="height:0px" data-pct="${pct}"></div>
-              <div class="bar-v-label">${hor}</div>
-            </div>`;
-        }).join('');
-
-        const trackH = 130 - 24; // altura disponível para barras
-        requestAnimationFrame(() => {
-          container.querySelectorAll('.bar-v-bar').forEach(el => {
-            el.style.height = Math.max(4, Math.round((el.dataset.pct / 100) * trackH)) + 'px';
+        // Eventos dos botões
+        selectorEl.querySelectorAll('.day-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            selectorEl.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderBarrasHorario(_checkinsCache, btn.dataset.data);
           });
         });
 
