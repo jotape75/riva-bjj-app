@@ -328,25 +328,34 @@
       }
     }
 
-    /* ── Buscar mensalidades do mês ── */
+    /* ── Buscar mensalidades do mês (apenas alunos ativos) ── */
     async function buscarMensalidades() {
+      // Buscar IDs dos alunos ativos
+      const alunosSnap = await getDocs(query(
+        collection(db, 'alunos'),
+        where('status', '==', 'ATIVO')
+      ));
+      const idsAtivos = new Set(alunosSnap.docs.map(d => d.id));
+
       const snap = await getDocs(query(
         collection(db, 'pagamentos'),
         where('mes', '==', mesSel),
         where('ano', '==', anoSel)
       ));
-      return snap.docs.map(d => {
-        const p = d.data();
-        return {
-          id:        d.id,
-          descricao: p.nome || 'Aluno',
-          valor:     parseFloat(p.valor || 0),
-          data:      p.data || '',
-          dataTs:    parseDateTS(p.data),
-          categoria: 'Mensalidade',
-          forma:     p.formaPagamento || '',
-        };
-      });
+      return snap.docs
+        .filter(d => idsAtivos.has(d.data().alunoId))
+        .map(d => {
+          const p = d.data();
+          return {
+            id:        d.id,
+            descricao: p.nome || 'Aluno',
+            valor:     parseFloat(p.valor || 0),
+            data:      p.data || '',
+            dataTs:    parseDateTS(p.data),
+            categoria: 'Mensalidade',
+            forma:     p.formaPagamento || '',
+          };
+        });
     }
 
     /* ── Buscar vendas da lojinha do mês ── */
@@ -430,6 +439,10 @@
           });
         }
 
+        // Buscar IDs dos alunos ativos (uma vez só)
+        const alunosSnap = await getDocs(query(collection(db,'alunos'), where('status','==','ATIVO')));
+        const idsAtivos  = new Set(alunosSnap.docs.map(d => d.id));
+
         // Buscar dados de cada mês
         const dadosMeses = await Promise.all(meses.map(async m => {
           const [pagSnap, despSnap, vendasSnap] = await Promise.all([
@@ -437,7 +450,9 @@
             getDocs(query(collection(db,'fluxo_despesas'), where('mes','==',m.mes), where('ano','==',m.ano))),
             getDocs(collection(db,'loja_vendas')),
           ]);
-          const entMens = pagSnap.docs.reduce((s,d) => s + parseFloat(d.data().valor||0), 0);
+          const entMens = pagSnap.docs
+            .filter(d => idsAtivos.has(d.data().alunoId))
+            .reduce((s,d) => s + parseFloat(d.data().valor||0), 0);
           const entLoja = vendasSnap.docs
             .map(d => d.data())
             .filter(v => { const dt = parseDateBR(v.data); return dt && dt.getMonth()+1 === m.mes && dt.getFullYear() === m.ano; })
