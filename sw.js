@@ -1,4 +1,4 @@
-const CACHE = "riva-bjj-v20260422223554";
+const CACHE = "riva-bjj-v20260422225305";
 const ASSETS = [
   "./",
   "./index.html",
