@@ -308,7 +308,7 @@
       return todosRegistros.filter(r => r.grupo_familiar && r.grupo_familiar.trim().toLowerCase() === gf).length >= 2;
     }
     function calcularValorFinal(a) {
-      if (a.plano === 'À Vista') return a.avista_valor || 0;
+      if (a.plano === 'Avista') return a.avista_valor || 0;
       const base = valorDePlano(a.plano);
       return detectarDesconto(a) ? Math.round(base * 0.9 * 100) / 100 : base;
     }
@@ -316,7 +316,7 @@
     // ── Status efetivo — inclui lógica À Vista ──────────────────
     function getEffectiveStatus(a) {
       // Plano À Vista: verifica se mês/ano selecionado está dentro do período pago
-      if (a.plano === 'À Vista') {
+      if (a.plano === 'Avista') {
         const pagoAte = a.pago_ate; // "YYYY-MM"
         if (!pagoAte) return 'pendente';
         const [anoFim, mesFim] = pagoAte.split('-').map(Number);
@@ -521,8 +521,8 @@
       let arrecadado=0, pendente=0, emDia=0;
       todosRegistros.forEach(a => {
         const st = getEffectiveStatus(a);
-        if (st==='pago') { arrecadado += parseFloat(a.plano === 'À Vista' ? a.avista_valor || 0 : (a.valor || calcularValorFinal(a))); emDia++; }
-        else if (a.plano !== 'À Vista') pendente += calcularValorFinal(a);
+        if (st==='pago') { arrecadado += parseFloat(a.plano === 'Avista' ? a.avista_valor || 0 : (a.valor || calcularValorFinal(a))); emDia++; }
+        else if (a.plano !== 'Avista') pendente += calcularValorFinal(a);
       });
       document.getElementById('resumoArrecadado').textContent = 'R$ '+arrecadado.toFixed(2).replace('.',',');
       document.getElementById('resumoPendente').textContent   = 'R$ '+pendente.toFixed(2).replace('.',',');
@@ -556,9 +556,9 @@
       if (st==='pago')    { badgeClass='status-pago';    badgeText='✅ Pago'; }
       if (st==='vencido') { badgeClass='status-vencido'; badgeText='❌ Vencido'; }
       if (a.plano==='Recorrente' && st!=='pago' && a.asaas_id) { badgeClass='status-recorrente-pendente'; badgeText='⏳ Recorrente'; }
-      if (a.plano==='À Vista' && st==='pago') { badgeClass='status-avista'; badgeText='💳 À Vista'; }
+      if (a.plano==='Avista' && st==='pago') { badgeClass='status-avista'; badgeText='💳 À Vista'; }
 
-      const subLabel = a.plano === 'À Vista'
+      const subLabel = a.plano === 'Avista'
         ? `À Vista · Pago até ${formatData(a.pago_ate)}`
         : `${a.plano||'—'} · R$ ${calcularValorFinal(a).toFixed(2).replace('.',',')}`;
 
@@ -580,17 +580,17 @@
       if (st==='pago')    { badgeClass='status-pago';    badgeText='✅ Pago'; }
       if (st==='vencido') { badgeClass='status-vencido'; badgeText='❌ Vencido'; }
       if (a.plano==='Recorrente' && st!=='pago' && a.asaas_id) { badgeClass='status-recorrente-pendente'; badgeText='⏳ Recorrente Pendente'; }
-      if (a.plano==='À Vista' && st==='pago') { badgeClass='status-avista'; badgeText='💳 À Vista'; }
+      if (a.plano==='Avista' && st==='pago') { badgeClass='status-avista'; badgeText='💳 À Vista'; }
 
       const temDesconto = detectarDesconto(a);
       const valorFinal  = calcularValorFinal(a);
-      const valorDisp   = a.plano === 'À Vista'
+      const valorDisp   = a.plano === 'Avista'
         ? 'R$ '+(a.avista_valor||0).toFixed(2).replace('.',',') + ' <span style="font-size:11px;color:#3498db;">(à vista)</span>'
         : 'R$ '+valorFinal.toFixed(2).replace('.',',')+(temDesconto?' <span class="desconto-tag">10% desc.</span>':'');
 
       // Vencimento
       let proxVenc = '—';
-      if (a.plano === 'À Vista') {
+      if (a.plano === 'Avista') {
         proxVenc = a.pago_ate ? formatData(a.pago_ate) : '—';
       } else if (a.plano === 'Recorrente' && a.asaas_id && liveData && liveData.proxVencimento) {
         proxVenc = formatData(liveData.proxVencimento);
@@ -610,7 +610,7 @@
       }
 
       let acoes = '';
-      if (a.plano === 'À Vista') {
+      if (a.plano === 'Avista') {
         // Nenhuma ação de cobrança para À Vista
         acoes += `<button class="btn-acao historico" onclick="window._historico('${ie}','${escAttr(a.nome||'')}')">📋 Histórico</button>`;
       } else if (a.plano === 'Recorrente') {
@@ -644,7 +644,7 @@
         : '';
 
       let extras = '';
-      if (a.plano === 'À Vista') {
+      if (a.plano === 'Avista') {
         extras += `<span class="chip-avista">💳 À Vista · ${formatFormaPag(a.avista_forma_pag)}</span>`;
       }
       if (a.asaas_id) extras += '<span class="asaas-badge">Asaas</span> ';
@@ -653,7 +653,7 @@
         if (new Date()<dataC) extras += `<span class="chip-carencia">⏳ Carência até ${formatDataBR(dataC)}</span>`;
       }
 
-      const vencLabel = a.plano === 'À Vista' ? 'Pago até' : 'Próx. Vencimento';
+      const vencLabel = a.plano === 'Avista' ? 'Pago até' : 'Próx. Vencimento';
 
       document.getElementById('modalFinBox').innerHTML = `
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
@@ -674,7 +674,7 @@
           <div class="fin-info-item"><span class="fin-info-label">Status</span><span class="fin-info-valor">${statusDisplay}</span></div>
           <div class="fin-info-item"><span class="fin-info-label">${vencLabel}</span><span class="fin-info-valor">${proxVenc}</span></div>
           <div class="fin-info-item"><span class="fin-info-label">Contrato</span><span class="fin-info-valor">${formatData(a.data_contrato)}</span></div>
-          ${st==='pago' && a.plano !== 'À Vista' ? `<div class="fin-info-item"><span class="fin-info-label">Forma</span><span class="fin-info-valor">${formatFormaPag(a.formaPagamento)}</span></div>` : ''}
+          ${st==='pago' && a.plano !== 'Avista' ? `<div class="fin-info-item"><span class="fin-info-label">Forma</span><span class="fin-info-valor">${formatFormaPag(a.formaPagamento)}</span></div>` : ''}
         </div>
         <div class="btns-acao">${acoes}</div>
         ${primeiroPagHtml}
