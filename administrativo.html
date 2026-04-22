@@ -3,220 +3,590 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#c0392b" />
+  <meta name="theme-color" content="#0a0a0a" />
   <title>Portal Administrativo – Riva BJJ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./styles.css" />
   <style>
-    .portal-welcome {
-      font-size: 20px;
-      font-weight: 900;
-      color: #fff;
-      margin-bottom: 20px;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #c0392b;
+      --red-glow: rgba(192,57,43,0.18);
+      --red-dim: rgba(192,57,43,0.08);
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --surface2: #171717;
+      --border: rgba(255,255,255,0.07);
+      --text: #f0f0f0;
+      --muted: #666;
+      --sidebar-w: 260px;
+      --header-h: 60px;
+      --font-head: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
     }
 
-    .portal-cards {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      overflow-x: hidden;
     }
 
-    .portal-card {
-      flex: 1 1 calc(50% - 6px);
-      min-width: 140px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 20px 16px;
+    /* ─────────── LOGIN ─────────── */
+    #loginScreen {
+      min-height: 100vh;
       display: flex;
-      flex-direction: column;
       align-items: center;
-      text-align: center;
-      gap: 10px;
-      justify-content: space-between;
-      align-items: stretch;
+      justify-content: center;
+      padding: 24px;
+      background: var(--bg);
+      position: relative;
+    }
+    #loginScreen::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(192,57,43,0.12) 0%, transparent 70%);
+      pointer-events: none;
     }
 
-    .portal-card-icon {
-      font-size: 40px;
-      line-height: 1;
+    .login-box {
+      width: 100%;
+      max-width: 400px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 32px;
+      position: relative;
+      z-index: 1;
+      animation: fadeUp 0.4s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
-    .portal-card-title {
+    .login-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .login-logo img {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+    }
+    .login-logo-text {
+      font-family: var(--font-head);
       font-size: 18px;
       font-weight: 900;
       color: #fff;
+      letter-spacing: 0.5px;
+    }
+    .login-logo-sub {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 400;
+      display: block;
+      letter-spacing: 1px;
+      text-transform: uppercase;
     }
 
-    .portal-card-subtitle {
-      font-size: 13px;
-      color: #aaa;
-      line-height: 1.4;
+    .login-title {
+      font-family: var(--font-head);
+      font-size: 26px;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+    .login-subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 28px;
     }
 
-    .portal-card .btn {
-      margin-top: 8px;
-      font-size: 15px;
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #999;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 7px;
+    }
+    .field input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
       padding: 12px 14px;
+      font-size: 15px;
+      color: #fff;
+      font-family: var(--font-body);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .field input:focus { border-color: var(--red); }
+    .field input::placeholder { color: #444; }
+
+    .btn-login {
+      width: 100%;
+      margin-top: 8px;
+      padding: 14px;
+      background: var(--red);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: var(--font-head);
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn-login:hover { opacity: 0.9; }
+    .btn-login:active { transform: scale(0.98); }
+    .btn-login:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .msg-err  { margin-top: 12px; font-size: 13px; color: #ff6b6b; text-align: center; min-height: 18px; }
+    .msg-info { margin-top: 12px; font-size: 13px; color: #aaa; text-align: center; min-height: 18px; }
+
+    /* ─────────── DASHBOARD SHELL ─────────── */
+    #dashScreen { display: none; min-height: 100vh; }
+    #dashScreen.visible { display: flex; }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 200;
+      transition: transform 0.3s cubic-bezier(.4,0,.2,1);
     }
 
-    .portal-card .btn[disabled] {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    @media (max-width: 360px) {
-      .portal-cards {
-        flex-direction: column;
-      }
-      .portal-card {
-        flex: 1 1 100%;
-      }
-    }
-
-    .portal-header-row {
+    .sidebar-brand {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 20px;
       gap: 12px;
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-brand img { width: 36px; height: 36px; object-fit: contain; }
+    .sidebar-brand-name {
+      font-family: var(--font-head);
+      font-size: 15px;
+      font-weight: 900;
+      color: #fff;
+    }
+    .sidebar-brand-sub {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
-    .btn-logout {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: #fff;
-      border-radius: 10px;
-      padding: 8px 14px;
-      font-size: 13px;
-      font-weight: 700;
+    .sidebar-user {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-user-label {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 4px;
+    }
+    .sidebar-user-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #ddd;
+    }
+
+    .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+
+    .nav-section-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--muted);
+      padding: 8px 20px 4px;
+      font-weight: 600;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 20px;
       cursor: pointer;
-      white-space: nowrap;
+      border-radius: 0;
+      transition: background 0.15s;
+      border-left: 3px solid transparent;
+      text-decoration: none;
+      color: #aaa;
+      font-size: 14px;
+      font-weight: 500;
+      user-select: none;
+    }
+    .nav-item:hover { background: var(--red-dim); color: #fff; }
+    .nav-item.active {
+      background: var(--red-dim);
+      border-left-color: var(--red);
+      color: #fff;
+    }
+    .nav-item-icon {
+      font-size: 18px;
+      width: 24px;
+      text-align: center;
       flex-shrink: 0;
     }
-    .btn-logout:active { opacity: .75; }
+    .nav-item-label { flex: 1; }
 
-    /* ── Header desktop compacto ── */
-    .admin-hdr-left {
+    .sidebar-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+    }
+    .btn-sair {
+      width: 100%;
       display: flex;
       align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: #888;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-body);
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-sair:hover { border-color: var(--red); color: #fff; }
+
+    /* MAIN AREA */
+    .main-area {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* TOP BAR */
+    .topbar {
+      height: var(--header-h);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 14px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .btn-menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 22px;
+      cursor: pointer;
+      padding: 4px;
+      line-height: 1;
+    }
+
+    .topbar-back {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-family: var(--font-body);
+      transition: color 0.15s, background 0.15s;
+      text-decoration: none;
+    }
+    .topbar-back:hover { color: #fff; background: var(--red-dim); }
+    .topbar-back-icon { font-size: 16px; }
+    .topbar-back.hidden { opacity: 0; pointer-events: none; }
+
+    .topbar-title {
+      font-family: var(--font-head);
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+      flex: 1;
+    }
+    .topbar-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* CONTENT */
+    .content-area {
+      flex: 1;
+      padding: 32px;
+    }
+
+    /* WELCOME PANEL */
+    #panelWelcome {
+      animation: fadeUp 0.35s ease both;
+    }
+    .welcome-heading {
+      font-family: var(--font-head);
+      font-size: 32px;
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+    .welcome-sub {
+      font-size: 15px;
+      color: var(--muted);
+      margin-bottom: 36px;
+    }
+    .welcome-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 14px;
     }
-    .admin-hdr-titulo { display: none; }
-    .admin-hdr-sair { display: none; }
-
-    @media (min-width: 769px) {
-      .admin-hdr-inner {
-        max-width: 1100px;
-        justify-content: space-between;
-        padding: 0 24px;
-      }
-      .admin-logo {
-        width: 48px !important;
-        height: 48px !important;
-        margin-top: 0 !important;
-      }
-      .admin-hdr-titulo {
-        display: inline;
-        font-size: 20px;
-        font-weight: 900;
-        color: #fff;
-        letter-spacing: 0.5px;
-      }
-      .admin-hdr-sair { display: inline-block; }
-      /* Layout desktop: largura maior, não centralizado */
-      .admin-page {
-        max-width: 1100px;
-        padding: 32px 32px 64px;
-      }
-      /* Portal cards em grid 3 colunas no desktop */
-      .portal-cards {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 16px;
-      }
+    .welcome-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 22px 18px;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
+    .welcome-card:hover {
+      border-color: var(--red);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px var(--red-glow);
+    }
+    .welcome-card-icon { font-size: 30px; }
+    .welcome-card-title {
+      font-family: var(--font-head);
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .welcome-card-desc { font-size: 12px; color: var(--muted); line-height: 1.4; }
+
+    /* IFRAME PANEL */
+    #panelIframe {
+      display: none;
+      flex-direction: column;
+      height: calc(100vh - var(--header-h));
+      margin: -32px;
+    }
+    #panelIframe.visible { display: flex; }
+
+    #pageFrame {
+      flex: 1;
+      border: none;
+      width: 100%;
+      background: var(--bg);
+    }
+
+    /* MOBILE OVERLAY */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 199;
+    }
+    .sidebar-overlay.visible { display: block; }
+
+    /* ── RESPONSIVE ── */
     @media (max-width: 768px) {
-      .admin-hdr-inner { justify-content: center; }
+      .sidebar {
+        transform: translateX(-100%);
+        box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+      }
+      .sidebar.open { transform: translateX(0); }
+      .main-area { margin-left: 0; }
+      .btn-menu-toggle { display: block; }
+      .content-area { padding: 20px 16px; }
+      #panelIframe { margin: -20px -16px; height: calc(100vh - var(--header-h)); }
+      .topbar { padding: 0 16px; }
     }
   </style>
 </head>
 <body>
-  <header class="hdr admin-hdr">
-    <div class="hdr-inner admin-hdr-inner">
-      <div class="admin-hdr-left">
-        <img class="logo admin-logo" src="./logo.png" alt="Riva BJJ" />
-        <span class="admin-hdr-titulo">Portal Administrativo</span>
+
+  <!-- ─────────── LOGIN ─────────── -->
+  <div id="loginScreen">
+    <div class="login-box">
+      <div class="login-logo">
+        <img src="./logo.png" alt="Riva BJJ" />
+        <div>
+          <div class="login-logo-text">Riva BJJ</div>
+          <span class="login-logo-sub">Portal Admin</span>
+        </div>
       </div>
-      <button class="btn-logout admin-hdr-sair" id="btnHdrSair">Sair</button>
+      <div class="login-title">Bem-vindo de volta</div>
+      <div class="login-subtitle">Faça login para acessar o painel</div>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="email" inputmode="email" autocomplete="email" placeholder="seu@email.com" />
+      </div>
+      <div class="field">
+        <label for="senha">Senha</label>
+        <input id="senha" type="password" autocomplete="current-password" placeholder="••••••••" />
+      </div>
+
+      <button class="btn-login" id="btnEntrar">Entrar</button>
+      <p class="msg-err" id="loginErr"></p>
+      <p class="msg-info" id="loginInfo"></p>
     </div>
-  </header>
+  </div>
 
-  <main class="page admin-page">
+  <!-- ─────────── DASHBOARD ─────────── -->
+  <div id="dashScreen">
 
-    <!-- ── LOGIN ──────────────────────────────────────────────── -->
-    <section class="card" id="cardLogin">
-      <h1 class="title">Acesso Administrativo</h1>
+    <!-- SIDEBAR OVERLAY (mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-      <label class="label" for="email">Email</label>
-      <input id="email" class="input" type="email" inputmode="email" autocomplete="email" placeholder="seu@email.com" required />
-
-      <label class="label" for="senha">Senha</label>
-      <input id="senha" class="input" type="password" autocomplete="current-password" placeholder="Digite a senha" required />
-
-      <button class="btn primary" id="btnEntrar">Entrar</button>
-
-      <p class="msg err" id="loginErr"></p>
-      <p class="msg info" id="loginInfo"></p>
-    </section>
-
-    <!-- ── PORTAL ──────────────────────────────────────────────── -->
-    <section class="card hidden" id="cardPortal">
-      <div class="portal-header-row">
-        <div class="portal-welcome" id="portalWelcome">Olá!</div>
-        <button class="btn-logout" id="btnLogout">Sair</button>
-      </div>
-
-      <div class="portal-cards">
-        <div class="portal-card">
-          <div class="portal-card-icon">👥</div>
-          <div class="portal-card-title">Alunos</div>
-          <div class="portal-card-subtitle">Ver e gerenciar alunos cadastrados</div>
-          <button class="btn primary" onclick="location.href='./alunos.html'">Ver Alunos</button>
-        </div>
-        <div class="portal-card">
-          <div class="portal-card-icon">➕</div>
-          <div class="portal-card-title">Cadastrar Aluno</div>
-          <div class="portal-card-subtitle">Adicionar novo aluno</div>
-          <button class="btn primary" onclick="location.href='./cadastroaluno.html'">Cadastrar</button>
-        </div>
-        <div class="portal-card">
-          <div class="portal-card-icon">🎂</div>
-          <div class="portal-card-title">Aniversariantes</div>
-          <div class="portal-card-subtitle">Ver aniversariantes da semana</div>
-          <button class="btn primary" onclick="location.href='./aniversariantes.html'">Ver Aniversariantes</button>
-        </div>
-        <div class="portal-card">
-          <div class="portal-card-icon">💰</div>
-          <div class="portal-card-title">Financeiro</div>
-          <div class="portal-card-subtitle" id="finSubtitle">Controle de mensalidades e pagamentos</div>
-          <button class="btn primary" onclick="location.href='./financeiro.html'">Ver Financeiro</button>
-        </div>
-        <div class="portal-card">
-          <div class="portal-card-icon">🥋</div>
-          <div class="portal-card-title">Troca de Faixa</div>
-          <div class="portal-card-subtitle">Alunos no grau máximo prontos para trocar de faixa</div>
-          <button class="btn primary" onclick="location.href='./trocafaixa.html'">Ver Alunos</button>
-        </div>
-        <div class="portal-card">
-          <div class="portal-card-icon">📲</div>
-          <div class="portal-card-title">Lembretes</div>
-          <div class="portal-card-subtitle">Enviar lembretes de pagamento pelo WhatsApp</div>
-          <button class="btn primary" onclick="location.href='./lembretes.html'">Ver Lembretes</button>
+    <!-- SIDEBAR -->
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <img src="./logo.png" alt="Riva BJJ" />
+        <div>
+          <div class="sidebar-brand-name">Riva BJJ</div>
+          <div class="sidebar-brand-sub">Administrativo</div>
         </div>
       </div>
-    </section>
 
-  </main>
+      <div class="sidebar-user">
+        <div class="sidebar-user-label">Usuário</div>
+        <div class="sidebar-user-name" id="sidebarUserName">—</div>
+      </div>
+
+      <div class="sidebar-nav">
+        <div class="nav-section-label">Geral</div>
+        <div class="nav-item active" data-panel="welcome" data-label="Início">
+          <span class="nav-item-icon">🏠</span>
+          <span class="nav-item-label">Início</span>
+        </div>
+        <div class="nav-section-label">Alunos</div>
+        <div class="nav-item" data-href="./alunos.html" data-label="Alunos">
+          <span class="nav-item-icon">👥</span>
+          <span class="nav-item-label">Ver Alunos</span>
+        </div>
+        <div class="nav-item" data-href="./cadastroaluno.html" data-label="Cadastrar Aluno">
+          <span class="nav-item-icon">➕</span>
+          <span class="nav-item-label">Cadastrar Aluno</span>
+        </div>
+        <div class="nav-item" data-href="./aniversariantes.html" data-label="Aniversariantes">
+          <span class="nav-item-icon">🎂</span>
+          <span class="nav-item-label">Aniversariantes</span>
+        </div>
+        <div class="nav-item" data-href="./trocafaixa.html" data-label="Troca de Faixa">
+          <span class="nav-item-icon">🥋</span>
+          <span class="nav-item-label">Troca de Faixa</span>
+        </div>
+        <div class="nav-section-label">Financeiro</div>
+        <div class="nav-item" data-href="./financeiro.html" data-label="Financeiro">
+          <span class="nav-item-icon">💰</span>
+          <span class="nav-item-label">Financeiro</span>
+        </div>
+        <div class="nav-item" data-href="./lembretes.html" data-label="Lembretes">
+          <span class="nav-item-icon">📲</span>
+          <span class="nav-item-label">Lembretes</span>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="btn-sair" id="btnLogout">
+          <span>⬅️</span> Sair da conta
+        </button>
+      </div>
+    </nav>
+
+    <!-- MAIN AREA -->
+    <div class="main-area">
+      <!-- TOP BAR -->
+      <div class="topbar">
+        <button class="btn-menu-toggle" id="btnMenuToggle">☰</button>
+        <button class="topbar-back hidden" id="btnBack">
+          <span class="topbar-back-icon">←</span> Voltar ao início
+        </button>
+        <div>
+          <div class="topbar-title" id="topbarTitle">Início</div>
+        </div>
+      </div>
+
+      <!-- CONTENT -->
+      <div class="content-area" id="contentArea">
+
+        <!-- WELCOME -->
+        <div id="panelWelcome">
+          <div class="welcome-heading" id="welcomeHeading">Olá!</div>
+          <div class="welcome-sub">Selecione uma opção no menu ou clique abaixo</div>
+          <div class="welcome-grid">
+            <div class="welcome-card" data-href="./alunos.html" data-label="Alunos">
+              <div class="welcome-card-icon">👥</div>
+              <div class="welcome-card-title">Alunos</div>
+              <div class="welcome-card-desc">Ver e gerenciar alunos cadastrados</div>
+            </div>
+            <div class="welcome-card" data-href="./cadastroaluno.html" data-label="Cadastrar Aluno">
+              <div class="welcome-card-icon">➕</div>
+              <div class="welcome-card-title">Cadastrar Aluno</div>
+              <div class="welcome-card-desc">Adicionar novo aluno ao sistema</div>
+            </div>
+            <div class="welcome-card" data-href="./aniversariantes.html" data-label="Aniversariantes">
+              <div class="welcome-card-icon">🎂</div>
+              <div class="welcome-card-title">Aniversariantes</div>
+              <div class="welcome-card-desc">Ver aniversariantes da semana</div>
+            </div>
+            <div class="welcome-card" data-href="./financeiro.html" data-label="Financeiro">
+              <div class="welcome-card-icon">💰</div>
+              <div class="welcome-card-title">Financeiro</div>
+              <div class="welcome-card-desc">Controle de mensalidades e pagamentos</div>
+            </div>
+            <div class="welcome-card" data-href="./trocafaixa.html" data-label="Troca de Faixa">
+              <div class="welcome-card-icon">🥋</div>
+              <div class="welcome-card-title">Troca de Faixa</div>
+              <div class="welcome-card-desc">Alunos prontos para trocar de faixa</div>
+            </div>
+            <div class="welcome-card" data-href="./lembretes.html" data-label="Lembretes">
+              <div class="welcome-card-icon">📲</div>
+              <div class="welcome-card-title">Lembretes</div>
+              <div class="welcome-card-desc">Enviar lembretes de pagamento pelo WhatsApp</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- IFRAME PANEL -->
+        <div id="panelIframe">
+          <iframe id="pageFrame" title="Página"></iframe>
+        </div>
+
+      </div>
+    </div>
+  </div>
 
   <script type="module">
     import { auth, db } from './firebase-config.js';
@@ -226,114 +596,145 @@
     const TOKEN_KEY = 'rv_prof_token';
     const NOME_KEY  = 'rv_prof_nome';
 
-    function show(id) { document.getElementById(id).classList.remove('hidden'); }
-    function hide(id) { document.getElementById(id).classList.add('hidden'); }
+    /* ── utils ──────────────────────────────────────────────── */
+    function showLogin()  {
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('dashScreen').classList.remove('visible');
+    }
+    function showDash(nome) {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('dashScreen').classList.add('visible');
+      document.getElementById('sidebarUserName').textContent = nome || 'Administrador';
+      document.getElementById('welcomeHeading').textContent = 'Olá, ' + (nome || 'Administrador') + '!';
+    }
+
+    async function buscarNome(email) {
+      try {
+        const q = query(collection(db, 'professores'), where('email', '==', email));
+        const snap = await getDocs(q);
+        if (!snap.empty) return snap.docs[0].data().nome || '';
+      } catch(e) {}
+      return '';
+    }
 
     function doLogout() {
-      signOut(auth).catch(() => {});
+      signOut(auth).catch(()=>{});
       sessionStorage.removeItem(TOKEN_KEY);
       sessionStorage.removeItem(NOME_KEY);
       location.reload();
     }
 
-    function showPortal(nome) {
-      document.getElementById('portalWelcome').textContent = 'Olá, ' + (nome || 'Administrador') + '!';
-      hide('cardLogin');
-      show('cardPortal');
+    /* ── navigation ─────────────────────────────────────────── */
+    function navigateTo(href, label) {
+      if (!href) return;
+      document.getElementById('pageFrame').src = href;
+      document.getElementById('panelWelcome').style.display = 'none';
+      document.getElementById('panelIframe').classList.add('visible');
+      document.getElementById('topbarTitle').textContent = label || '';
+      document.getElementById('btnBack').classList.remove('hidden');
+
+      // update active nav
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      const match = document.querySelector(`.nav-item[data-href="${href}"]`);
+      if (match) match.classList.add('active');
+
+      closeMobileMenu();
     }
 
-    async function buscarNomeProfessor(email) {
-      try {
-        const q = query(collection(db, 'professores'), where('email', '==', email));
-        const snap = await getDocs(q);
-        if (!snap.empty) return snap.docs[0].data().nome || '';
-      } catch (err) { console.error('Failed to fetch professor name:', err); }
-      return '';
+    function goHome() {
+      document.getElementById('pageFrame').src = 'about:blank';
+      document.getElementById('panelIframe').classList.remove('visible');
+      document.getElementById('panelWelcome').style.display = '';
+      document.getElementById('topbarTitle').textContent = 'Início';
+      document.getElementById('btnBack').classList.add('hidden');
+
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      document.querySelector('.nav-item[data-panel="welcome"]').classList.add('active');
     }
 
-    // ── Check auth state ────────────────────────────────────────
+    /* ── mobile sidebar ─────────────────────────────────────── */
+    function openMobileMenu() {
+      document.getElementById('sidebar').classList.add('open');
+      document.getElementById('sidebarOverlay').classList.add('visible');
+    }
+    function closeMobileMenu() {
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('sidebarOverlay').classList.remove('visible');
+    }
+
+    document.getElementById('btnMenuToggle').addEventListener('click', openMobileMenu);
+    document.getElementById('sidebarOverlay').addEventListener('click', closeMobileMenu);
+
+    /* ── sidebar nav items ──────────────────────────────────── */
+    document.querySelectorAll('.nav-item[data-href]').forEach(item => {
+      item.addEventListener('click', () => {
+        navigateTo(item.dataset.href, item.dataset.label);
+      });
+    });
+    document.querySelector('.nav-item[data-panel="welcome"]').addEventListener('click', goHome);
+
+    /* ── welcome cards ──────────────────────────────────────── */
+    document.querySelectorAll('.welcome-card[data-href]').forEach(card => {
+      card.addEventListener('click', () => {
+        navigateTo(card.dataset.href, card.dataset.label);
+      });
+    });
+
+    /* ── back button ────────────────────────────────────────── */
+    document.getElementById('btnBack').addEventListener('click', goHome);
+
+    /* ── logout ─────────────────────────────────────────────── */
+    document.getElementById('btnLogout').addEventListener('click', doLogout);
+
+    /* ── auth state ─────────────────────────────────────────── */
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         let nome = sessionStorage.getItem(NOME_KEY) || user.displayName || '';
-        if (!nome) {
-          nome = await buscarNomeProfessor(user.email);
-        }
+        if (!nome) nome = await buscarNome(user.email);
         if (!nome) nome = user.email || 'Administrador';
         sessionStorage.setItem(NOME_KEY, nome);
-        showPortal(nome);
+        showDash(nome);
+      } else {
+        showLogin();
       }
     });
 
-    // ── Login ──────────────────────────────────────────────────
-    document.getElementById('btnEntrar').addEventListener('click', async () => {
+    /* ── login ──────────────────────────────────────────────── */
+    async function tryLogin() {
       const email = document.getElementById('email').value.trim().toLowerCase();
       const senha = document.getElementById('senha').value.trim();
+      const errEl  = document.getElementById('loginErr');
+      const infoEl = document.getElementById('loginInfo');
+      const btn    = document.getElementById('btnEntrar');
 
-      if (!email || email.indexOf('@') < 1) {
-        document.getElementById('loginErr').textContent = 'Email inválido.';
-        return;
-      }
-      if (!senha) {
-        document.getElementById('loginErr').textContent = 'Digite a senha.';
-        return;
-      }
+      errEl.textContent = '';
+      if (!email || email.indexOf('@') < 1) { errEl.textContent = 'Email inválido.'; return; }
+      if (!senha) { errEl.textContent = 'Digite a senha.'; return; }
 
-      document.getElementById('loginErr').textContent  = '';
-      document.getElementById('loginInfo').textContent = 'Verificando…';
-      document.getElementById('btnEntrar').disabled    = true;
+      infoEl.textContent = 'Verificando…';
+      btn.disabled = true;
 
       try {
         const cred = await signInWithEmailAndPassword(auth, email, senha);
         let nome = cred.user.displayName || '';
-        if (!nome) {
-          nome = await buscarNomeProfessor(email);
-        }
+        if (!nome) nome = await buscarNome(email);
         if (!nome) nome = email;
         sessionStorage.setItem(TOKEN_KEY, 'rv_prof_ok');
         sessionStorage.setItem(NOME_KEY, nome);
-        document.getElementById('loginInfo').textContent = '';
-        showPortal(nome);
-      } catch (e) {
-        const msg = (e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found')
-          ? 'Credenciais inválidas.'
-          : 'Erro de conexão. Tente novamente.';
-        document.getElementById('loginErr').textContent  = msg;
-        document.getElementById('loginInfo').textContent = '';
+        infoEl.textContent = '';
+        showDash(nome);
+      } catch(e) {
+        const isCredErr = ['auth/invalid-credential','auth/wrong-password','auth/user-not-found'].includes(e.code);
+        errEl.textContent = isCredErr ? 'Credenciais inválidas.' : 'Erro de conexão. Tente novamente.';
+        infoEl.textContent = '';
       } finally {
-        document.getElementById('btnEntrar').disabled = false;
+        btn.disabled = false;
       }
-    });
+    }
 
-    document.getElementById('senha').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') document.getElementById('btnEntrar').click();
-    });
-
-    document.getElementById('email').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') document.getElementById('senha').focus();
-    });
-
-    // ── Logout ─────────────────────────────────────────────────
-    document.getElementById('btnLogout').addEventListener('click', doLogout);
-    document.getElementById('btnHdrSair').addEventListener('click', doLogout);
-
-    // ── Resumo rápido do Financeiro ────────────────────────────
-    (function mostrarResumoFinanceiro() {
-      try {
-        const mes = new Date().getMonth() + 1;
-        const ano = new Date().getFullYear();
-        const key = 'rv_fin_cache_' + mes + '_' + ano;
-        const c   = JSON.parse(localStorage.getItem(key) || 'null');
-        const TTL = 5 * 60 * 1000;
-        if (!c || Date.now() - c.ts > TTL) return;
-        const emDia = (c.dados || []).filter(a =>
-          (a.statusPagamento || '').toLowerCase() === 'pago'
-        ).length;
-        const el = document.getElementById('finSubtitle');
-        if (el && emDia > 0) {
-          el.textContent = emDia + ' aluno' + (emDia > 1 ? 's' : '') + ' em dia este mês';
-        }
-      } catch(e) {}
-    })();
+    document.getElementById('btnEntrar').addEventListener('click', tryLogin);
+    document.getElementById('senha').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+    document.getElementById('email').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('senha').focus(); });
   </script>
 </body>
 </html>
