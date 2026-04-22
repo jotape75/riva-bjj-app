@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0a0a0a" />
   <title>Portal Administrativo – Riva BJJ</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./styles.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -23,8 +23,8 @@
       --muted: #666;
       --sidebar-w: 260px;
       --header-h: 60px;
-      --font-head: 'Syne', sans-serif;
-      --font-body: 'DM Sans', sans-serif;
+      --font-head: 'Geist', sans-serif;
+      --font-body: 'Geist', sans-serif;
     }
 
     body {
@@ -81,11 +81,10 @@
       object-fit: contain;
     }
     .login-logo-text {
-      font-family: var(--font-head);
-      font-size: 18px;
-      font-weight: 900;
+      font-size: 17px;
+      font-weight: 700;
       color: #fff;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.2px;
     }
     .login-logo-sub {
       font-size: 11px;
@@ -97,11 +96,11 @@
     }
 
     .login-title {
-      font-family: var(--font-head);
-      font-size: 26px;
-      font-weight: 900;
+      font-size: 28px;
+      font-weight: 600;
       color: #fff;
       margin-bottom: 6px;
+      letter-spacing: -0.5px;
     }
     .login-subtitle {
       font-size: 14px;
@@ -142,10 +141,10 @@
       color: #fff;
       border: none;
       border-radius: 10px;
-      font-family: var(--font-head);
+      font-family: var(--font-body);
       font-size: 15px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
       cursor: pointer;
       transition: opacity 0.2s, transform 0.1s;
     }
@@ -218,9 +217,9 @@
       font-size: 10px;
       text-transform: uppercase;
       letter-spacing: 1.2px;
-      color: var(--muted);
-      padding: 8px 20px 4px;
-      font-weight: 600;
+      color: #bbb;
+      padding: 14px 20px 4px;
+      font-weight: 800;
     }
 
     .nav-item {
@@ -349,48 +348,55 @@
     /* WELCOME PANEL */
     #panelWelcome {
       animation: fadeUp 0.35s ease both;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: calc(100vh - var(--header-h) - 64px);
+    }
+    .welcome-eyebrow {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 12px;
     }
     .welcome-heading {
-      font-family: var(--font-head);
-      font-size: 32px;
-      font-weight: 900;
+      font-size: 42px;
+      font-weight: 700;
       color: #fff;
-      margin-bottom: 6px;
+      line-height: 1.1;
+      margin-bottom: 14px;
+      letter-spacing: -1.5px;
     }
     .welcome-sub {
       font-size: 15px;
       color: var(--muted);
-      margin-bottom: 36px;
+      max-width: 360px;
+      line-height: 1.6;
     }
-    .welcome-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 14px;
+    .welcome-divider {
+      width: 40px;
+      height: 3px;
+      background: var(--red);
+      border-radius: 2px;
+      margin: 28px 0;
     }
-    .welcome-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 22px 18px;
-      cursor: pointer;
-      transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+    .welcome-hints {
       display: flex;
-      flex-direction: column;
-      gap: 10px;
+      flex-wrap: wrap;
+      gap: 8px;
     }
-    .welcome-card:hover {
-      border-color: var(--red);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 32px var(--red-glow);
+    .welcome-hint {
+      padding: 6px 14px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 12px;
+      color: #777;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
     }
-    .welcome-card-icon { font-size: 30px; }
-    .welcome-card-title {
-      font-family: var(--font-head);
-      font-size: 16px;
-      font-weight: 800;
-      color: #fff;
-    }
-    .welcome-card-desc { font-size: 12px; color: var(--muted); line-height: 1.4; }
+    .welcome-hint:hover { border-color: var(--red); color: #fff; }
 
     /* IFRAME PANEL */
     #panelIframe {
@@ -543,39 +549,16 @@
 
         <!-- WELCOME -->
         <div id="panelWelcome">
+          <div class="welcome-eyebrow">Riva BJJ · Portal Admin</div>
           <div class="welcome-heading" id="welcomeHeading">Olá!</div>
-          <div class="welcome-sub">Selecione uma opção no menu ou clique abaixo</div>
-          <div class="welcome-grid">
-            <div class="welcome-card" data-href="./alunos.html" data-label="Alunos">
-              <div class="welcome-card-icon">👥</div>
-              <div class="welcome-card-title">Alunos</div>
-              <div class="welcome-card-desc">Ver e gerenciar alunos cadastrados</div>
-            </div>
-            <div class="welcome-card" data-href="./cadastroaluno.html" data-label="Cadastrar Aluno">
-              <div class="welcome-card-icon">➕</div>
-              <div class="welcome-card-title">Cadastrar Aluno</div>
-              <div class="welcome-card-desc">Adicionar novo aluno ao sistema</div>
-            </div>
-            <div class="welcome-card" data-href="./aniversariantes.html" data-label="Aniversariantes">
-              <div class="welcome-card-icon">🎂</div>
-              <div class="welcome-card-title">Aniversariantes</div>
-              <div class="welcome-card-desc">Ver aniversariantes da semana</div>
-            </div>
-            <div class="welcome-card" data-href="./financeiro.html" data-label="Financeiro">
-              <div class="welcome-card-icon">💰</div>
-              <div class="welcome-card-title">Financeiro</div>
-              <div class="welcome-card-desc">Controle de mensalidades e pagamentos</div>
-            </div>
-            <div class="welcome-card" data-href="./trocafaixa.html" data-label="Troca de Faixa">
-              <div class="welcome-card-icon">🥋</div>
-              <div class="welcome-card-title">Troca de Faixa</div>
-              <div class="welcome-card-desc">Alunos prontos para trocar de faixa</div>
-            </div>
-            <div class="welcome-card" data-href="./lembretes.html" data-label="Lembretes">
-              <div class="welcome-card-icon">📲</div>
-              <div class="welcome-card-title">Lembretes</div>
-              <div class="welcome-card-desc">Enviar lembretes de pagamento pelo WhatsApp</div>
-            </div>
+          <div class="welcome-sub">Use o menu lateral para navegar entre as seções do portal.</div>
+          <div class="welcome-divider"></div>
+          <div class="welcome-hints">
+            <span class="welcome-hint" data-href="./alunos.html" data-label="Alunos">👥 Alunos</span>
+            <span class="welcome-hint" data-href="./financeiro.html" data-label="Financeiro">💰 Financeiro</span>
+            <span class="welcome-hint" data-href="./aniversariantes.html" data-label="Aniversariantes">🎂 Aniversariantes</span>
+            <span class="welcome-hint" data-href="./trocafaixa.html" data-label="Troca de Faixa">🥋 Troca de Faixa</span>
+            <span class="welcome-hint" data-href="./lembretes.html" data-label="Lembretes">📲 Lembretes</span>
           </div>
         </div>
 
@@ -624,14 +607,25 @@
       location.reload();
     }
 
-    /* ── navigation ─────────────────────────────────────────── */
+    /* ── navigate ─────────────────────────────────────────────── */
     function navigateTo(href, label) {
       if (!href) return;
-      document.getElementById('pageFrame').src = href;
+      const url = href + (href.includes('?') ? '&' : '?') + 'embed=1';
+      document.getElementById('pageFrame').src = url;
       document.getElementById('panelWelcome').style.display = 'none';
       document.getElementById('panelIframe').classList.add('visible');
       document.getElementById('topbarTitle').textContent = label || '';
       document.getElementById('btnBack').classList.remove('hidden');
+
+      // inject CSS to hide nav/header inside iframe after load
+      document.getElementById('pageFrame').onload = function() {
+        try {
+          const iDoc = this.contentDocument || this.contentWindow.document;
+          const style = iDoc.createElement('style');
+          style.textContent = 'header, .hdr, nav, .sidebar, .topbar, .btn-back-portal { display: none !important; } body, .page, main { padding-top: 0 !important; margin-top: 0 !important; }';
+          iDoc.head.appendChild(style);
+        } catch(e) { /* cross-origin, ignore */ }
+      };
 
       // update active nav
       document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -673,11 +667,9 @@
     });
     document.querySelector('.nav-item[data-panel="welcome"]').addEventListener('click', goHome);
 
-    /* ── welcome cards ──────────────────────────────────────── */
-    document.querySelectorAll('.welcome-card[data-href]').forEach(card => {
-      card.addEventListener('click', () => {
-        navigateTo(card.dataset.href, card.dataset.label);
-      });
+    /* ── welcome hints ──────────────────────────────────────── */
+    document.querySelectorAll('.welcome-hint[data-href]').forEach(el => {
+      el.addEventListener('click', () => navigateTo(el.dataset.href, el.dataset.label));
     });
 
     /* ── back button ────────────────────────────────────────── */
