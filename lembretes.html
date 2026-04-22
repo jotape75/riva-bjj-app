@@ -24,16 +24,6 @@
     .page-title { font-size: 24px; font-weight: 900; color: #fff; margin-bottom: 4px; }
     .page-subtitle { font-size: 14px; color: #aaa; margin-bottom: 20px; }
 
-    .aviso-teste {
-      background: #2a1a00;
-      border: 1px solid #f39c12;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-size: 13px;
-      color: #f39c12;
-      margin-bottom: 16px;
-    }
-
     .lembrete-item {
       background: #222;
       border: 1px solid #333;
@@ -100,12 +90,7 @@
   <main class="page admin-page">
     <section id="sectionLembretes">
       <div class="page-title">📲 Lembretes de Pagamento</div>
-      <div class="page-subtitle">Alunos com mensalidade vencendo em breve</div>
-
-      <div class="aviso-teste">
-        ⚠️ <strong>Modo de teste:</strong> mostrando alunos com vencimento em 2 dias após o contrato.
-        Em produção, alterar para calcular pelo dia do mês do contrato.
-      </div>
+      <div class="page-subtitle">Alunos com mensalidade vencendo nos próximos 3 dias (ciclo de 30 dias)</div>
 
       <div class="resumo-box" id="resumoBox" style="display:none;">
         <div>
@@ -132,7 +117,6 @@
     const TOKEN_KEY = 'rv_prof_token';
     const CHAVE_PIX = '66.256.625/0001-27'; // ← substituir pela chave PIX real
     const DIAS_AVISO = 3; // dias antes do vencimento para enviar lembrete
-    const MODO_TESTE = true; // true = vencimento 2 dias após contrato; false = produção
 
     function esc(str) {
       return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -151,21 +135,13 @@
       if (!dataContrato) return null;
       const dc = new Date(dataContrato + 'T00:00:00');
       if (isNaN(dc.getTime())) return null;
-
-      if (MODO_TESTE) {
-        // TESTE: vencimento = data_contrato + 2 dias
-        const venc = new Date(dc);
-        venc.setDate(venc.getDate() + 2);
-        return venc;
-      } else {
-        // PRODUÇÃO: próximo vencimento = mesmo dia do mês
-        const hoje = new Date();
-        hoje.setHours(0,0,0,0);
-        const diaVenc = dc.getDate();
-        const prox = new Date(hoje.getFullYear(), hoje.getMonth(), diaVenc);
-        if (prox <= hoje) prox.setMonth(prox.getMonth() + 1);
-        return prox;
-      }
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      const venc = new Date(dc);
+      venc.setHours(0, 0, 0, 0);
+      // Avança em ciclos de 30 dias até encontrar a próxima data futura
+      while (venc <= hoje) venc.setDate(venc.getDate() + 30);
+      return venc;
     }
 
     function diasAteVencimento(vencimento) {
@@ -200,13 +176,23 @@
       const lista = document.getElementById('listaLembretes');
 
       try {
-        const q    = query(collection(db, 'alunos'), where('status', '==', 'ATIVO'), where('plano', '==', 'Mensal'));
-        const snap = await getDocs(q);
+        const hoje     = new Date();
+        const mesAtual = hoje.getMonth() + 1;
+        const anoAtual = hoje.getFullYear();
+
+        const [snap, pagSnap] = await Promise.all([
+          getDocs(query(collection(db, 'alunos'), where('status', '==', 'ATIVO'), where('plano', '==', 'Mensal'))),
+          getDocs(query(collection(db, 'pagamentos'), where('mes', '==', mesAtual), where('ano', '==', anoAtual))),
+        ]);
+
+        const alunosPagos = new Set();
+        pagSnap.forEach(d => alunosPagos.add(d.data().alunoId));
 
         lembretes = [];
         snap.forEach(d => {
           const a = d.data();
           if (!a.data_contrato) return;
+          if (alunosPagos.has(d.id)) return; // já pagou este mês
 
           const venc = calcularProxVencimento(a.data_contrato);
           if (!venc) return;
@@ -267,9 +253,7 @@
     window.enviarLembrete = function(id) {
       const a = lembretes.find(x => x.id === id);
       if (!a) return;
-      // Busca dados completos para montar mensagem correta
-      const snap = lembretes.find(x => x.id === id);
-      const msg  = montarMensagem(a, a.vencimento);
+      const msg = montarMensagem(a, a.vencimento);
       abrirWhatsApp(a.telefone, msg);
     };
 
