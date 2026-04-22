@@ -27,409 +27,134 @@
       --font-body: 'Geist', sans-serif;
     }
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font-body);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; overflow-x: hidden; }
 
-    /* ─────────── LOGIN ─────────── */
-    #loginScreen {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      background: var(--bg);
-      position: relative;
-    }
-    #loginScreen::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(192,57,43,0.12) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .login-box {
-      width: 100%;
-      max-width: 400px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 40px 32px;
-      position: relative;
-      z-index: 1;
-      animation: fadeUp 0.4s ease both;
-    }
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .login-logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 32px;
-    }
-    .login-logo img {
-      width: 44px;
-      height: 44px;
-      object-fit: contain;
-    }
-    .login-logo-text {
-      font-size: 17px;
-      font-weight: 700;
-      color: #fff;
-      letter-spacing: 0.2px;
-    }
-    .login-logo-sub {
-      font-size: 11px;
-      color: var(--muted);
-      font-weight: 400;
-      display: block;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
-
-    .login-title {
-      font-size: 28px;
-      font-weight: 600;
-      color: #fff;
-      margin-bottom: 6px;
-      letter-spacing: -0.5px;
-    }
-    .login-subtitle {
-      font-size: 14px;
-      color: var(--muted);
-      margin-bottom: 28px;
-    }
-
+    /* ─── LOGIN ─── */
+    #loginScreen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; background: var(--bg); position: relative; }
+    #loginScreen::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(192,57,43,0.12) 0%, transparent 70%); pointer-events: none; }
+    .login-box { width: 100%; max-width: 400px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 40px 32px; position: relative; z-index: 1; animation: fadeUp 0.4s ease both; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .login-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+    .login-logo img { width: 44px; height: 44px; object-fit: contain; }
+    .login-logo-text { font-size: 17px; font-weight: 700; color: #fff; }
+    .login-logo-sub { font-size: 11px; color: var(--muted); display: block; letter-spacing: 1px; text-transform: uppercase; }
+    .login-title { font-size: 28px; font-weight: 600; color: #fff; margin-bottom: 6px; letter-spacing: -0.5px; }
+    .login-subtitle { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
     .field { margin-bottom: 16px; }
-    .field label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: #999;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-      margin-bottom: 7px;
-    }
-    .field input {
-      width: 100%;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 14px;
-      font-size: 15px;
-      color: #fff;
-      font-family: var(--font-body);
-      outline: none;
-      transition: border-color 0.2s;
-    }
+    .field label { display: block; font-size: 12px; font-weight: 600; color: #999; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 7px; }
+    .field input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 15px; color: #fff; font-family: var(--font-body); outline: none; transition: border-color 0.2s; }
     .field input:focus { border-color: var(--red); }
     .field input::placeholder { color: #444; }
-
-    .btn-login {
-      width: 100%;
-      margin-top: 8px;
-      padding: 14px;
-      background: var(--red);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-family: var(--font-body);
-      font-size: 15px;
-      font-weight: 600;
-      letter-spacing: 0.2px;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.1s;
-    }
+    .btn-login { width: 100%; margin-top: 8px; padding: 14px; background: var(--red); color: #fff; border: none; border-radius: 10px; font-family: var(--font-body); font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity 0.2s, transform 0.1s; }
     .btn-login:hover { opacity: 0.9; }
     .btn-login:active { transform: scale(0.98); }
     .btn-login:disabled { opacity: 0.5; cursor: not-allowed; }
-
     .msg-err  { margin-top: 12px; font-size: 13px; color: #ff6b6b; text-align: center; min-height: 18px; }
     .msg-info { margin-top: 12px; font-size: 13px; color: #aaa; text-align: center; min-height: 18px; }
 
-    /* ─────────── DASHBOARD SHELL ─────────── */
+    /* ─── SHELL ─── */
     #dashScreen { display: none; min-height: 100vh; }
     #dashScreen.visible { display: flex; }
 
-    /* SIDEBAR */
-    .sidebar {
-      width: var(--sidebar-w);
-      min-height: 100vh;
-      background: var(--surface);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      position: fixed;
-      top: 0; left: 0;
-      z-index: 200;
-      transition: transform 0.3s cubic-bezier(.4,0,.2,1);
-    }
-
-    .sidebar-brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 20px 20px 16px;
-      border-bottom: 1px solid var(--border);
-    }
+    /* ─── SIDEBAR ─── */
+    .sidebar { width: var(--sidebar-w); min-height: 100vh; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 200; transition: transform 0.3s cubic-bezier(.4,0,.2,1); }
+    .sidebar-brand { display: flex; align-items: center; gap: 12px; padding: 20px 20px 16px; border-bottom: 1px solid var(--border); }
     .sidebar-brand img { width: 36px; height: 36px; object-fit: contain; }
-    .sidebar-brand-name {
-      font-family: var(--font-head);
-      font-size: 15px;
-      font-weight: 900;
-      color: #fff;
-    }
-    .sidebar-brand-sub {
-      font-size: 10px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .sidebar-user {
-      padding: 14px 20px;
-      border-bottom: 1px solid var(--border);
-    }
-    .sidebar-user-label {
-      font-size: 10px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      margin-bottom: 4px;
-    }
-    .sidebar-user-name {
-      font-size: 14px;
-      font-weight: 600;
-      color: #ddd;
-    }
-
+    .sidebar-brand-name { font-family: var(--font-head); font-size: 15px; font-weight: 900; color: #fff; }
+    .sidebar-brand-sub { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+    .sidebar-user { padding: 14px 20px; border-bottom: 1px solid var(--border); }
+    .sidebar-user-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
+    .sidebar-user-name { font-size: 14px; font-weight: 600; color: #ddd; }
     .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
-
-    .nav-section-label {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 1.2px;
-      color: #bbb;
-      padding: 14px 20px 4px;
-      font-weight: 800;
-    }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 11px 20px;
-      cursor: pointer;
-      border-radius: 0;
-      transition: background 0.15s;
-      border-left: 3px solid transparent;
-      text-decoration: none;
-      color: #aaa;
-      font-size: 14px;
-      font-weight: 500;
-      user-select: none;
-    }
+    .nav-section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: #bbb; padding: 14px 20px 4px; font-weight: 800; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 20px; cursor: pointer; transition: background 0.15s; border-left: 3px solid transparent; text-decoration: none; color: #aaa; font-size: 14px; font-weight: 500; user-select: none; }
     .nav-item:hover { background: var(--red-dim); color: #fff; }
-    .nav-item.active {
-      background: var(--red-dim);
-      border-left-color: var(--red);
-      color: #fff;
-    }
-    .nav-item-icon {
-      font-size: 18px;
-      width: 24px;
-      text-align: center;
-      flex-shrink: 0;
-    }
+    .nav-item.active { background: var(--red-dim); border-left-color: var(--red); color: #fff; }
+    .nav-item-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
     .nav-item-label { flex: 1; }
-
-    .sidebar-footer {
-      padding: 14px 20px;
-      border-top: 1px solid var(--border);
-    }
-    .btn-sair {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      color: #888;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: var(--font-body);
-      transition: border-color 0.2s, color 0.2s;
-    }
+    .sidebar-footer { padding: 14px 20px; border-top: 1px solid var(--border); }
+    .btn-sair { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: transparent; border: 1px solid var(--border); border-radius: 10px; color: #888; font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--font-body); transition: border-color 0.2s, color 0.2s; }
     .btn-sair:hover { border-color: var(--red); color: #fff; }
 
-    /* MAIN AREA */
-    .main-area {
-      margin-left: var(--sidebar-w);
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-
-    /* TOP BAR */
-    .topbar {
-      height: var(--header-h);
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      padding: 0 24px;
-      gap: 14px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .btn-menu-toggle {
-      display: none;
-      background: none;
-      border: none;
-      color: #fff;
-      font-size: 22px;
-      cursor: pointer;
-      padding: 4px;
-      line-height: 1;
-    }
-
-    .topbar-back {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: none;
-      border: none;
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-family: var(--font-body);
-      transition: color 0.15s, background 0.15s;
-      text-decoration: none;
-    }
+    /* ─── MAIN ─── */
+    .main-area { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { height: var(--header-h); background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 14px; position: sticky; top: 0; z-index: 100; }
+    .btn-menu-toggle { display: none; background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; padding: 4px; line-height: 1; }
+    .topbar-back { display: flex; align-items: center; gap: 8px; background: none; border: none; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; padding: 6px 12px; border-radius: 8px; font-family: var(--font-body); transition: color 0.15s, background 0.15s; }
     .topbar-back:hover { color: #fff; background: var(--red-dim); }
-    .topbar-back-icon { font-size: 16px; }
     .topbar-back.hidden { opacity: 0; pointer-events: none; }
+    .topbar-title { font-family: var(--font-head); font-size: 16px; font-weight: 800; color: #fff; flex: 1; }
+    .content-area { flex: 1; padding: 28px 32px; }
 
-    .topbar-title {
-      font-family: var(--font-head);
-      font-size: 16px;
-      font-weight: 800;
-      color: #fff;
-      flex: 1;
-    }
-    .topbar-subtitle {
-      font-size: 12px;
-      color: var(--muted);
-    }
+    /* ─── DASHBOARD PANELS ─── */
+    #panelWelcome { animation: fadeUp 0.35s ease both; }
 
-    /* CONTENT */
-    .content-area {
-      flex: 1;
-      padding: 32px;
-    }
+    .dash-header { margin-bottom: 28px; }
+    .dash-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--red); margin-bottom: 6px; }
+    .dash-title { font-size: 26px; font-weight: 700; color: #fff; letter-spacing: -0.6px; }
+    .dash-date { font-size: 13px; color: var(--muted); margin-top: 3px; }
 
-    /* WELCOME PANEL */
-    #panelWelcome {
-      animation: fadeUp 0.35s ease both;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      height: calc(100vh - var(--header-h) - 64px);
-    }
-    .welcome-eyebrow {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--red);
-      margin-bottom: 12px;
-    }
-    .welcome-heading {
-      font-size: 42px;
-      font-weight: 700;
-      color: #fff;
-      line-height: 1.1;
-      margin-bottom: 14px;
-      letter-spacing: -1.5px;
-    }
-    .welcome-sub {
-      font-size: 15px;
-      color: var(--muted);
-      max-width: 360px;
-      line-height: 1.6;
-    }
-    .welcome-divider {
-      width: 40px;
-      height: 3px;
-      background: var(--red);
-      border-radius: 2px;
-      margin: 28px 0;
-    }
-    .welcome-hints {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .welcome-hint {
-      padding: 6px 14px;
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      font-size: 12px;
-      color: #777;
-      cursor: pointer;
-      transition: border-color 0.15s, color 0.15s;
-    }
-    .welcome-hint:hover { border-color: var(--red); color: #fff; }
+    /* ─── CHART CARDS ─── */
+    .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px 20px; }
+    .chart-card.full { grid-column: 1 / -1; }
 
-    /* IFRAME PANEL */
-    #panelIframe {
-      display: none;
-      flex-direction: column;
-      height: calc(100vh - var(--header-h));
-      margin: -32px;
-    }
+    .chart-header { margin-bottom: 20px; }
+    .chart-title { font-size: 12px; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
+    .chart-subtitle { font-size: 11px; color: var(--muted); }
+
+    /* shimmer skeleton */
+    .skel { background: var(--surface2); border-radius: 6px; animation: shimmer 1.2s infinite; }
+    @keyframes shimmer { 0%,100%{opacity:.35} 50%{opacity:.7} }
+
+    /* ── BARRAS HORIZONTAIS — faixas ── */
+    .bar-h-list { display: flex; flex-direction: column; gap: 12px; }
+    .bar-h-row { display: flex; align-items: center; gap: 10px; }
+    .bar-h-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .bar-h-name { font-size: 12px; color: #ccc; width: 100px; flex-shrink: 0; }
+    .bar-h-track { flex: 1; background: rgba(255,255,255,0.05); border-radius: 4px; height: 7px; overflow: hidden; }
+    .bar-h-fill { height: 100%; border-radius: 4px; transition: width 0.7s cubic-bezier(.4,0,.2,1); }
+    .bar-h-count { font-size: 12px; color: var(--muted); width: 30px; text-align: right; flex-shrink: 0; font-weight: 600; }
+
+    /* cores das faixas */
+    .dot-branca, .fill-branca { background: #e0e0e0; }
+    .dot-azul,   .fill-azul   { background: #2980b9; }
+    .dot-roxa,   .fill-roxa   { background: #8e44ad; }
+    .dot-marrom, .fill-marrom { background: #a0522d; }
+    .dot-preta,  .fill-preta  { background: #888; }
+    .dot-kids,   .fill-kids   { background: linear-gradient(90deg,#f39c12,#e67e22); }
+
+    /* ── BARRAS VERTICAIS — horários ── */
+    .bar-v-area { display: flex; align-items: flex-end; gap: 8px; height: 130px; padding-top: 10px; }
+    .bar-v-col  { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; min-width: 0; }
+    .bar-v-val  { font-size: 10px; color: var(--muted); line-height: 1; }
+    .bar-v-bar  { width: 100%; background: var(--red); border-radius: 4px 4px 0 0; transition: height 0.7s cubic-bezier(.4,0,.2,1); min-height: 2px; opacity: 0.85; }
+    .bar-v-bar:hover { opacity: 1; }
+    .bar-v-label { font-size: 9px; color: #666; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+
+    /* ── LINHA — novos alunos ── */
+    .line-wrap { position: relative; height: 130px; }
+    svg.line-svg { width: 100%; height: 100%; overflow: visible; }
+    .line-path { fill: none; stroke: var(--red); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .line-area { fill: url(#lineGrad); }
+    .line-dot  { fill: var(--red); }
+    .line-labels { display: flex; justify-content: space-between; margin-top: 8px; }
+    .line-label  { font-size: 10px; color: var(--muted); text-align: center; flex: 1; }
+
+    /* iframe */
+    #panelIframe { display: none; flex-direction: column; height: calc(100vh - var(--header-h)); margin: -28px -32px; }
     #panelIframe.visible { display: flex; }
+    #pageFrame { flex: 1; border: none; width: 100%; background: var(--bg); }
 
-    #pageFrame {
-      flex: 1;
-      border: none;
-      width: 100%;
-      background: var(--bg);
-    }
-
-    /* MOBILE OVERLAY */
-    .sidebar-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.6);
-      z-index: 199;
-    }
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 199; }
     .sidebar-overlay.visible { display: block; }
 
-    /* ── RESPONSIVE ── */
+    @media (max-width: 1024px) {
+      .charts-grid { grid-template-columns: 1fr; }
+      .chart-card.full { grid-column: 1; }
+    }
     @media (max-width: 768px) {
-      .sidebar {
-        transform: translateX(-100%);
-        box-shadow: 4px 0 24px rgba(0,0,0,0.5);
-      }
+      .sidebar { transform: translateX(-100%); box-shadow: 4px 0 24px rgba(0,0,0,0.5); }
       .sidebar.open { transform: translateX(0); }
       .main-area { margin-left: 0; }
       .btn-menu-toggle { display: block; }
@@ -441,7 +166,7 @@
 </head>
 <body>
 
-  <!-- ─────────── LOGIN ─────────── -->
+  <!-- LOGIN -->
   <div id="loginScreen">
     <div class="login-box">
       <div class="login-logo">
@@ -453,7 +178,6 @@
       </div>
       <div class="login-title">Bem-vindo de volta</div>
       <div class="login-subtitle">Faça login para acessar o painel</div>
-
       <div class="field">
         <label for="email">Email</label>
         <input id="email" type="email" inputmode="email" autocomplete="email" placeholder="seu@email.com" />
@@ -462,20 +186,16 @@
         <label for="senha">Senha</label>
         <input id="senha" type="password" autocomplete="current-password" placeholder="••••••••" />
       </div>
-
       <button class="btn-login" id="btnEntrar">Entrar</button>
-      <p class="msg-err" id="loginErr"></p>
+      <p class="msg-err"  id="loginErr"></p>
       <p class="msg-info" id="loginInfo"></p>
     </div>
   </div>
 
-  <!-- ─────────── DASHBOARD ─────────── -->
+  <!-- DASH -->
   <div id="dashScreen">
-
-    <!-- SIDEBAR OVERLAY (mobile) -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <!-- SIDEBAR -->
     <nav class="sidebar" id="sidebar">
       <div class="sidebar-brand">
         <img src="./logo.png" alt="Riva BJJ" />
@@ -484,46 +204,36 @@
           <div class="sidebar-brand-sub">Administrativo</div>
         </div>
       </div>
-
       <div class="sidebar-user">
         <div class="sidebar-user-label">Usuário</div>
         <div class="sidebar-user-name" id="sidebarUserName">—</div>
       </div>
-
       <div class="sidebar-nav">
         <div class="nav-section-label">Geral</div>
         <div class="nav-item active" data-panel="welcome" data-label="Início">
-          <span class="nav-item-icon">🏠</span>
-          <span class="nav-item-label">Início</span>
+          <span class="nav-item-icon">🏠</span><span class="nav-item-label">Início</span>
         </div>
         <div class="nav-section-label">Alunos</div>
         <div class="nav-item" data-href="./alunos.html" data-label="Alunos">
-          <span class="nav-item-icon">👥</span>
-          <span class="nav-item-label">Ver Alunos</span>
+          <span class="nav-item-icon">👥</span><span class="nav-item-label">Ver Alunos</span>
         </div>
         <div class="nav-item" data-href="./cadastroaluno.html" data-label="Cadastrar Aluno">
-          <span class="nav-item-icon">➕</span>
-          <span class="nav-item-label">Cadastrar Aluno</span>
+          <span class="nav-item-icon">➕</span><span class="nav-item-label">Cadastrar Aluno</span>
         </div>
         <div class="nav-item" data-href="./aniversariantes.html" data-label="Aniversariantes">
-          <span class="nav-item-icon">🎂</span>
-          <span class="nav-item-label">Aniversariantes</span>
+          <span class="nav-item-icon">🎂</span><span class="nav-item-label">Aniversariantes</span>
         </div>
         <div class="nav-item" data-href="./trocafaixa.html" data-label="Troca de Faixa">
-          <span class="nav-item-icon">🥋</span>
-          <span class="nav-item-label">Troca de Faixa</span>
+          <span class="nav-item-icon">🥋</span><span class="nav-item-label">Troca de Faixa</span>
         </div>
         <div class="nav-section-label">Financeiro</div>
         <div class="nav-item" data-href="./financeiro.html" data-label="Financeiro">
-          <span class="nav-item-icon">💰</span>
-          <span class="nav-item-label">Financeiro</span>
+          <span class="nav-item-icon">💰</span><span class="nav-item-label">Financeiro</span>
         </div>
         <div class="nav-item" data-href="./lembretes.html" data-label="Lembretes">
-          <span class="nav-item-icon">📲</span>
-          <span class="nav-item-label">Lembretes</span>
+          <span class="nav-item-icon">📲</span><span class="nav-item-label">Lembretes</span>
         </div>
       </div>
-
       <div class="sidebar-footer">
         <button class="btn-sair" id="btnLogout">
           <span>⬅️</span> Sair da conta
@@ -531,38 +241,77 @@
       </div>
     </nav>
 
-    <!-- MAIN AREA -->
     <div class="main-area">
-      <!-- TOP BAR -->
       <div class="topbar">
         <button class="btn-menu-toggle" id="btnMenuToggle">☰</button>
-        <button class="topbar-back hidden" id="btnBack">
-          <span class="topbar-back-icon">←</span> Voltar ao início
-        </button>
-        <div>
-          <div class="topbar-title" id="topbarTitle">Início</div>
-        </div>
+        <button class="topbar-back hidden" id="btnBack">← Voltar ao início</button>
+        <div class="topbar-title" id="topbarTitle">Início</div>
       </div>
 
-      <!-- CONTENT -->
       <div class="content-area" id="contentArea">
 
-        <!-- WELCOME -->
+        <!-- WELCOME / DASHBOARD -->
         <div id="panelWelcome">
-          <div class="welcome-eyebrow">Riva BJJ · Portal Admin</div>
-          <div class="welcome-heading" id="welcomeHeading">Olá!</div>
-          <div class="welcome-sub">Use o menu lateral para navegar entre as seções do portal.</div>
-          <div class="welcome-divider"></div>
-          <div class="welcome-hints">
-            <span class="welcome-hint" data-href="./alunos.html" data-label="Alunos">👥 Alunos</span>
-            <span class="welcome-hint" data-href="./financeiro.html" data-label="Financeiro">💰 Financeiro</span>
-            <span class="welcome-hint" data-href="./aniversariantes.html" data-label="Aniversariantes">🎂 Aniversariantes</span>
-            <span class="welcome-hint" data-href="./trocafaixa.html" data-label="Troca de Faixa">🥋 Troca de Faixa</span>
-            <span class="welcome-hint" data-href="./lembretes.html" data-label="Lembretes">📲 Lembretes</span>
+
+          <div class="dash-header">
+            <div class="dash-eyebrow">Riva BJJ · Portal Admin</div>
+            <div class="dash-title" id="welcomeHeading">Olá!</div>
+            <div class="dash-date" id="dashDate"></div>
+          </div>
+
+          <div class="charts-grid">
+
+            <!-- GRÁFICO 1: Alunos por faixa -->
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">Alunos por Faixa</div>
+                <div class="chart-subtitle">Distribuição de faixas — alunos ativos</div>
+              </div>
+              <div class="bar-h-list" id="chartFaixas">
+                <!-- skeleton -->
+                <div class="bar-h-row"><div class="skel" style="width:100%;height:7px;border-radius:4px;"></div></div>
+                <div class="bar-h-row"><div class="skel" style="width:100%;height:7px;border-radius:4px;"></div></div>
+                <div class="bar-h-row"><div class="skel" style="width:100%;height:7px;border-radius:4px;"></div></div>
+                <div class="bar-h-row"><div class="skel" style="width:100%;height:7px;border-radius:4px;"></div></div>
+              </div>
+            </div>
+
+            <!-- GRÁFICO 2: Alunos por horário -->
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">Alunos por Horário</div>
+                <div class="chart-subtitle">Check-ins por faixa de horário</div>
+              </div>
+              <div class="bar-v-area" id="chartHorarios">
+                <div class="skel" style="width:100%;height:100%;border-radius:6px;"></div>
+              </div>
+            </div>
+
+            <!-- GRÁFICO 3: Novos alunos por mês (full width) -->
+            <div class="chart-card full">
+              <div class="chart-header">
+                <div class="chart-title">Novos Alunos por Mês</div>
+                <div class="chart-subtitle">Cadastros nos últimos 6 meses</div>
+              </div>
+              <div class="line-wrap">
+                <svg class="line-svg" id="lineSvg" viewBox="0 0 600 130" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%"   stop-color="#c0392b" stop-opacity="0.35"/>
+                      <stop offset="100%" stop-color="#c0392b" stop-opacity="0"/>
+                    </linearGradient>
+                  </defs>
+                  <!-- skeleton rect -->
+                  <rect x="0" y="50" width="600" height="4" rx="2" fill="rgba(255,255,255,0.05)" class="skel"/>
+                </svg>
+              </div>
+              <div class="line-labels" id="lineLabels"></div>
+            </div>
+
           </div>
         </div>
 
-        <!-- IFRAME PANEL -->
+        <!-- IFRAME -->
         <div id="panelIframe">
           <iframe id="pageFrame" title="Página"></iframe>
         </div>
@@ -574,13 +323,13 @@
   <script type="module">
     import { auth, db } from './firebase-config.js';
     import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-    import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { collection, query, where, getDocs, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
     const TOKEN_KEY = 'rv_prof_token';
     const NOME_KEY  = 'rv_prof_nome';
 
-    /* ── utils ──────────────────────────────────────────────── */
-    function showLogin()  {
+    /* ── utils ── */
+    function showLogin() {
       document.getElementById('loginScreen').style.display = 'flex';
       document.getElementById('dashScreen').classList.remove('visible');
     }
@@ -588,13 +337,18 @@
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('dashScreen').classList.add('visible');
       document.getElementById('sidebarUserName').textContent = nome || 'Administrador';
-      document.getElementById('welcomeHeading').textContent = 'Olá, ' + (nome || 'Administrador') + '!';
+      document.getElementById('welcomeHeading').textContent  = 'Olá, ' + (nome || 'Administrador') + '!';
+
+      const now = new Date();
+      const opts = { weekday:'long', day:'numeric', month:'long', year:'numeric' };
+      document.getElementById('dashDate').textContent = now.toLocaleDateString('pt-BR', opts);
+
+      carregarDashboard();
     }
 
     async function buscarNome(email) {
       try {
-        const q = query(collection(db, 'professores'), where('email', '==', email));
-        const snap = await getDocs(q);
+        const snap = await getDocs(query(collection(db,'professores'), where('email','==',email)));
         if (!snap.empty) return snap.docs[0].data().nome || '';
       } catch(e) {}
       return '';
@@ -607,7 +361,7 @@
       location.reload();
     }
 
-    /* ── navigate ─────────────────────────────────────────────── */
+    /* ── navigate ── */
     function navigateTo(href, label) {
       if (!href) return;
       const url = href + (href.includes('?') ? '&' : '?') + 'embed=1';
@@ -617,21 +371,18 @@
       document.getElementById('topbarTitle').textContent = label || '';
       document.getElementById('btnBack').classList.remove('hidden');
 
-      // inject CSS to hide nav/header inside iframe after load
       document.getElementById('pageFrame').onload = function() {
         try {
           const iDoc = this.contentDocument || this.contentWindow.document;
-          const style = iDoc.createElement('style');
-          style.textContent = 'header, .hdr, nav, .sidebar, .topbar, .btn-back-portal { display: none !important; } body, .page, main { padding-top: 0 !important; margin-top: 0 !important; }';
-          iDoc.head.appendChild(style);
-        } catch(e) { /* cross-origin, ignore */ }
+          const s = iDoc.createElement('style');
+          s.textContent = 'header,.hdr,nav,.sidebar,.topbar,.btn-back-portal{display:none!important}body,.page,main{padding-top:0!important;margin-top:0!important}';
+          iDoc.head.appendChild(s);
+        } catch(e) {}
       };
 
-      // update active nav
       document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
       const match = document.querySelector(`.nav-item[data-href="${href}"]`);
       if (match) match.classList.add('active');
-
       closeMobileMenu();
     }
 
@@ -641,44 +392,233 @@
       document.getElementById('panelWelcome').style.display = '';
       document.getElementById('topbarTitle').textContent = 'Início';
       document.getElementById('btnBack').classList.add('hidden');
-
       document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
       document.querySelector('.nav-item[data-panel="welcome"]').classList.add('active');
     }
 
-    /* ── mobile sidebar ─────────────────────────────────────── */
-    function openMobileMenu() {
-      document.getElementById('sidebar').classList.add('open');
-      document.getElementById('sidebarOverlay').classList.add('visible');
-    }
-    function closeMobileMenu() {
-      document.getElementById('sidebar').classList.remove('open');
-      document.getElementById('sidebarOverlay').classList.remove('visible');
-    }
+    function openMobileMenu()  { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('visible'); }
+    function closeMobileMenu() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('visible'); }
 
     document.getElementById('btnMenuToggle').addEventListener('click', openMobileMenu);
     document.getElementById('sidebarOverlay').addEventListener('click', closeMobileMenu);
-
-    /* ── sidebar nav items ──────────────────────────────────── */
     document.querySelectorAll('.nav-item[data-href]').forEach(item => {
-      item.addEventListener('click', () => {
-        navigateTo(item.dataset.href, item.dataset.label);
-      });
+      item.addEventListener('click', () => navigateTo(item.dataset.href, item.dataset.label));
     });
     document.querySelector('.nav-item[data-panel="welcome"]').addEventListener('click', goHome);
-
-    /* ── welcome hints ──────────────────────────────────────── */
-    document.querySelectorAll('.welcome-hint[data-href]').forEach(el => {
-      el.addEventListener('click', () => navigateTo(el.dataset.href, el.dataset.label));
-    });
-
-    /* ── back button ────────────────────────────────────────── */
     document.getElementById('btnBack').addEventListener('click', goHome);
-
-    /* ── logout ─────────────────────────────────────────────── */
     document.getElementById('btnLogout').addEventListener('click', doLogout);
 
-    /* ── auth state ─────────────────────────────────────────── */
+    /* ─────────────── DASHBOARD ─────────────── */
+    async function carregarDashboard() {
+      await Promise.all([
+        carregarFaixas(),
+        carregarHorarios(),
+        carregarNovosMes(),
+      ]);
+    }
+
+    /* ── 1. Alunos por faixa ── */
+    const FAIXA_CONFIG = [
+      { key: 'Branca',  dot: 'dot-branca',  fill: 'fill-branca'  },
+      { key: 'Azul',    dot: 'dot-azul',    fill: 'fill-azul'    },
+      { key: 'Roxa',    dot: 'dot-roxa',    fill: 'fill-roxa'    },
+      { key: 'Marrom',  dot: 'dot-marrom',  fill: 'fill-marrom'  },
+      { key: 'Preta',   dot: 'dot-preta',   fill: 'fill-preta'   },
+    ];
+
+    async function carregarFaixas() {
+      const container = document.getElementById('chartFaixas');
+      try {
+        const snap = await getDocs(query(collection(db,'alunos'), where('status','==','ATIVO')));
+        const contagem = {};
+        snap.forEach(d => {
+          const faixa = (d.data().faixa || 'Branca').trim();
+          // Agrupar faixas kids em "Kids"
+          const isAdulto = ['Branca','Azul','Roxa','Marrom','Preta'].includes(faixa);
+          const chave = isAdulto ? faixa : 'Kids';
+          contagem[chave] = (contagem[chave] || 0) + 1;
+        });
+
+        // Ordenar por quantidade
+        const lista = Object.entries(contagem).sort((a,b) => b[1]-a[1]);
+        const max = lista[0]?.[1] || 1;
+
+        const config = [
+          ...FAIXA_CONFIG,
+          { key: 'Kids', dot: 'dot-kids', fill: 'fill-kids' },
+        ];
+
+        container.innerHTML = lista.map(([faixa, total]) => {
+          const cfg = config.find(c => c.key === faixa) || { dot:'dot-branca', fill:'fill-branca' };
+          const pct = Math.round((total / max) * 100);
+          return `
+            <div class="bar-h-row">
+              <div class="bar-h-dot ${cfg.dot}"></div>
+              <div class="bar-h-name">${faixa}</div>
+              <div class="bar-h-track">
+                <div class="bar-h-fill ${cfg.fill}" style="width:0%" data-pct="${pct}"></div>
+              </div>
+              <div class="bar-h-count">${total}</div>
+            </div>`;
+        }).join('');
+
+        // Animar depois de render
+        requestAnimationFrame(() => {
+          container.querySelectorAll('.bar-h-fill').forEach(el => {
+            el.style.width = el.dataset.pct + '%';
+          });
+        });
+
+      } catch(e) {
+        container.innerHTML = '<p style="color:var(--muted);font-size:12px;">Erro ao carregar.</p>';
+      }
+    }
+
+    /* ── 2. Alunos por horário ── */
+    async function carregarHorarios() {
+      const container = document.getElementById('chartHorarios');
+      try {
+        const snap = await getDocs(collection(db, 'checkins'));
+        const contagem = {};
+        snap.forEach(d => {
+          const h = (d.data().horario || '').trim().toUpperCase();
+          if (!h) return;
+          contagem[h] = (contagem[h] || 0) + 1;
+        });
+
+        // Ordenar horários cronologicamente
+        const lista = Object.entries(contagem).sort((a, b) => {
+          const toMin = s => {
+            const m = s.replace(/[^0-9:H]/g,'').replace('H',':');
+            const [h, min='0'] = m.split(':');
+            return parseInt(h)*60 + parseInt(min);
+          };
+          return toMin(a[0]) - toMin(b[0]);
+        });
+
+        if (!lista.length) { container.innerHTML = '<p style="color:var(--muted);font-size:12px;padding:8px;">Sem dados.</p>'; return; }
+
+        const max = Math.max(...lista.map(x => x[1]));
+
+        container.innerHTML = lista.map(([hor, total]) => {
+          const pct = Math.round((total / max) * 100);
+          return `
+            <div class="bar-v-col">
+              <div class="bar-v-val">${total}</div>
+              <div class="bar-v-bar" style="height:0px" data-pct="${pct}"></div>
+              <div class="bar-v-label">${hor}</div>
+            </div>`;
+        }).join('');
+
+        const trackH = 130 - 24; // altura disponível para barras
+        requestAnimationFrame(() => {
+          container.querySelectorAll('.bar-v-bar').forEach(el => {
+            el.style.height = Math.max(4, Math.round((el.dataset.pct / 100) * trackH)) + 'px';
+          });
+        });
+
+      } catch(e) {
+        container.innerHTML = '<p style="color:var(--muted);font-size:12px;">Erro ao carregar.</p>';
+      }
+    }
+
+    /* ── 3. Novos alunos por mês (últimos 6 meses) ── */
+    async function carregarNovosMes() {
+      const svgEl    = document.getElementById('lineSvg');
+      const labelsEl = document.getElementById('lineLabels');
+
+      try {
+        const snap = await getDocs(collection(db, 'alunos'));
+
+        // Montar array dos últimos 6 meses
+        const now = new Date();
+        const meses = [];
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          meses.push({ ano: d.getFullYear(), mes: d.getMonth(), label: d.toLocaleDateString('pt-BR',{month:'short',year:'2-digit'}).replace('. ','/')} );
+        }
+
+        // Contar por mês usando criadoEm (Timestamp) ou data_inicio
+        const contagem = meses.map(() => 0);
+        snap.forEach(d => {
+          const data = d.data();
+          let dt = null;
+          if (data.criadoEm && data.criadoEm.toDate) {
+            dt = data.criadoEm.toDate();
+          } else if (data.data_inicio) {
+            // "YYYY-MM-DD" ou "DD/MM/YYYY"
+            const s = data.data_inicio;
+            if (/^\d{4}-\d{2}-\d{2}/.test(s)) dt = new Date(s + 'T00:00:00');
+            else if (/^\d{2}\/\d{2}\/\d{4}/.test(s)) {
+              const [dd, mm, yy] = s.split('/');
+              dt = new Date(`${yy}-${mm}-${dd}T00:00:00`);
+            }
+          }
+          if (!dt) return;
+          const idx = meses.findIndex(m => m.ano === dt.getFullYear() && m.mes === dt.getMonth());
+          if (idx >= 0) contagem[idx]++;
+        });
+
+        // Labels
+        labelsEl.innerHTML = meses.map(m =>
+          `<span class="line-label">${m.label}</span>`
+        ).join('');
+
+        // Desenhar SVG
+        const W = 600, H = 130, PAD = 14;
+        const maxVal = Math.max(...contagem, 1);
+        const pts = contagem.map((v, i) => {
+          const x = PAD + (i / (meses.length - 1)) * (W - PAD * 2);
+          const y = PAD + ((maxVal - v) / maxVal) * (H - PAD * 2);
+          return [x, y];
+        });
+
+        // Smooth bezier path
+        function bezierPath(points) {
+          if (points.length < 2) return '';
+          let d = `M ${points[0][0]} ${points[0][1]}`;
+          for (let i = 1; i < points.length; i++) {
+            const prev = points[i-1], curr = points[i];
+            const cpx = (prev[0] + curr[0]) / 2;
+            d += ` C ${cpx} ${prev[1]}, ${cpx} ${curr[1]}, ${curr[0]} ${curr[1]}`;
+          }
+          return d;
+        }
+
+        const linePath = bezierPath(pts);
+        const first = pts[0], last = pts[pts.length-1];
+        const areaPath = `${linePath} L ${last[0]} ${H} L ${first[0]} ${H} Z`;
+
+        const dots = pts.map(([x,y]) =>
+          `<circle class="line-dot" cx="${x}" cy="${y}" r="4"/>`
+        ).join('');
+
+        // value labels acima dos dots
+        const valLabels = pts.map(([x,y], i) =>
+          contagem[i] > 0
+            ? `<text x="${x}" y="${y - 8}" text-anchor="middle" font-size="10" fill="#888" font-family="Geist,sans-serif">${contagem[i]}</text>`
+            : ''
+        ).join('');
+
+        svgEl.innerHTML = `
+          <defs>
+            <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"   stop-color="#c0392b" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#c0392b" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path class="line-area" d="${areaPath}"/>
+          <path class="line-path" d="${linePath}"/>
+          ${dots}
+          ${valLabels}
+        `;
+
+      } catch(e) {
+        svgEl.innerHTML = '<text x="300" y="65" text-anchor="middle" fill="#555" font-size="12">Erro ao carregar</text>';
+      }
+    }
+
+    /* ── auth ── */
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         let nome = sessionStorage.getItem(NOME_KEY) || user.displayName || '';
@@ -691,10 +631,10 @@
       }
     });
 
-    /* ── login ──────────────────────────────────────────────── */
+    /* ── login ── */
     async function tryLogin() {
-      const email = document.getElementById('email').value.trim().toLowerCase();
-      const senha = document.getElementById('senha').value.trim();
+      const email  = document.getElementById('email').value.trim().toLowerCase();
+      const senha  = document.getElementById('senha').value.trim();
       const errEl  = document.getElementById('loginErr');
       const infoEl = document.getElementById('loginInfo');
       const btn    = document.getElementById('btnEntrar');
@@ -725,8 +665,8 @@
     }
 
     document.getElementById('btnEntrar').addEventListener('click', tryLogin);
-    document.getElementById('senha').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
-    document.getElementById('email').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('senha').focus(); });
+    document.getElementById('senha').addEventListener('keydown', e => { if (e.key==='Enter') tryLogin(); });
+    document.getElementById('email').addEventListener('keydown', e => { if (e.key==='Enter') document.getElementById('senha').focus(); });
   </script>
 </body>
 </html>
