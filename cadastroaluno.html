@@ -160,7 +160,7 @@
           <option value="Recorrente">Recorrente – R$ 200,00</option>
           <option value="Semestral">Semestral – R$ 220,00</option>
           <option value="Mensal">Mensal – R$ 240,00</option>
-          <option value="À Vista">💳 À Vista</option>
+          <option value="Avista">À Vista</option>
         </select>
 
         <!-- ── Campos exclusivos À Vista ── -->
@@ -238,7 +238,7 @@
 
     // ── Mostrar/ocultar seção À Vista ──
     document.getElementById('fPlano').addEventListener('change', function() {
-      document.getElementById('secaoAvista').style.display = this.value === 'À Vista' ? '' : 'none';
+      document.getElementById('secaoAvista').style.display = this.value === 'Avista' ? '' : 'none';
     });
 
     document.getElementById('fCpf').addEventListener('input', function() { this.value = formatarCpf(this.value); });
@@ -288,7 +288,7 @@
       if (!nome)  { setErr('formErr', 'Nome é obrigatório.'); return; }
       if (!email || email.indexOf('@') < 1) { setErr('formErr', 'Email inválido.'); return; }
 
-      if (plano === 'À Vista') {
+      if (plano === 'Avista') {
         const pagoAte = document.getElementById('fPagoAte').value;
         if (!pagoAte) { setErr('formErr', 'Informe até quando foi pago (mês/ano).'); return; }
       }
@@ -332,9 +332,9 @@
           data_inicio:      document.getElementById('fDataInicio').value,
           categoria,
           plano,
-          pago_ate:         plano === 'À Vista' ? pagoAte : '',
-          avista_valor:     plano === 'À Vista' ? (parseFloat(document.getElementById('fAvistaValor').value) || 0) : 0,
-          avista_forma_pag: plano === 'À Vista' ? document.getElementById('fAvistaFormaPag').value : '',
+          pago_ate:         plano === 'Avista' ? pagoAte : '',
+          avista_valor:     plano === 'Avista' ? (parseFloat(document.getElementById('fAvistaValor').value) || 0) : 0,
+          avista_forma_pag: plano === 'Avista' ? document.getElementById('fAvistaFormaPag').value : '',
           grupo_familiar:   document.getElementById('fGrupoFamiliar').value.trim(),
           data_contrato:    document.getElementById('fDataContrato').value,
           cep:              document.getElementById('fCep').value.replace(/\D/g,''),
