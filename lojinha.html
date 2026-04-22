@@ -61,14 +61,11 @@
     .produto-card:active { transform: scale(0.97); }
     .produto-card.sem-estoque { opacity: 0.45; cursor: not-allowed; }
     .produto-card.sem-estoque:hover { border-color: var(--border); }
-    .produto-emoji { font-size: 32px; margin-bottom: 8px; }
     .produto-nome { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px; }
     .produto-preco { font-size: 14px; font-weight: 900; color: #2ecc71; }
     .produto-estoque { font-size: 11px; color: #aaa; margin-top: 3px; }
     .produto-estoque.baixo { color: #f39c12; }
     .produto-estoque.zero  { color: #e74c3c; }
-    .btn-edit-produto { position: absolute; top: 8px; right: 8px; background: transparent; border: none; color: #555; font-size: 14px; cursor: pointer; padding: 2px; line-height: 1; }
-    .btn-edit-produto:hover { color: #fff; }
 
     /* ── FORMULÁRIOS ── */
     .form-section { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px 16px; margin-bottom: 16px; }
@@ -82,12 +79,6 @@
     .form-input::placeholder { color: #444; }
     .form-select { width: 100%; background: #1a1a1a; border: 1px solid #333; border-radius: 10px; padding: 11px 12px; font-size: 14px; color: #fff; font-family: inherit; outline: none; appearance: none; transition: border-color 0.2s; }
     .form-select:focus { border-color: var(--red); }
-
-    /* ── EMOJI PICKER ── */
-    .emoji-picker { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-    .emoji-opt { font-size: 22px; cursor: pointer; padding: 4px; border-radius: 6px; border: 2px solid transparent; transition: border-color 0.15s; }
-    .emoji-opt.selected { border-color: var(--red); background: rgba(192,57,43,0.12); }
-    .emoji-opt:hover { background: rgba(255,255,255,0.06); }
 
     /* ── MODAL VENDA ── */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.8); z-index: 50; align-items: flex-end; justify-content: center; }
@@ -170,24 +161,6 @@
         <div class="form-section">
           <div class="form-section-title" id="formProdutoTitulo">➕ Novo Produto</div>
           <input type="hidden" id="produtoEditId" />
-
-          <div class="form-group">
-            <label class="form-label">Ícone</label>
-            <div class="emoji-picker" id="emojiPicker">
-              <span class="emoji-opt selected" data-emoji="🛍️">🛍️</span>
-              <span class="emoji-opt" data-emoji="👕">👕</span>
-              <span class="emoji-opt" data-emoji="🥋">🥋</span>
-              <span class="emoji-opt" data-emoji="☕">☕</span>
-              <span class="emoji-opt" data-emoji="💧">💧</span>
-              <span class="emoji-opt" data-emoji="🍫">🍫</span>
-              <span class="emoji-opt" data-emoji="🥤">🥤</span>
-              <span class="emoji-opt" data-emoji="💊">💊</span>
-              <span class="emoji-opt" data-emoji="🎽">🎽</span>
-              <span class="emoji-opt" data-emoji="🩳">🩳</span>
-              <span class="emoji-opt" data-emoji="🧴">🧴</span>
-              <span class="emoji-opt" data-emoji="📦">📦</span>
-            </div>
-          </div>
 
           <div class="form-row">
             <div class="form-group">
@@ -318,7 +291,6 @@
     let vendaSelecionada = null;
     let qtyAtual = 1;
     let formaAtual = 'dinheiro';
-    let emojiAtual = '🛍️';
     let filtroAtual = 'hoje';
     let todasVendas = [];
 
@@ -350,7 +322,6 @@
         const estoqueLabel = estoque === 0 ? '❌ Sem estoque' : estoque <= 3 ? `⚠️ ${estoque} restantes` : `${estoque} em estoque`;
         return `
           <div class="produto-card${estoque === 0 ? ' sem-estoque' : ''}" data-id="${p.id}">
-            <div class="produto-emoji">${p.emoji || '🛍️'}</div>
             <div class="produto-nome">${esc(p.nome)}</div>
             <div class="produto-preco">R$ ${parseFloat(p.preco||0).toFixed(2).replace('.',',')}</div>
             <div class="produto-estoque ${estoqueClass}">${estoqueLabel}</div>
@@ -371,7 +342,7 @@
       qtyAtual = 1;
       formaAtual = 'dinheiro';
 
-      document.getElementById('modalVendaNome').textContent = `${prod.emoji || '🛍️'} ${prod.nome}`;
+      document.getElementById('modalVendaNome').textContent = prod.nome;
       document.getElementById('modalVendaPreco').textContent = `R$ ${parseFloat(prod.preco).toFixed(2).replace('.',',')} / unidade`;
       document.getElementById('qtyValue').textContent = '1';
       document.getElementById('modalVendaMsg').textContent = '';
@@ -432,7 +403,6 @@
         await addDoc(collection(db, 'loja_vendas'), {
           produtoId:   vendaSelecionada.id,
           produtoNome: vendaSelecionada.nome,
-          produtoEmoji:vendaSelecionada.emoji || '🛍️',
           quantidade:  qtyAtual,
           precoUnit:   parseFloat(vendaSelecionada.preco),
           total,
@@ -532,7 +502,6 @@
       const formaPag = { dinheiro:'💵 Dinheiro', pix:'📲 Pix', debito:'💳 Débito', credito:'💳 Crédito' };
       container.innerHTML = lista.map(v => `
         <div class="venda-card">
-          <div class="venda-icon">${v.produtoEmoji || '🛍️'}</div>
           <div class="venda-info">
             <div class="venda-nome">${esc(v.produtoNome || '—')}${v.quantidade > 1 ? ` <span style="color:#aaa;font-weight:400;">x${v.quantidade}</span>` : ''}</div>
             <div class="venda-meta">${formaPag[v.formaPagamento] || v.formaPagamento || '—'} · ${v.data || ''} ${v.hora || ''}</div>
@@ -553,15 +522,6 @@
 
     /* ────────────── CADASTRO DE PRODUTOS ────────────── */
 
-    // Emoji picker
-    document.querySelectorAll('.emoji-opt').forEach(el => {
-      el.addEventListener('click', () => {
-        document.querySelectorAll('.emoji-opt').forEach(e => e.classList.remove('selected'));
-        el.classList.add('selected');
-        emojiAtual = el.dataset.emoji;
-      });
-    });
-
     async function carregarListaProdutos() {
       await carregarProdutos();
       const container = document.getElementById('listaProdutosCad');
@@ -571,7 +531,6 @@
       }
       container.innerHTML = produtos.map(p => `
         <div class="venda-card" style="margin-bottom:8px;">
-          <div class="venda-icon">${p.emoji || '🛍️'}</div>
           <div class="venda-info">
             <div class="venda-nome">${esc(p.nome)}</div>
             <div class="venda-meta">${esc(p.categoria||'—')} · Estoque: ${p.estoque ?? 0}</div>
@@ -597,38 +556,27 @@
     function editarProduto(id) {
       const p = produtos.find(x => x.id === id);
       if (!p) return;
-      document.getElementById('produtoEditId').value   = id;
-      document.getElementById('produtoNome').value     = p.nome || '';
-      document.getElementById('produtoPreco').value    = p.preco || '';
-      document.getElementById('produtoEstoque').value  = p.estoque ?? '';
-      document.getElementById('produtoCategoria').value= p.categoria || 'Outro';
+      document.getElementById('produtoEditId').value    = id;
+      document.getElementById('produtoNome').value      = p.nome || '';
+      document.getElementById('produtoPreco').value     = p.preco || '';
+      document.getElementById('produtoEstoque').value   = p.estoque ?? '';
+      document.getElementById('produtoCategoria').value = p.categoria || 'Outro';
       document.getElementById('formProdutoTitulo').textContent = '✏️ Editar Produto';
       document.getElementById('btnCancelarEdicao').style.display = '';
-
-      // Emoji
-      emojiAtual = p.emoji || '🛍️';
-      document.querySelectorAll('.emoji-opt').forEach(el => {
-        el.classList.toggle('selected', el.dataset.emoji === emojiAtual);
-      });
-
       window.scrollTo({ top: document.getElementById('tabProdutos').offsetTop - 80, behavior: 'smooth' });
     }
 
     document.getElementById('btnCancelarEdicao').addEventListener('click', resetFormProduto);
 
     function resetFormProduto() {
-      document.getElementById('produtoEditId').value  = '';
-      document.getElementById('produtoNome').value    = '';
-      document.getElementById('produtoPreco').value   = '';
-      document.getElementById('produtoEstoque').value = '';
+      document.getElementById('produtoEditId').value    = '';
+      document.getElementById('produtoNome').value      = '';
+      document.getElementById('produtoPreco').value     = '';
+      document.getElementById('produtoEstoque').value   = '';
       document.getElementById('produtoCategoria').value = 'Equipamento';
       document.getElementById('formProdutoTitulo').textContent = '➕ Novo Produto';
       document.getElementById('btnCancelarEdicao').style.display = 'none';
       document.getElementById('produtoMsg').textContent = '';
-      emojiAtual = '🛍️';
-      document.querySelectorAll('.emoji-opt').forEach(el => {
-        el.classList.toggle('selected', el.dataset.emoji === '🛍️');
-      });
     }
 
     document.getElementById('btnSalvarProduto').addEventListener('click', async () => {
@@ -646,7 +594,7 @@
       document.getElementById('btnSalvarProduto').disabled = true;
 
       try {
-        const dados = { nome, preco, estoque, categoria, emoji: emojiAtual };
+        const dados = { nome, preco, estoque, categoria };
         if (editId) {
           await updateDoc(doc(db, 'loja_produtos', editId), dados);
           msg.textContent = '✅ Produto atualizado!';
