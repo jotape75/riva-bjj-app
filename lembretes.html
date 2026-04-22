@@ -297,7 +297,7 @@
         const snap = await getDocs(query(
           collection(db, 'alunos'),
           where('status', '==', 'ATIVO'),
-          where('plano', '==', 'À Vista')
+          where('plano', '==', 'Avista')
         ));
 
         const avistaVencendo = [];
