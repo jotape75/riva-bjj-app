@@ -72,8 +72,7 @@
     .resumo-num { font-size: 28px; font-weight: 900; color: #f39c12; }
     .resumo-label { font-size: 13px; color: #aaa; margin-top: 2px; }
 
-    .rodape-fixo { position: sticky; bottom: 0; background: var(--bg); border-top: 1px solid var(--border); padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); }
-    .lista-lembretes { padding-bottom: 80px; }
+    .lista-lembretes { padding-bottom: 24px; }
   </style>
 </head>
 <body>
@@ -102,10 +101,6 @@
 
       <p class="msg info" id="pageInfo">Carregando…</p>
       <div id="listaLembretes" class="lista-lembretes"></div>
-
-      <div class="rodape-fixo">
-        <button class="btn secondary" onclick="location.href='./administrativo.html'">← Voltar ao Portal</button>
-      </div>
     </section>
   </main>
 
@@ -115,8 +110,8 @@
     import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
     const TOKEN_KEY = 'rv_prof_token';
-    const CHAVE_PIX = '66.256.625/0001-27'; // ← substituir pela chave PIX real
-    const DIAS_AVISO = 3; // dias antes do vencimento para enviar lembrete
+    const CHAVE_PIX = '66.256.625/0001-27';
+    const DIAS_AVISO = 3;
 
     function esc(str) {
       return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -139,7 +134,6 @@
       hoje.setHours(0, 0, 0, 0);
       const venc = new Date(dc);
       venc.setHours(0, 0, 0, 0);
-      // Avança em ciclos de 30 dias até encontrar a próxima data futura
       while (venc <= hoje) venc.setDate(venc.getDate() + 30);
       return venc;
     }
@@ -192,7 +186,7 @@
         snap.forEach(d => {
           const a = d.data();
           if (!a.data_contrato) return;
-          if (alunosPagos.has(d.id)) return; // já pagou este mês
+          if (alunosPagos.has(d.id)) return;
 
           const venc = calcularProxVencimento(a.data_contrato);
           if (!venc) return;
@@ -219,7 +213,6 @@
           return;
         }
 
-        // Resumo
         document.getElementById('resumoCount').textContent = lembretes.length;
         document.getElementById('resumoBox').style.display = '';
 
