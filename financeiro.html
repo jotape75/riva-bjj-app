@@ -75,10 +75,7 @@
     .busca-fixa { position: sticky; top: 72px; z-index: 9; background: var(--bg); padding: 12px 0 4px; margin-bottom: 8px; }
     @media (max-width: 768px) { .busca-fixa { top: 68px; } }
     .busca-fixa .input { margin-bottom: 8px; }
-    .rodape-fixo { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--bg); border-top: 1px solid var(--border); padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); }
-    .rodape-fixo .btn { margin-top: 0; max-width: 520px; margin-left: auto; margin-right: auto; display: block; }
-    @media (min-width: 769px) { .rodape-fixo .btn { max-width: 1100px; } }
-    .lista-scroll { padding-bottom: 90px; }
+    .lista-scroll { padding-bottom: 24px; }
     .lista-vazia { color: #aaa; text-align: center; padding: 24px 0; font-size: 15px; }
     .mes-selector { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
     .mes-selector .select-input { margin-bottom: 0; flex: 1; }
@@ -200,9 +197,6 @@
         <div class="resumo-item"><div class="resumo-valor azul"    id="resumoEmDia">0</div><div class="resumo-label">Em dia</div></div>
       </div>
       <div id="listaAlunos" class="lista-scroll"></div>
-      <div class="rodape-fixo">
-        <button class="btn secondary" onclick="location.href='./administrativo.html'">← Voltar ao Portal</button>
-      </div>
     </section>
   </main>
 
@@ -614,7 +608,6 @@
         if (liveData.valor) valorDisplay = 'R$ '+parseFloat(liveData.valor).toFixed(2).replace('.',',');
       }
 
-      // Botões de ação
       let acoes = '';
       if (a.plano === 'Recorrente') {
         if (!a.asaas_id) {
@@ -629,7 +622,6 @@
       }
       acoes += `<button class="btn-acao historico" onclick="window._historico('${ie}','${escAttr(a.nome||'')}')">📋 Histórico</button>`;
 
-      // 1º pagamento
       const primPag = a.primeiro_pagamento || '';
       const isPago  = primPag === 'pix_pago' || primPag === 'debito' || primPag === 'dinheiro';
       const primeiroPagHtml = (a.plano === 'Recorrente' && a.asaas_id && st !== 'pago')
@@ -644,7 +636,6 @@
            </div>`
         : '';
 
-      // Extras
       let extras = '';
       if (a.asaas_id) extras += '<span class="asaas-badge">Asaas</span> ';
       if (a.plano==='Recorrente' && a.data_contrato) {
@@ -729,7 +720,6 @@
         }
         renderListaFiltrada();
         atualizarResumo();
-        // Reabrir modal atualizado
         const a2 = todosRegistros.find(r => r.id === alunoId);
         if (a2) abrirModalFin(a2);
       } catch(e) { alert('Erro ao salvar: '+e.message); }
@@ -906,7 +896,6 @@
       } catch(e) { document.getElementById('vincularErr').textContent='Erro: '+e.message; document.getElementById('vincularInfo').textContent=''; document.getElementById('btnCriarAsaas').disabled=false; }
     });
 
-    // ── Cancelar assinatura ────────────────────────────────────
     window._cancelar = async function(alunoId) {
       const a = todosRegistros.find(r => r.id === alunoId);
       if (!a || !a.asaas_assinatura_id) { alert('Assinatura não encontrada.'); return; }
@@ -928,7 +917,6 @@
       } catch(e) { alert('Erro: '+e.message); }
     };
 
-    // ── Cobrar (compatibilidade) ───────────────────────────────
     window._cobrar = async function(alunoId, formaPag) {
       await recarregarAluno(alunoId);
       const a = todosRegistros.find(r => r.id === alunoId);
