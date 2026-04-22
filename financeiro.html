@@ -7,6 +7,11 @@
   <title>Financeiro – Riva BJJ</title>
   <link rel="stylesheet" href="./styles.css" />
   <style>
+    /* ── EMBED MODE ── */
+    html.embed-mode header,
+    html.embed-mode .hdr { display: none !important; }
+    html.embed-mode .busca-fixa { top: 8px !important; }
+    html.embed-mode .admin-page { padding-top: 8px !important; }
     .admin-hdr-left { display: flex; align-items: center; gap: 14px; }
     .admin-hdr-titulo { display: none; }
     .admin-hdr-sair { display: none; }
@@ -152,6 +157,11 @@
   </style>
 </head>
 <body>
+  <script>
+    if (new URLSearchParams(location.search).get('embed') === '1') {
+      document.documentElement.classList.add('embed-mode');
+    }
+  </script>
   <header class="hdr admin-hdr">
     <div class="hdr-inner admin-hdr-inner">
       <div class="admin-hdr-left">
@@ -548,7 +558,11 @@
       const busca = (document.getElementById('searchBox').value||'').toLowerCase().trim();
       let lista = todosRegistros;
       if (filtroAtivo !== 'todos') lista = lista.filter(a => getEffectiveStatus(a) === filtroAtivo);
-      if (busca) lista = lista.filter(a => (a.nome||'').toLowerCase().includes(busca));
+      if (busca) lista = lista.filter(a =>
+        (a.nome||'').toLowerCase().includes(busca) ||
+        (a.email||'').toLowerCase().includes(busca) ||
+        (a.plano||'').toLowerCase().includes(busca)
+      );
       const container = document.getElementById('listaAlunos');
       if (!lista.length) { container.innerHTML='<div class="lista-vazia">Nenhum resultado encontrado.</div>'; return; }
       container.innerHTML = lista.map(buildCardCompact).join('');
