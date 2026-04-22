@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#c0392b" />
-  <title>Financeiro – Riva BJJ</title>
+  <title>Lembretes de Pagamento – Riva BJJ</title>
   <link rel="stylesheet" href="./styles.css" />
   <style>
     .admin-hdr-left { display: flex; align-items: center; gap: 14px; }
@@ -12,143 +12,67 @@
     .admin-hdr-sair { display: none; }
     .btn-logout { background: transparent; border: 1px solid var(--border); color: #fff; border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
     .btn-logout:active { opacity: .75; }
-    .admin-logo { width: 56px !important; height: 56px !important; margin-top: 0 !important; }
     @media (min-width: 769px) {
       .admin-hdr-inner { max-width: 1100px; justify-content: space-between; padding: 0 24px; }
-      .admin-logo { width: 64px !important; height: 64px !important; margin-top: 0 !important; }
+      .admin-logo { width: 48px !important; height: 48px !important; margin-top: 0 !important; }
       .admin-hdr-titulo { display: inline; font-size: 20px; font-weight: 900; color: #fff; letter-spacing: 0.5px; }
       .admin-hdr-sair { display: inline-block; }
       .admin-page { max-width: 1100px; padding: 32px 32px 64px; }
     }
     @media (max-width: 768px) { .admin-hdr-inner { justify-content: center; } }
 
-    /* ── Resumo ── */
-    .resumo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
-    .resumo-item { background: #141414; border: 1px solid var(--border); border-radius: 12px; padding: 14px 10px; text-align: center; }
-    .resumo-valor { font-size: 22px; font-weight: 900; color: #fff; line-height: 1.1; }
-    .resumo-label { font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
-    .resumo-valor.verde   { color: #2ecc71; }
-    .resumo-valor.amarelo { color: #f39c12; }
-    .resumo-valor.azul    { color: #3498db; }
+    .page-title { font-size: 24px; font-weight: 900; color: #fff; margin-bottom: 4px; }
+    .page-subtitle { font-size: 14px; color: #aaa; margin-bottom: 20px; }
 
-    /* ── Filtros / busca ── */
-    .filtros-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
-    .btn-filtro { background: #222; border: 1px solid #444; color: #aaa; border-radius: 20px; padding: 6px 14px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
-    .btn-filtro.ativo { background: var(--red); color: #fff; border-color: var(--red); }
-    .btn-filtro:active { opacity: .75; }
-
-    /* ── Card compacto ── */
-    .fin-card-compact {
-      background: var(--card);
-      border: 1px solid var(--border);
+    .lembrete-item {
+      background: #222;
+      border: 1px solid #333;
       border-radius: 12px;
-      padding: 12px 14px;
-      margin-bottom: 8px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 12px;
-      cursor: pointer;
-      transition: border-color 0.15s;
+      flex-wrap: wrap;
     }
-    .fin-card-compact:hover { border-color: var(--red); }
-    .fin-card-compact:active { opacity: .85; }
-    .fin-compact-info { flex: 1; min-width: 0; }
-    .fin-compact-nome { font-size: 15px; font-weight: 900; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .fin-compact-sub  { font-size: 12px; color: #aaa; margin-top: 2px; }
-    .status-badge { display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: 12px; font-weight: 900; white-space: nowrap; }
-    .status-pago     { background: rgba(46,204,113,.2);  color: #2ecc71; border: 1px solid #2ecc71; }
-    .status-pendente { background: rgba(243,156,18,.15); color: #f39c12; border: 1px solid #f39c12; }
-    .status-vencido  { background: rgba(231,76,60,.2);   color: #e74c3c; border: 1px solid #e74c3c; }
-    .status-recorrente-pendente { background: rgba(142,68,173,.2); color: #9b59b6; border: 1px solid #9b59b6; }
+    .lembrete-info { flex: 1; min-width: 0; }
+    .lembrete-nome { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lembrete-detalhe { font-size: 12px; color: #aaa; }
+    .lembrete-venc { font-size: 12px; color: #f39c12; font-weight: 700; margin-top: 2px; }
 
-    /* ── Sync ── */
-    .sync-status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #aaa; margin-bottom: 8px; }
-    .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #555; display: inline-block; }
-    .sync-dot.syncing { background: #f39c12; animation: pulse 1s infinite; }
-    .sync-dot.ok   { background: #2ecc71; }
-    .sync-dot.erro { background: #e74c3c; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .btn-wpp {
+      background: #25D366;
+      border: none;
+      color: #fff;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-wpp:active { opacity: .75; }
 
-    /* ── Outros utilitários ── */
-    .select-input { width: 100%; padding: 14px; font-size: 16px; border-radius: 12px; background: #222; border: 2px solid #333; color: #fff; outline: none; margin-bottom: 12px; appearance: none; -webkit-appearance: none; }
-    .select-input:focus { border-color: var(--red); }
-    .busca-fixa { position: sticky; top: 72px; z-index: 9; background: var(--bg); padding: 12px 0 4px; margin-bottom: 8px; }
-    @media (max-width: 768px) { .busca-fixa { top: 68px; } }
-    .busca-fixa .input { margin-bottom: 8px; }
-    .lista-scroll { padding-bottom: 24px; }
-    .lista-vazia { color: #aaa; text-align: center; padding: 24px 0; font-size: 15px; }
-    .mes-selector { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-    .mes-selector .select-input { margin-bottom: 0; flex: 1; }
-    .mes-selector .btn-mes { background: var(--red); border: none; color: #fff; border-radius: 10px; padding: 12px 18px; font-size: 15px; font-weight: 800; cursor: pointer; white-space: nowrap; }
-    .mes-selector .btn-mes:active { opacity: .75; }
+    .resumo-box {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .resumo-num { font-size: 28px; font-weight: 900; color: #f39c12; }
+    .resumo-label { font-size: 13px; color: #aaa; margin-top: 2px; }
 
-    /* ── Modal financeiro ── */
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.8); z-index: 50; align-items: flex-end; justify-content: center; }
-    .modal-overlay.open { display: flex; }
-    .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 20px 20px 0 0; padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px)); width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto; }
-    @media (min-width: 769px) { .modal-overlay { align-items: center; } .modal-box { border-radius: 20px; max-width: 540px; max-height: 88vh; } }
-    .modal-title   { font-size: 18px; font-weight: 900; color: #fff; margin-bottom: 4px; }
-    .modal-subtitle{ font-size: 13px; color: #aaa; margin-bottom: 16px; }
-    .modal-btns    { display: flex; gap: 10px; margin-top: 4px; }
-    .modal-btns .btn { margin-top: 0; flex: 1; }
-
-    /* ── Info grid no modal ── */
-    .fin-modal-info { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; margin: 14px 0; border-top: 1px solid var(--border); padding-top: 12px; }
-    .fin-info-item { display: flex; flex-direction: column; gap: 2px; }
-    .fin-info-label { font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; }
-    .fin-info-valor { font-size: 14px; color: #fff; font-weight: 700; }
-
-    /* ── Botões de ação ── */
-    .btns-acao { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
-    .btn-acao { border: none; color: #fff; border-radius: 999px; padding: 8px 16px; font-size: 13px; font-weight: 900; cursor: pointer; white-space: nowrap; text-decoration: none; display: inline-block; }
-    .btn-acao:active { opacity: .75; }
-    .btn-acao.vincular  { background: #2980b9; }
-    .btn-acao.ver       { background: #1a5276; }
-    .btn-acao.boleto    { background: #666; }
-    .btn-acao.cancelar  { background: #e74c3c; }
-    .btn-acao.cartao    { background: #8e44ad; }
-    .btn-acao.historico { background: #2c3e50; }
-    .btn-acao.manual    { background: #27ae60; }
-
-    /* ── 1º pagamento ── */
-    .primeiro-pag-wrap { margin-top: 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: 10px; }
-    .primeiro-pag-label { font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
-    .primeiro-pag-select { background: #222; border: 1px solid #555; color: #fff; border-radius: 8px; padding: 7px 10px; font-size: 13px; font-weight: 700; cursor: pointer; flex: 1; min-width: 140px; }
-    .primeiro-pag-select.pago    { border-color: #2ecc71; color: #2ecc71; }
-    .primeiro-pag-select.pendente{ border-color: #f39c12; color: #f39c12; }
-
-    /* ── Tags / badges ── */
-    .chip-carencia { display: inline-block; background: rgba(243,156,18,.2); color: #f39c12; border: 1px solid #f39c12; border-radius: 999px; padding: 2px 10px; font-size: 11px; font-weight: 700; margin-right: 4px; }
-    .desconto-tag  { background: rgba(52,152,219,.2); color: #3498db; border-radius: 4px; padding: 1px 6px; font-size: 11px; font-weight: 700; margin-left: 4px; }
-    .asaas-badge   { display: inline-block; background: rgba(52,152,219,.15); color: #3498db; border: 1px solid #3498db; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
-
-    /* ── Histórico ── */
-    .hist-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); gap: 10px; }
-    .hist-item:last-child { border-bottom: none; }
-    .hist-info { display: flex; flex-direction: column; gap: 2px; }
-    .hist-data  { font-size: 13px; color: #aaa; }
-    .hist-forma { font-size: 14px; color: #fff; font-weight: 700; }
-    .hist-valor { font-size: 16px; font-weight: 900; color: #2ecc71; white-space: nowrap; }
-    .hist-vazio { color: #aaa; text-align: center; padding: 24px 0; font-size: 14px; }
-
-    /* ── Cartão ── */
-    .card-input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .card-input-row .input-wrap { display: flex; flex-direction: column; gap: 4px; }
-    .card-number-wrap { position: relative; }
-    .card-number-wrap .card-brand { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 18px; pointer-events: none; }
-    .card-security-info { display: flex; align-items: center; gap: 6px; background: rgba(46,204,113,.08); border: 1px solid rgba(46,204,113,.25); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; font-size: 12px; color: #2ecc71; font-weight: 600; }
-    .cartao-sucesso { text-align: center; padding: 16px 0 8px; }
-    .cartao-sucesso-icon { font-size: 36px; }
-    .cartao-sucesso-text { font-size: 16px; font-weight: 700; color: #2ecc71; margin-top: 8px; }
-    .cartao-final-4 { font-size: 13px; color: #aaa; margin-top: 4px; }
-    .vincular-sucesso { text-align: center; padding: 16px 0 8px; }
-    .vincular-sucesso-icon { font-size: 36px; }
-    .vincular-sucesso-text { font-size: 16px; font-weight: 700; color: #2ecc71; margin-top: 8px; }
-    .check-label { display: flex; align-items: center; gap: 8px; color: #ddd; font-size: 14px; font-weight: 600; margin-bottom: 12px; cursor: pointer; }
-    .check-label input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--red); cursor: pointer; }
-    .valor-final-box { background: #222; border: 1px solid #333; border-radius: 10px; padding: 12px 14px; margin-top: 4px; margin-bottom: 12px; }
-    .valor-final-label { font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; }
-    .valor-final-num   { font-size: 22px; font-weight: 900; color: #fff; margin-top: 2px; }
+    .lista-lembretes { padding-bottom: 24px; }
   </style>
 </head>
 <body>
@@ -156,799 +80,193 @@
     <div class="hdr-inner admin-hdr-inner">
       <div class="admin-hdr-left">
         <img class="logo admin-logo" src="./logo.png" alt="Riva BJJ" />
-        <span class="admin-hdr-titulo">Financeiro</span>
+        <span class="admin-hdr-titulo">Portal Administrativo</span>
       </div>
       <button class="btn-logout admin-hdr-sair" id="btnHdrSair">Sair</button>
     </div>
   </header>
 
   <main class="page admin-page">
-    <section class="hidden" id="sectionFinanceiro">
-      <div class="busca-fixa">
-        <h1 class="title" style="margin-bottom:10px;">💰 Financeiro</h1>
-        <div class="mes-selector">
-          <select class="select-input" id="selMes">
-            <option value="1">Janeiro</option><option value="2">Fevereiro</option>
-            <option value="3">Março</option><option value="4">Abril</option>
-            <option value="5">Maio</option><option value="6">Junho</option>
-            <option value="7">Julho</option><option value="8">Agosto</option>
-            <option value="9">Setembro</option><option value="10">Outubro</option>
-            <option value="11">Novembro</option><option value="12">Dezembro</option>
-          </select>
-          <select class="select-input" id="selAno" style="max-width:100px;"></select>
-          <button class="btn-mes" id="btnCarregar">Carregar</button>
+    <section id="sectionLembretes">
+      <div class="page-title">📲 Lembretes de Pagamento</div>
+      <div class="page-subtitle">Alunos com mensalidade vencendo nos próximos 3 dias (ciclo de 30 dias)</div>
+
+      <div class="resumo-box" id="resumoBox" style="display:none;">
+        <div>
+          <div class="resumo-num" id="resumoCount">0</div>
+          <div class="resumo-label">alunos para lembrar hoje</div>
         </div>
-        <input id="searchBox" class="input" type="search" placeholder="Buscar por nome…" />
-        <div class="filtros-row">
-          <button class="btn-filtro ativo" data-filtro="todos">Todos</button>
-          <button class="btn-filtro" data-filtro="pago">✅ Pagos</button>
-          <button class="btn-filtro" data-filtro="pendente">⏳ Pendentes</button>
-          <button class="btn-filtro" data-filtro="vencido">❌ Vencidos</button>
-        </div>
-        <div class="sync-status">
-          <span class="sync-dot" id="syncDot"></span>
-          <span id="syncLabel">–</span>
-        </div>
-        <p class="msg info" id="listInfo"></p>
+        <button class="btn primary" id="btnEnviarTodos" style="margin-top:0;">📲 Enviar todos</button>
       </div>
-      <div class="resumo-grid" id="resumoGrid" style="display:none;">
-        <div class="resumo-item"><div class="resumo-valor verde"   id="resumoArrecadado">R$ 0</div><div class="resumo-label">Arrecadado</div></div>
-        <div class="resumo-item"><div class="resumo-valor amarelo" id="resumoPendente">R$ 0</div><div class="resumo-label">Pendente</div></div>
-        <div class="resumo-item"><div class="resumo-valor azul"    id="resumoEmDia">0</div><div class="resumo-label">Em dia</div></div>
-      </div>
-      <div id="listaAlunos" class="lista-scroll"></div>
+
+      <p class="msg info" id="pageInfo">Carregando…</p>
+      <div id="listaLembretes" class="lista-lembretes"></div>
     </section>
   </main>
 
-  <!-- MODAL DETALHES FINANCEIRO -->
-  <div class="modal-overlay" id="modalFin">
-    <div class="modal-box" id="modalFinBox"></div>
-  </div>
-
-  <!-- MODAL VINCULAR AO ASAAS -->
-  <div class="modal-overlay" id="modalVincular">
-    <div class="modal-box">
-      <div class="modal-title">🔗 Vincular ao Asaas</div>
-      <div class="modal-subtitle" id="vincularNome"></div>
-      <input type="hidden" id="vincularAlunoId" />
-      <div id="vincularFormWrap">
-        <label class="label" for="vincularPlano">Plano</label>
-        <select class="select-input" id="vincularPlano">
-          <option value="Recorrente">Recorrente – R$ 200,00</option>
-          <option value="Semestral">Semestral – R$ 220,00</option>
-          <option value="Mensal">Mensal – R$ 240,00</option>
-        </select>
-        <div id="vincularFormaPagWrap" style="display:none;">
-          <label class="label" for="vincularFormaPag">Forma de Pagamento</label>
-          <select class="select-input" id="vincularFormaPag">
-            <option value="BOLETO">📄 Boleto</option>
-          </select>
-        </div>
-        <label class="label" for="vincularDataContrato">Data de início do contrato</label>
-        <input type="date" class="input" id="vincularDataContrato" style="margin-bottom:12px;" />
-        <label class="check-label"><input type="checkbox" id="vincularDesconto" /> Desconto família 10%</label>
-        <div class="valor-final-box">
-          <div class="valor-final-label">Valor final</div>
-          <div class="valor-final-num" id="vincularValorFinal">R$ 0,00</div>
-        </div>
-        <p class="msg err"  id="vincularErr"></p>
-        <p class="msg info" id="vincularInfo"></p>
-        <div class="modal-btns">
-          <button class="btn secondary" id="btnCancelarVincular">Cancelar</button>
-          <button class="btn primary"   id="btnCriarAsaas">Criar no Asaas</button>
-        </div>
-      </div>
-      <div id="vincularSuccessWrap" style="display:none;">
-        <div class="vincular-sucesso">
-          <div class="vincular-sucesso-icon">✅</div>
-          <div class="vincular-sucesso-text">Vinculado com sucesso!</div>
-        </div>
-        <button class="btn" id="btnCadastrarCartao" style="display:none;background:#8e44ad;color:#fff;margin-top:16px;">💳 Cadastrar cartão agora</button>
-        <button class="btn secondary" style="margin-top:8px;" id="btnFecharVincular">Fechar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL CADASTRO DE CARTÃO -->
-  <div class="modal-overlay" id="modalCartao">
-    <div class="modal-box">
-      <div class="modal-title">💳 Cadastrar Cartão</div>
-      <div class="modal-subtitle" id="cartaoAlunoNome"></div>
-      <input type="hidden" id="cartaoAlunoId" />
-      <input type="hidden" id="cartaoCustomerId" />
-      <div id="cartaoFormWrap">
-        <div class="card-security-info">🔒 Seus dados são transmitidos com criptografia segura</div>
-        <label class="label">Número do cartão</label>
-        <div class="card-number-wrap" style="margin-bottom:12px;">
-          <input id="cCartaoNumero" class="input" type="tel" inputmode="numeric" maxlength="19" placeholder="0000 0000 0000 0000" style="margin-bottom:0;padding-right:44px;" autocomplete="cc-number" />
-          <span class="card-brand" id="cCartaoBrand">💳</span>
-        </div>
-        <label class="label">Nome no cartão</label>
-        <input id="cCartaoNome" class="input" type="text" placeholder="NOME COMO NO CARTÃO" style="text-transform:uppercase;" autocomplete="cc-name" />
-        <div class="card-input-row">
-          <div class="input-wrap">
-            <label class="label">Validade</label>
-            <input id="cCartaoValidade" class="input" type="tel" inputmode="numeric" maxlength="5" placeholder="MM/AA" autocomplete="cc-exp" style="margin-bottom:0;" />
-          </div>
-          <div class="input-wrap">
-            <label class="label">CVV</label>
-            <input id="cCartaoCvv" class="input" type="tel" inputmode="numeric" maxlength="4" placeholder="000" autocomplete="cc-csc" style="margin-bottom:0;" />
-          </div>
-        </div>
-        <div style="height:12px;"></div>
-        <label class="label">CPF do titular</label>
-        <input id="cCartaoCpf" class="input" type="tel" inputmode="numeric" maxlength="14" placeholder="000.000.000-00" autocomplete="off" />
-        <input id="cCartaoCep" type="hidden" />
-        <p class="msg err"  id="cartaoErr"></p>
-        <p class="msg info" id="cartaoInfo"></p>
-        <div class="modal-btns">
-          <button class="btn secondary" id="btnCancelarCartao">Cancelar</button>
-          <button class="btn primary"   id="btnSalvarCartao">Salvar cartão</button>
-        </div>
-      </div>
-      <div id="cartaoSuccessWrap" style="display:none;">
-        <div class="cartao-sucesso">
-          <div class="cartao-sucesso-icon">✅</div>
-          <div class="cartao-sucesso-text">Cartão cadastrado!</div>
-          <div class="cartao-final-4" id="cartaoFinal4"></div>
-        </div>
-        <button class="btn" id="btnCartaoWpp" style="display:none;background:#25D366;color:#fff;margin-top:16px;">💬 Enviar confirmação via WhatsApp</button>
-        <button class="btn secondary" style="margin-top:8px;" id="btnFecharCartao">Fechar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL HISTÓRICO -->
-  <div class="modal-overlay" id="modalHistorico">
-    <div class="modal-box">
-      <div class="modal-title">📋 Histórico de Pagamentos</div>
-      <div class="modal-subtitle" id="histAlunoNome"></div>
-      <div id="histLista"></div>
-      <button class="btn secondary" style="margin-top:12px;" id="btnFecharHist">Fechar</button>
-    </div>
-  </div>
-
   <script type="module">
-    const GAS_URL            = 'https://script.google.com/macros/s/AKfycbx7pbyrOuM_2PcRn-epYGByCCuICaSLmS-gR9RVyEfhaRae-iT_8W_H6NnVJPGAJCIC/exec';
-    const AUTO_SYNC_INTERVAL = 5 * 60 * 1000;
-
     import { db, auth } from './firebase-config.js';
-    import { collection, doc, query, where, getDocs, getDoc, addDoc, updateDoc, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
     import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
-    const TOKEN_KEY      = 'rv_prof_token';
-    const DIA_VENCIMENTO = 10;
-    let todosRegistros   = [];
-    let filtroAtivo      = 'todos';
-    let mesSelecionado   = new Date().getMonth() + 1;
-    let anoSelecionado   = new Date().getFullYear();
-    const asaasStatusMap = {};
-    let _cartaoAlunoData = null;
-    let autoSyncTimer    = null;
-    const _pagamentosGravados = new Set();
+    const TOKEN_KEY = 'rv_prof_token';
+    const CHAVE_PIX = '66.256.625/0001-27';
+    const DIAS_AVISO = 3;
 
-    // ── Utilitários ────────────────────────────────────────────
-    function valorDePlano(plano) {
-      if (!plano) return 0;
-      const p = plano.toLowerCase();
-      if (p.includes('recorrente')) return 200;
-      if (p.includes('semestral'))  return 220;
-      if (p.includes('mensal'))     return 240;
-      return 0;
+    function esc(str) {
+      return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
-    function detectarDesconto(a) {
-      if (!a.grupo_familiar || !a.grupo_familiar.trim()) return false;
-      const gf = a.grupo_familiar.trim().toLowerCase();
-      return todosRegistros.filter(r => r.grupo_familiar && r.grupo_familiar.trim().toLowerCase() === gf).length >= 2;
-    }
-    function calcularValorFinal(a) {
-      const base = valorDePlano(a.plano);
-      return detectarDesconto(a) ? Math.round(base * 0.9 * 100) / 100 : base;
-    }
-    function getEffectiveStatus(a) {
-      if (a.plano === 'Mensal' || a.plano === 'Semestral') return a.statusPagamento || 'pendente';
-      const live = asaasStatusMap[a.id];
-      if (live && live.status) {
-        if (live.status === 'CONFIRMED' || live.status === 'RECEIVED') return 'pago';
-        if (live.status === 'OVERDUE') return 'vencido';
-        return 'pendente';
+
+    function formatarDataBR(dateStr) {
+      if (!dateStr) return '—';
+      if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+        const [y,m,d] = dateStr.slice(0,10).split('-');
+        return `${d}/${m}/${y}`;
       }
-      return a.statusPagamento || 'pendente';
-    }
-    function formatData(s) {
-      if (!s) return '—';
-      if (/^\d{4}-\d{2}-\d{2}/.test(s)) { const p = s.substring(0,10).split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
-      return s;
-    }
-    function formatDataBR(d) { return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); }
-    function formatFormaPag(f) {
-      if (!f) return '—';
-      return { dinheiro:'💵 Dinheiro', debito:'💳 Débito', pix:'📲 Pix', cartao:'💳 Cartão', maquina:'💳 Máquina' }[f.toLowerCase()] || f;
-    }
-    function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-    function escAttr(s) { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
-    function show(id)   { document.getElementById(id).classList.remove('hidden'); }
-    function validarTelefone(tel) { const t=(tel||'').replace(/\D/g,''); return (t.length>=10&&t.length<=11)?t:null; }
-    function detectarBandeira(num) { return { emoji: '💳' }; }
-    function formatarNumeroCartao(val) { return val.replace(/\D/g,'').slice(0,16).replace(/(\d{4})(?=\d)/g,'$1 '); }
-    function formatarValidade(val)     { return val.replace(/\D/g,'').slice(0,4).replace(/(\d{2})(?=\d)/,'$1/'); }
-    function formatarCpf(val)          { return val.replace(/\D/g,'').slice(0,11).replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2'); }
-
-    async function gasCall(action, params) {
-      const qs = Object.entries(Object.assign({ action }, params || {}))
-        .map(([k,v]) => encodeURIComponent(k)+'='+encodeURIComponent(String(v))).join('&');
-      const resp = await fetch(GAS_URL + '?' + qs, { redirect: 'follow', method: 'GET' });
-      if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      return resp.json();
+      return dateStr;
     }
 
-    async function recarregarAluno(alunoId) {
-      const snap = await getDoc(doc(db, 'alunos', alunoId));
-      if (!snap.exists()) return null;
-      const d = snap.data();
-      const dados = {
-        nome: d.nome_aluno||'', email: d.email||'', telefone: d.telefone||'',
-        cpf: d.cpf||'', cep: d.cep||'', numero: d.numero||'',
-        rua: d.rua||'', bairro: d.bairro||'', cidade: d.cidade||'', estado: d.estado||'',
-        grupo_familiar: d.grupo_familiar||'', plano: d.plano||'', data_contrato: d.data_contrato||'',
-        resp_nome: d.resp_nome||'', resp_email: d.resp_email||'', resp_telefone: d.resp_telefone||'', resp_cpf: d.resp_cpf||'',
-      };
-      const idx = todosRegistros.findIndex(r => r.id === alunoId);
-      if (idx >= 0) Object.assign(todosRegistros[idx], dados);
-      return dados;
+    function calcularProxVencimento(dataContrato) {
+      if (!dataContrato) return null;
+      const dc = new Date(dataContrato + 'T00:00:00');
+      if (isNaN(dc.getTime())) return null;
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      const venc = new Date(dc);
+      venc.setHours(0, 0, 0, 0);
+      while (venc <= hoje) venc.setDate(venc.getDate() + 30);
+      return venc;
     }
 
-    function setSyncStatus(estado, texto) {
-      document.getElementById('syncDot').className = 'sync-dot ' + estado;
-      document.getElementById('syncLabel').textContent = texto;
+    function diasAteVencimento(vencimento) {
+      const hoje = new Date();
+      hoje.setHours(0,0,0,0);
+      vencimento.setHours(0,0,0,0);
+      return Math.round((vencimento - hoje) / (1000 * 60 * 60 * 24));
     }
 
-    async function syncTodos(silencioso = false) {
-      const comAsaas = todosRegistros.filter(a => a.asaas_id && a.plano === 'Recorrente');
-      if (!comAsaas.length) { setSyncStatus('ok', 'Sincronizado.'); return; }
-      if (!silencioso) setSyncStatus('syncing', 'Sincronizando com Asaas…');
-      let erros = 0;
-      for (const a of comAsaas) {
-        try {
-          let tipo = 'customer', asaasId = a.asaas_id;
-          if (a.asaas_cobranca_id && a.primeiro_pagamento !== 'pix_pago' && a.primeiro_pagamento !== 'debito' && a.primeiro_pagamento !== 'dinheiro') {
-            tipo = 'cobranca'; asaasId = a.asaas_cobranca_id;
-          } else if (a.asaas_tipo === 'assinatura' && a.asaas_assinatura_id) {
-            tipo = 'assinatura'; asaasId = a.asaas_assinatura_id;
-          } else if ((a.asaas_tipo === 'parcelamento' || a.asaas_tipo === 'avista') && a.asaas_cobranca_id) {
-            tipo = 'cobranca'; asaasId = a.asaas_cobranca_id;
-          }
-          if (a.primeiro_pagamento === 'pix_pago' || a.primeiro_pagamento === 'debito' || a.primeiro_pagamento === 'dinheiro') {
-            const dc = new Date(a.data_contrato + 'T00:00:00');
-            if (dc.getMonth() + 1 === mesSelecionado && dc.getFullYear() === anoSelecionado) {
-              asaasStatusMap[a.id] = { ok: true, status: 'RECEIVED', valor: calcularValorFinal(a) };
-              const idx = todosRegistros.findIndex(r => r.id === a.id);
-              if (idx >= 0) todosRegistros[idx].statusPagamento = 'pago';
-              continue;
-            }
-          }
-          const resp = await gasCall('asaasStatus', { asaasId, tipo, mes: mesSelecionado, ano: anoSelecionado });
-          if (resp.ok) {
-            asaasStatusMap[a.id] = resp;
-            const idx = todosRegistros.findIndex(r => r.id === a.id);
-            if (idx >= 0) {
-              const st = resp.status || '';
-              if (st === 'CONFIRMED' || st === 'RECEIVED') {
-                todosRegistros[idx].statusPagamento = 'pago';
-                todosRegistros[idx].valor           = resp.valor || todosRegistros[idx].valor;
-                todosRegistros[idx].dataPagamento   = resp.dataPagamento || '';
-                const chave = `${a.id}_${mesSelecionado}_${anoSelecionado}`;
-                if (!_pagamentosGravados.has(chave)) {
-                  try {
-                    const existeSnap = await getDocs(query(collection(db,'pagamentos'), where('alunoId','==',a.id), where('mes','==',mesSelecionado), where('ano','==',anoSelecionado)));
-                    if (existeSnap.empty) {
-                      let formaPag = tipo === 'assinatura' ? 'cartao' : 'pix';
-                      const dataGrav = (resp.dataPagamento||'').slice(0,10) || (() => { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })();
-                      await addDoc(collection(db,'pagamentos'), { alunoId:a.id, nome:a.nome||'', valor:parseFloat(resp.valor||calcularValorFinal(a)), data:dataGrav, formaPagamento:formaPag, mes:mesSelecionado, ano:anoSelecionado, criadoEm:serverTimestamp(), fonte:'asaas_sync' });
-                      todosRegistros[idx].valor = parseFloat(resp.valor||calcularValorFinal(a));
-                      todosRegistros[idx].formaPagamento = formaPag;
-                    }
-                    _pagamentosGravados.add(chave);
-                  } catch(errGrav) { console.warn('Erro ao gravar pagamento:', errGrav); }
-                }
-              } else if (st === 'OVERDUE') {
-                todosRegistros[idx].statusPagamento = 'vencido';
-              } else {
-                todosRegistros[idx].statusPagamento = 'pendente';
-              }
-            }
-          } else { erros++; }
-        } catch(e) { erros++; }
-      }
-      renderListaFiltrada();
-      atualizarResumo();
-      const agora = new Date();
-      const hora  = agora.getHours().toString().padStart(2,'0')+':'+agora.getMinutes().toString().padStart(2,'0');
-      setSyncStatus(erros > 0 ? 'erro' : 'ok', erros > 0 ? `Sync com ${erros} erro(s) — ${hora}` : `Sincronizado às ${hora}`);
+    function montarMensagem(aluno, vencimento) {
+      const nomeAluno = aluno.nome_aluno || '—';
+      const dataVenc  = formatarDataBR(vencimento.toISOString().slice(0,10));
+      return `Olá ${nomeAluno}! 😊 Sua mensalidade da Riva BJJ vence no dia ${dataVenc}. Você pode realizar o pagamento via PIX utilizando a chave: *${CHAVE_PIX}* ou passar na academia para pagar no débito. Qualquer dúvida estamos à disposição! 🥋`;
     }
 
-    function agendarAutoSync() {
-      if (autoSyncTimer) clearInterval(autoSyncTimer);
-      autoSyncTimer = setInterval(() => syncTodos(true), AUTO_SYNC_INTERVAL);
+    function abrirWhatsApp(telefone, mensagem) {
+      const tel = (telefone || '').replace(/\D/g,'');
+      if (!tel) { alert('Telefone não cadastrado.'); return; }
+      const url = `https://wa.me/55${tel}?text=${encodeURIComponent(mensagem)}`;
+      window.open(url, '_blank');
     }
 
-    onAuthStateChanged(auth, user => {
-      if (user) { show('sectionFinanceiro'); preencherSeletores(); carregarFinanceiro(); }
+    let lembretes = [];
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) carregarLembretes();
       else location.href = './administrativo.html';
     });
 
-    function preencherSeletores() {
-      document.getElementById('selMes').value = mesSelecionado;
-      const selAno = document.getElementById('selAno');
-      const anoAtual = new Date().getFullYear();
-      for (let a = anoAtual; a >= anoAtual-3; a--) {
-        const o = document.createElement('option'); o.value = a; o.textContent = a; selAno.appendChild(o);
-      }
-      selAno.value = anoSelecionado;
-    }
+    async function carregarLembretes() {
+      const info  = document.getElementById('pageInfo');
+      const lista = document.getElementById('listaLembretes');
 
-    async function carregarFinanceiro() {
-      const mes = parseInt(document.getElementById('selMes').value);
-      const ano = parseInt(document.getElementById('selAno').value);
-      mesSelecionado = mes; anoSelecionado = ano;
-      document.getElementById('listInfo').textContent = 'Carregando…';
-      document.getElementById('listaAlunos').innerHTML = '';
-      document.getElementById('resumoGrid').style.display = 'none';
-      setSyncStatus('', '');
       try {
-        const alunosSnap = await getDocs(query(collection(db,'alunos'), where('status','==','ATIVO')));
-        const pagSnap    = await getDocs(query(collection(db,'pagamentos'), where('mes','==',mes), where('ano','==',ano)));
-        const pagByAluno = {};
-        pagSnap.forEach(d => { const p=d.data(); pagByAluno[p.alunoId]=p; });
-        const agora  = new Date();
-        const isPast = (ano < agora.getFullYear()) || (ano === agora.getFullYear() && mes < agora.getMonth()+1);
-        todosRegistros = alunosSnap.docs.map(d => {
-          const a = d.data(); const id = d.id; const pag = pagByAluno[id];
-          return {
-            id, nome: a.nome_aluno||'', plano: a.plano||'', email: a.email||'',
-            telefone: a.telefone||'', cpf: a.cpf||'', grupo_familiar: a.grupo_familiar||'',
-            data_contrato: a.data_contrato||'', asaas_id: a.asaas_id||'',
-            asaas_assinatura_id: a.asaas_assinatura_id||'', asaas_cobranca_id: a.asaas_cobranca_id||'',
-            asaas_tipo: a.asaas_tipo||'', asaas_paymentLink: a.asaas_paymentLink||'',
-            numero: a.numero||'', primeiro_pagamento: a.primeiro_pagamento||'',
-            valorMensalidade: valorDePlano(a.plano),
-            statusPagamento: pag ? 'pago' : (isPast ? 'vencido' : 'pendente'),
-            valor: pag ? (pag.valor||0) : 0,
-            dataPagamento: pag ? (pag.data||'') : '',
-            formaPagamento: pag ? (pag.formaPagamento||'') : '',
-            resp_nome: a.resp_nome||'', resp_email: a.resp_email||'',
-            resp_telefone: a.resp_telefone||'', resp_cpf: a.resp_cpf||'',
-          };
-        });
-        document.getElementById('listInfo').textContent = '';
-        renderListaFiltrada();
-        await syncTodos();
-        agendarAutoSync();
-      } catch(e) {
-        console.error('Erro carregarFinanceiro:', e);
-        document.getElementById('listInfo').textContent = 'Erro de conexão. Tente novamente.';
-      }
-    }
+        const hoje     = new Date();
+        const mesAtual = hoje.getMonth() + 1;
+        const anoAtual = hoje.getFullYear();
 
-    function atualizarResumo() {
-      if (!todosRegistros.length) { document.getElementById('resumoGrid').style.display='none'; return; }
-      let arrecadado=0, pendente=0, emDia=0;
-      todosRegistros.forEach(a => {
-        const st = getEffectiveStatus(a);
-        if (st==='pago') { arrecadado += parseFloat(a.valor || calcularValorFinal(a)); emDia++; }
-        else pendente += calcularValorFinal(a);
-      });
-      document.getElementById('resumoArrecadado').textContent = 'R$ '+arrecadado.toFixed(2).replace('.',',');
-      document.getElementById('resumoPendente').textContent   = 'R$ '+pendente.toFixed(2).replace('.',',');
-      document.getElementById('resumoEmDia').textContent      = emDia;
-      document.getElementById('resumoGrid').style.display     = '';
-    }
+        const [snap, pagSnap] = await Promise.all([
+          getDocs(query(collection(db, 'alunos'), where('status', '==', 'ATIVO'), where('plano', '==', 'Mensal'))),
+          getDocs(query(collection(db, 'pagamentos'), where('mes', '==', mesAtual), where('ano', '==', anoAtual))),
+        ]);
 
-    function renderListaFiltrada() {
-      const busca = (document.getElementById('searchBox').value||'').toLowerCase().trim();
-      let lista = todosRegistros;
-      if (filtroAtivo !== 'todos') lista = lista.filter(a => getEffectiveStatus(a) === filtroAtivo);
-      if (busca) lista = lista.filter(a => (a.nome||'').toLowerCase().includes(busca));
-      const container = document.getElementById('listaAlunos');
-      if (!lista.length) { container.innerHTML='<div class="lista-vazia">Nenhum resultado encontrado.</div>'; return; }
-      container.innerHTML = lista.map(buildCardCompact).join('');
-      container.querySelectorAll('.fin-card-compact').forEach(card => {
-        card.addEventListener('click', () => {
-          const a = todosRegistros.find(x => x.id === card.dataset.id);
-          if (a) abrirModalFin(a);
-        });
-      });
-    }
+        const alunosPagos = new Set();
+        pagSnap.forEach(d => alunosPagos.add(d.data().alunoId));
 
-    function buildCardCompact(a) {
-      const st = getEffectiveStatus(a);
-      let badgeClass='status-pendente', badgeText='⏳ Pendente';
-      if (st==='pago')    { badgeClass='status-pago';    badgeText='✅ Pago'; }
-      if (st==='vencido') { badgeClass='status-vencido'; badgeText='❌ Vencido'; }
-      if (a.plano==='Recorrente' && st!=='pago' && a.asaas_id) { badgeClass='status-recorrente-pendente'; badgeText='⏳ Recorrente'; }
-      return `<div class="fin-card-compact" data-id="${escHtml(a.id)}">
-        <div class="fin-compact-info">
-          <div class="fin-compact-nome">${escHtml(a.nome||'—')}</div>
-          <div class="fin-compact-sub">${escHtml(a.plano||'—')} · R$ ${calcularValorFinal(a).toFixed(2).replace('.',',')}</div>
-        </div>
-        <span class="status-badge ${badgeClass}">${badgeText}</span>
-      </div>`;
-    }
+        lembretes = [];
+        snap.forEach(d => {
+          const a = d.data();
+          if (!a.data_contrato) return;
+          if (alunosPagos.has(d.id)) return;
 
-    /* ── Modal detalhes ── */
-    function abrirModalFin(a) {
-      const st = getEffectiveStatus(a);
-      const ie = escAttr(a.id);
-      const liveData = asaasStatusMap[a.id];
+          const venc = calcularProxVencimento(a.data_contrato);
+          if (!venc) return;
 
-      let badgeClass='status-pendente', badgeText='⏳ Pendente';
-      if (st==='pago')    { badgeClass='status-pago';    badgeText='✅ Pago'; }
-      if (st==='vencido') { badgeClass='status-vencido'; badgeText='❌ Vencido'; }
-      if (a.plano==='Recorrente' && st!=='pago' && a.asaas_id) { badgeClass='status-recorrente-pendente'; badgeText='⏳ Recorrente Pendente'; }
-
-      const temDesconto = detectarDesconto(a);
-      const valorFinal  = calcularValorFinal(a);
-      const valorDisp   = 'R$ '+valorFinal.toFixed(2).replace('.',',')+(temDesconto?' <span class="desconto-tag">10% desc.</span>':'');
-
-      let proxVenc = '—';
-      if (a.plano === 'Recorrente' && a.asaas_id && liveData && liveData.proxVencimento) {
-        proxVenc = formatData(liveData.proxVencimento);
-      } else if (a.data_contrato) {
-        const hoje = new Date();
-        const prox = new Date(a.data_contrato + 'T00:00:00');
-        while (prox <= hoje) prox.setMonth(prox.getMonth() + 1);
-        proxVenc = formatDataBR(prox);
-      }
-
-      let statusDisplay = st === 'pago' ? '✅ Pago' : st === 'vencido' ? '❌ Vencido' : '⏳ Pendente';
-      let valorDisplay  = valorDisp;
-      if (liveData && liveData.status && a.plano === 'Recorrente') {
-        const sMap = { CONFIRMED:'✅ Confirmado', RECEIVED:'✅ Recebido', PENDING:'⏳ Pendente', OVERDUE:'❌ Vencido', REFUNDED:'↩️ Estornado', CANCELLED:'🚫 Cancelado' };
-        statusDisplay = sMap[liveData.status] || liveData.status;
-        if (liveData.valor) valorDisplay = 'R$ '+parseFloat(liveData.valor).toFixed(2).replace('.',',');
-      }
-
-      let acoes = '';
-      if (a.plano === 'Recorrente') {
-        if (!a.asaas_id) {
-          acoes += `<button class="btn-acao vincular" onclick="window._vincular('${ie}')">🔗 Vincular ao Asaas</button>`;
-        } else {
-          if (a.asaas_paymentLink) acoes += `<a class="btn-acao ver" href="${escHtml(a.asaas_paymentLink)}" target="_blank" rel="noopener">🔗 Ver no Asaas</a>`;
-          if (a.asaas_assinatura_id) acoes += `<button class="btn-acao cancelar" onclick="window._cancelar('${ie}')">❌ Cancelar Assinatura</button>`;
-          acoes += `<button class="btn-acao cartao" onclick="window._abrirCartao('${ie}')">💳 Cartão</button>`;
-        }
-      } else if ((a.plano === 'Mensal' || a.plano === 'Semestral') && st !== 'pago') {
-        acoes += `<button class="btn-acao manual" onclick="window._confirmarPagManual('${ie}')">✅ Confirmar Pagamento</button>`;
-      }
-      acoes += `<button class="btn-acao historico" onclick="window._historico('${ie}','${escAttr(a.nome||'')}')">📋 Histórico</button>`;
-
-      const primPag = a.primeiro_pagamento || '';
-      const isPago  = primPag === 'pix_pago' || primPag === 'debito' || primPag === 'dinheiro';
-      const primeiroPagHtml = (a.plano === 'Recorrente' && a.asaas_id && st !== 'pago')
-        ? `<div class="primeiro-pag-wrap">
-            <span class="primeiro-pag-label">1º mês:</span>
-            <select class="primeiro-pag-select ${isPago?'pago':'pendente'}" onchange="window._salvarPrimeiroPag('${ie}',this.value)">
-              <option value=""         ${primPag===''        ?' selected':''}>⏳ Aguardando pagamento</option>
-              <option value="pix_pago" ${primPag==='pix_pago'?' selected':''}>✅ Pix pago</option>
-              <option value="debito"   ${primPag==='debito'  ?' selected':''}>✅ Débito pago</option>
-              <option value="dinheiro" ${primPag==='dinheiro'?' selected':''}>✅ Dinheiro pago</option>
-            </select>
-           </div>`
-        : '';
-
-      let extras = '';
-      if (a.asaas_id) extras += '<span class="asaas-badge">Asaas</span> ';
-      if (a.plano==='Recorrente' && a.data_contrato) {
-        const dc=new Date(a.data_contrato+'T00:00:00'); const dataC=new Date(dc); dataC.setMonth(dataC.getMonth()+2);
-        if (new Date()<dataC) extras += `<span class="chip-carencia">⏳ Carência até ${formatDataBR(dataC)}</span>`;
-      }
-
-      document.getElementById('modalFinBox').innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-          <div>
-            <div style="font-size:18px;font-weight:900;color:#fff;">${escHtml(a.nome||'—')}</div>
-            ${a.resp_nome ? `<div style="font-size:12px;color:#f39c12;margin-top:2px;">👨‍👧 ${escHtml(a.resp_nome)}</div>` : ''}
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span class="status-badge ${badgeClass}">${badgeText}</span>
-            <button onclick="document.getElementById('modalFin').classList.remove('open')"
-              style="background:transparent;border:1px solid #444;color:#aaa;border-radius:8px;padding:4px 10px;font-size:18px;cursor:pointer;">✕</button>
-          </div>
-        </div>
-        ${extras ? `<div style="margin-bottom:10px;">${extras}</div>` : ''}
-        <div class="fin-modal-info">
-          <div class="fin-info-item"><span class="fin-info-label">Plano</span><span class="fin-info-valor">${escHtml(a.plano||'—')}</span></div>
-          <div class="fin-info-item"><span class="fin-info-label">Valor</span><span class="fin-info-valor">${valorDisplay}</span></div>
-          <div class="fin-info-item"><span class="fin-info-label">Status</span><span class="fin-info-valor">${statusDisplay}</span></div>
-          <div class="fin-info-item"><span class="fin-info-label">Próx. Vencimento</span><span class="fin-info-valor">${proxVenc}</span></div>
-          <div class="fin-info-item"><span class="fin-info-label">Contrato</span><span class="fin-info-valor">${formatData(a.data_contrato)}</span></div>
-          ${st==='pago' ? `<div class="fin-info-item"><span class="fin-info-label">Forma</span><span class="fin-info-valor">${formatFormaPag(a.formaPagamento)}</span></div>` : ''}
-        </div>
-        <div class="btns-acao">${acoes}</div>
-        ${primeiroPagHtml}
-      `;
-
-      document.getElementById('modalFin').classList.add('open');
-    }
-
-    document.getElementById('modalFin').addEventListener('click', function(e) {
-      if (e.target === this) this.classList.remove('open');
-    });
-
-    // ── Histórico ──────────────────────────────────────────────
-    window._historico = async function(alunoId, nome) {
-      document.getElementById('histAlunoNome').textContent = nome;
-      document.getElementById('histLista').innerHTML = '<p style="color:#aaa;text-align:center;padding:16px;">Carregando…</p>';
-      document.getElementById('modalHistorico').classList.add('open');
-      function renderItens(docs) {
-        if (!docs.length) { document.getElementById('histLista').innerHTML = '<div class="hist-vazio">Nenhum pagamento registrado.</div>'; return; }
-        docs.sort((a,b) => { if((b.ano||0)!==(a.ano||0)) return (b.ano||0)-(a.ano||0); return (b.mes||0)-(a.mes||0); });
-        document.getElementById('histLista').innerHTML = docs.map(p => {
-          const mesNome = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][parseInt(p.mes||1)-1];
-          return `<div class="hist-item"><div class="hist-info"><div class="hist-forma">${escHtml(formatFormaPag(p.formaPagamento||''))}</div><div class="hist-data">${escHtml(formatData(p.data||''))} — ${escHtml(mesNome||'')}/${escHtml(String(p.ano||''))}</div></div><div class="hist-valor">R$ ${parseFloat(p.valor||0).toFixed(2).replace('.',',')}</div></div>`;
-        }).join('');
-      }
-      try {
-        let snap;
-        try { snap = await getDocs(query(collection(db,'pagamentos'), where('alunoId','==',alunoId), orderBy('criadoEm','desc'))); }
-        catch(e) { snap = await getDocs(query(collection(db,'pagamentos'), where('alunoId','==',alunoId))); }
-        renderItens(snap.docs.map(d => d.data()));
-      } catch(e) { document.getElementById('histLista').innerHTML = '<div class="hist-vazio">Erro ao carregar histórico.</div>'; }
-    };
-    document.getElementById('btnFecharHist').addEventListener('click', () => document.getElementById('modalHistorico').classList.remove('open'));
-    document.getElementById('modalHistorico').addEventListener('click', function(e) { if(e.target===this) this.classList.remove('open'); });
-
-    // ── Salvar 1º pagamento ────────────────────────────────────
-    window._salvarPrimeiroPag = async function(alunoId, valor) {
-      try {
-        await updateDoc(doc(db,'alunos',alunoId), { primeiro_pagamento: valor });
-        const idx = todosRegistros.findIndex(r => r.id === alunoId);
-        if (idx >= 0) todosRegistros[idx].primeiro_pagamento = valor;
-        const a = todosRegistros.find(r => r.id === alunoId);
-        if (a && valor) {
-          const hoje = new Date();
-          const offsetBR = -3 * 60;
-          const localBR  = new Date(hoje.getTime() + (offsetBR - hoje.getTimezoneOffset()) * 60000);
-          const dataHojeBR = localBR.toISOString().slice(0, 10);
-          const formaPag = valor === 'pix_pago' ? 'pix' : valor;
-          const existeSnap = await getDocs(query(collection(db,'pagamentos'), where('alunoId','==',alunoId), where('mes','==',mesSelecionado), where('ano','==',anoSelecionado)));
-          if (existeSnap.empty) {
-            const valorFinal = calcularValorFinal(a);
-            await addDoc(collection(db,'pagamentos'), { alunoId, nome:a.nome||'', valor:valorFinal, data:dataHojeBR, formaPagamento:formaPag, mes:mesSelecionado, ano:anoSelecionado, criadoEm:serverTimestamp(), fonte:'primeiro_pagamento' });
-            if (idx >= 0) { todosRegistros[idx].statusPagamento='pago'; todosRegistros[idx].valor=valorFinal; todosRegistros[idx].formaPagamento=formaPag; }
+          const dias = diasAteVencimento(new Date(venc));
+          if (dias >= 0 && dias <= DIAS_AVISO) {
+            lembretes.push({
+              id:         d.id,
+              nome_aluno: a.nome_aluno || '',
+              telefone:   a.telefone   || '',
+              plano:      a.plano      || '',
+              asaas_id:   a.asaas_id   || '',
+              vencimento: new Date(venc),
+              dias,
+            });
           }
+        });
+
+        lembretes.sort((a, b) => a.dias - b.dias);
+        info.textContent = '';
+
+        if (!lembretes.length) {
+          lista.innerHTML = '<p class="presenca-vazia">Nenhum aluno com vencimento nos próximos dias.</p>';
+          return;
         }
-        renderListaFiltrada();
-        atualizarResumo();
-        const a2 = todosRegistros.find(r => r.id === alunoId);
-        if (a2) abrirModalFin(a2);
-      } catch(e) { alert('Erro ao salvar: '+e.message); }
-    };
 
-    // ── Confirmar pagamento manual ─────────────────────────────
-    window._confirmarPagManual = async function(alunoId) {
-      const a = todosRegistros.find(r => r.id === alunoId);
-      if (!a) return;
-      const valorFinal = calcularValorFinal(a);
-      if (!confirm('Confirmar pagamento de R$ '+valorFinal.toFixed(2).replace('.',',')+' para '+a.nome+'?')) return;
-      try {
-        const hoje = new Date();
-        const offsetBR = -3 * 60;
-        const localBR  = new Date(hoje.getTime() + (offsetBR - hoje.getTimezoneOffset()) * 60000);
-        const dataHojeBR = localBR.toISOString().slice(0, 10);
-        const existeSnap = await getDocs(query(collection(db,'pagamentos'), where('alunoId','==',alunoId), where('mes','==',mesSelecionado), where('ano','==',anoSelecionado)));
-        if (!existeSnap.empty) { alert('Pagamento já registrado para este mês.'); return; }
-        await addDoc(collection(db,'pagamentos'), { alunoId, nome:a.nome||'', valor:valorFinal, data:dataHojeBR, formaPagamento:'maquina', mes:mesSelecionado, ano:anoSelecionado, criadoEm:serverTimestamp(), fonte:'manual' });
-        const dc = new Date(dataHojeBR + 'T00:00:00');
-        if (a.plano === 'Semestral') dc.setMonth(dc.getMonth()+6); else dc.setMonth(dc.getMonth()+1);
-        const proxVencISO = dc.getFullYear()+'-'+String(dc.getMonth()+1).padStart(2,'0')+'-'+String(dc.getDate()).padStart(2,'0');
-        await updateDoc(doc(db,'alunos',alunoId), { data_contrato: proxVencISO });
-        const idx = todosRegistros.findIndex(r => r.id === alunoId);
-        if (idx >= 0) { todosRegistros[idx].statusPagamento='pago'; todosRegistros[idx].valor=valorFinal; todosRegistros[idx].formaPagamento='maquina'; todosRegistros[idx].data_contrato=proxVencISO; }
-        renderListaFiltrada();
-        atualizarResumo();
-        document.getElementById('modalFin').classList.remove('open');
-        alert('✅ Pagamento confirmado! Próx. vencimento: '+formatDataBR(dc));
-      } catch(e) { alert('Erro ao confirmar: '+e.message); }
-    };
+        document.getElementById('resumoCount').textContent = lembretes.length;
+        document.getElementById('resumoBox').style.display = '';
 
-    // ── Abrir cartão ───────────────────────────────────────────
-    window._abrirCartao = async function(alunoId) {
-      const a = todosRegistros.find(r => r.id === alunoId);
-      if (!a) return;
-      const cpfTitular = a.resp_cpf || a.cpf;
-      _cartaoAlunoData = a;
-      document.getElementById('cartaoAlunoId').value         = alunoId;
-      document.getElementById('cartaoCustomerId').value      = a.asaas_id || '';
-      document.getElementById('cartaoAlunoNome').textContent = a.nome || '';
-      document.getElementById('cCartaoNumero').value   = '';
-      document.getElementById('cCartaoNome').value     = '';
-      document.getElementById('cCartaoValidade').value = '';
-      document.getElementById('cCartaoCvv').value      = '';
-      document.getElementById('cCartaoCpf').value      = cpfTitular ? formatarCpf(cpfTitular.replace(/\D/g,'')) : '';
-      document.getElementById('cCartaoCep').value      = '';
-      document.getElementById('cCartaoBrand').textContent = '💳';
-      document.getElementById('cartaoErr').textContent  = '';
-      document.getElementById('cartaoInfo').textContent = '';
-      document.getElementById('btnSalvarCartao').disabled = false;
-      document.getElementById('cartaoFormWrap').style.display    = '';
-      document.getElementById('cartaoSuccessWrap').style.display = 'none';
-      document.getElementById('modalCartao').classList.add('open');
-      try {
-        const alunoDoc = await getDoc(doc(db,'alunos',alunoId));
-        if (alunoDoc.exists()) {
-          const dados = alunoDoc.data();
-          const cepFirestore = (dados.cep||'').replace(/\D/g,'');
-          if (cepFirestore.length===8) document.getElementById('cCartaoCep').value = cepFirestore;
-          if (dados.numero) _cartaoAlunoData = Object.assign({}, _cartaoAlunoData, { numero: dados.numero });
-        }
-      } catch(e) { console.warn('Erro ao buscar dados:', e); }
-    };
+        renderLista();
 
-    document.getElementById('cCartaoNumero').addEventListener('input',   function() { this.value=formatarNumeroCartao(this.value); document.getElementById('cCartaoBrand').textContent=detectarBandeira(this.value).emoji; });
-    document.getElementById('cCartaoNome').addEventListener('input',     function() { this.value=this.value.toUpperCase(); });
-    document.getElementById('cCartaoValidade').addEventListener('input', function() { this.value=formatarValidade(this.value); });
-    document.getElementById('cCartaoCvv').addEventListener('input',      function() { this.value=this.value.replace(/\D/g,'').slice(0,4); });
-    document.getElementById('cCartaoCpf').addEventListener('input',      function() { this.value=formatarCpf(this.value); });
-
-    document.getElementById('btnSalvarCartao').addEventListener('click', async () => {
-      const alunoId    = document.getElementById('cartaoAlunoId').value;
-      const customerId = document.getElementById('cartaoCustomerId').value;
-      const numero     = document.getElementById('cCartaoNumero').value.replace(/\D/g,'');
-      const nome       = document.getElementById('cCartaoNome').value.trim();
-      const validade   = document.getElementById('cCartaoValidade').value.trim();
-      const cvv        = document.getElementById('cCartaoCvv').value.trim();
-      const cpf        = document.getElementById('cCartaoCpf').value.replace(/\D/g,'');
-      const cep        = document.getElementById('cCartaoCep').value.replace(/\D/g,'');
-      document.getElementById('cartaoErr').textContent = '';
-      if (numero.length<13)               { document.getElementById('cartaoErr').textContent='Número do cartão inválido.'; return; }
-      if (!nome)                           { document.getElementById('cartaoErr').textContent='Informe o nome no cartão.'; return; }
-      if (!/^\d{2}\/\d{2}$/.test(validade)){ document.getElementById('cartaoErr').textContent='Validade inválida (MM/AA).'; return; }
-      if (cvv.length<3)                    { document.getElementById('cartaoErr').textContent='CVV inválido.'; return; }
-      if (cpf.length!==11)                 { document.getElementById('cartaoErr').textContent='CPF do titular inválido.'; return; }
-      if (cep.length!==8)                  { document.getElementById('cartaoErr').textContent='CEP inválido.'; return; }
-      const [mesVal, anoVal] = validade.split('/');
-      document.getElementById('cartaoInfo').textContent   = 'Cadastrando cartão…';
-      document.getElementById('btnSalvarCartao').disabled = true;
-      try {
-        const resp = await gasCall('asaasCartao', { customerId, alunoId, numero, nome, mesValidade:mesVal, anoValidade:'20'+anoVal, cvv, cpfTitular:cpf, email:_cartaoAlunoData?(_cartaoAlunoData.resp_email||_cartaoAlunoData.email||''):'', telefone:_cartaoAlunoData?(_cartaoAlunoData.resp_telefone||_cartaoAlunoData.telefone||''):'', cep, addressNumber:_cartaoAlunoData?(_cartaoAlunoData.numero||'S/N'):'S/N' });
-        document.getElementById('cartaoInfo').textContent = '';
-        if (!resp.ok) { document.getElementById('cartaoErr').textContent='Erro: '+(resp.erro||'desconhecido'); document.getElementById('btnSalvarCartao').disabled=false; return; }
-        await updateDoc(doc(db,'alunos',alunoId), { asaas_cartao_token: resp.creditCardToken||'' });
-        const idx = todosRegistros.findIndex(r => r.id === alunoId);
-        if (idx>=0) todosRegistros[idx].asaas_cartao_token = resp.creditCardToken||'';
-        document.getElementById('cartaoFormWrap').style.display    = 'none';
-        document.getElementById('cartaoSuccessWrap').style.display = '';
-        const final4 = numero.slice(-4);
-        document.getElementById('cartaoFinal4').textContent = 'Final '+final4;
-        const btnWppCartao = document.getElementById('btnCartaoWpp');
-        const aData = _cartaoAlunoData;
-        if (aData && validarTelefone(aData.telefone)) {
-          btnWppCartao.style.display = '';
-          btnWppCartao.onclick = function() {
-            const tel   = validarTelefone(aData.telefone);
-            const valor = calcularValorFinal(aData).toFixed(2).replace('.',',');
-            const msg   = 'Olá '+aData.nome+'! 😊\nSeu cartão com final '+final4+' foi cadastrado com sucesso na Riva BJJ.\nAs cobranças do plano '+(aData.plano||'')+' (R$ '+valor+'/mês) serão debitadas automaticamente. 🥋';
-            window.open('https://wa.me/55'+tel+'?text='+encodeURIComponent(msg),'_blank');
-          };
-        } else { btnWppCartao.style.display='none'; }
-      } catch(e) { document.getElementById('cartaoErr').textContent='Erro: '+e.message; document.getElementById('cartaoInfo').textContent=''; document.getElementById('btnSalvarCartao').disabled=false; }
-    });
-
-    function fecharModalCartao() { document.getElementById('modalCartao').classList.remove('open'); }
-    document.getElementById('btnCancelarCartao').addEventListener('click', fecharModalCartao);
-    document.getElementById('btnFecharCartao').addEventListener('click', () => { fecharModalCartao(); renderListaFiltrada(); });
-    document.getElementById('modalCartao').addEventListener('click', function(e) { if(e.target===this) fecharModalCartao(); });
-
-    // ── Vincular ───────────────────────────────────────────────
-    window._vincular = async function(alunoId) {
-      await recarregarAluno(alunoId);
-      const a = todosRegistros.find(r => r.id === alunoId);
-      if (!a) return;
-      document.getElementById('vincularAlunoId').value     = alunoId;
-      document.getElementById('vincularNome').textContent   = a.nome||'';
-      document.getElementById('vincularErr').textContent    = '';
-      document.getElementById('vincularInfo').textContent   = '';
-      document.getElementById('vincularPlano').value        = a.plano||'Recorrente';
-      document.getElementById('vincularDataContrato').value = a.data_contrato||new Date().toISOString().slice(0,10);
-      document.getElementById('vincularDesconto').checked   = detectarDesconto(a);
-      document.getElementById('btnCriarAsaas').disabled     = false;
-      atualizarFormVincular();
-      document.getElementById('vincularFormWrap').style.display    = '';
-      document.getElementById('vincularSuccessWrap').style.display = 'none';
-      document.getElementById('modalVincular').classList.add('open');
-    };
-
-    function atualizarFormVincular() {
-      const plano = document.getElementById('vincularPlano').value;
-      document.getElementById('vincularFormaPagWrap').style.display = plano==='Mensal' ? '' : 'none';
-      const temD  = document.getElementById('vincularDesconto').checked;
-      const base  = {Recorrente:200,Semestral:220,Mensal:240}[plano]||0;
-      const final = temD ? Math.round(base*0.9*100)/100 : base;
-      document.getElementById('vincularValorFinal').textContent = 'R$ '+final.toFixed(2).replace('.',',');
-    }
-    document.getElementById('vincularPlano').addEventListener('change', atualizarFormVincular);
-    document.getElementById('vincularDesconto').addEventListener('change', atualizarFormVincular);
-
-    document.getElementById('btnCriarAsaas').addEventListener('click', async () => {
-      const alunoId      = document.getElementById('vincularAlunoId').value;
-      const a            = todosRegistros.find(r => r.id === alunoId);
-      const plano        = document.getElementById('vincularPlano').value;
-      const formaPag     = document.getElementById('vincularFormaPag').value;
-      const dataContrato = document.getElementById('vincularDataContrato').value;
-      const temDesconto  = document.getElementById('vincularDesconto').checked;
-      if (!dataContrato) { document.getElementById('vincularErr').textContent='Informe a data de início.'; return; }
-      document.getElementById('vincularErr').textContent  = '';
-      document.getElementById('vincularInfo').textContent = 'Criando no Asaas…';
-      document.getElementById('btnCriarAsaas').disabled   = true;
-      try {
-        const resp = await gasCall('asaasVincular', { alunoId, nome:a?a.nome:'', email:a?a.email:'', telefone:a?a.telefone:'', cpf:a?a.cpf:'', plano, formaPag:plano==='Mensal'?formaPag:'', grupoFamiliar:a?a.grupo_familiar:'', temDesconto:temDesconto?'true':'false', dataContrato, resp_nome:a?a.resp_nome||'':'', resp_email:a?a.resp_email||'':'', resp_telefone:a?a.resp_telefone||'':'', resp_cpf:a?a.resp_cpf||'':'' });
-        if (!resp.ok) { document.getElementById('vincularErr').textContent='Erro: '+(resp.erro||'desconhecido'); document.getElementById('vincularInfo').textContent=''; document.getElementById('btnCriarAsaas').disabled=false; return; }
-        const upd = { asaas_id:resp.customerId||'', asaas_assinatura_id:resp.assinatura_id||'', asaas_cobranca_id:resp.cobranca_id||'', asaas_tipo:resp.tipo||'', asaas_paymentLink:resp.paymentLink||'', data_contrato:dataContrato, plano };
-        await updateDoc(doc(db,'alunos',alunoId), upd);
-        const idx = todosRegistros.findIndex(r => r.id === alunoId);
-        if (idx>=0) Object.assign(todosRegistros[idx], upd);
-        document.getElementById('vincularFormWrap').style.display    = 'none';
-        document.getElementById('vincularSuccessWrap').style.display = '';
-        const btnCartao = document.getElementById('btnCadastrarCartao');
-        btnCartao.style.display = '';
-        btnCartao.onclick = function() { fecharModalVincular(); window._abrirCartao(alunoId); };
-      } catch(e) { document.getElementById('vincularErr').textContent='Erro: '+e.message; document.getElementById('vincularInfo').textContent=''; document.getElementById('btnCriarAsaas').disabled=false; }
-    });
-
-    window._cancelar = async function(alunoId) {
-      const a = todosRegistros.find(r => r.id === alunoId);
-      if (!a || !a.asaas_assinatura_id) { alert('Assinatura não encontrada.'); return; }
-      if (a.data_contrato) {
-        const dc=new Date(a.data_contrato+'T00:00:00'); const dataC=new Date(dc); dataC.setMonth(dataC.getMonth()+2);
-        if (new Date()<dataC && !confirm('⚠️ Este aluno está em carência até '+formatDataBR(dataC)+'.\nDeseja cancelar mesmo assim?')) return;
+      } catch(e) {
+        info.textContent = '';
+        lista.innerHTML = `<p class="msg err">Erro ao carregar: ${esc(e.message)}</p>`;
       }
-      if (!confirm('Cancelar a assinatura de '+a.nome+'?\nEsta ação não pode ser desfeita.')) return;
-      try {
-        const resp = await gasCall('asaasCancelarAssinatura', { assinatura_id: a.asaas_assinatura_id });
-        if (resp.ok) {
-          await updateDoc(doc(db,'alunos',alunoId), { asaas_assinatura_id:'', asaas_tipo:'cancelado' });
-          const idx = todosRegistros.findIndex(r => r.id === alunoId);
-          if (idx>=0) { todosRegistros[idx].asaas_assinatura_id=''; todosRegistros[idx].asaas_tipo='cancelado'; }
-          renderListaFiltrada();
-          document.getElementById('modalFin').classList.remove('open');
-          alert('✅ Assinatura cancelada com sucesso.');
-        } else alert('Erro: '+(resp.erro||'desconhecido'));
-      } catch(e) { alert('Erro: '+e.message); }
-    };
+    }
 
-    window._cobrar = async function(alunoId, formaPag) {
-      await recarregarAluno(alunoId);
-      const a = todosRegistros.find(r => r.id === alunoId);
+    function renderLista() {
+      const lista = document.getElementById('listaLembretes');
+      lista.innerHTML = lembretes.map(a => {
+        const dataVencStr = formatarDataBR(a.vencimento.toISOString().slice(0,10));
+        const diasLabel   = a.dias === 0 ? 'Vence hoje!' : a.dias === 1 ? 'Vence amanhã!' : `Vence em ${a.dias} dias`;
+        const temTel      = !!(a.telefone || '').replace(/\D/g,'');
+        return `<div class="lembrete-item">
+          <div class="lembrete-info">
+            <div class="lembrete-nome" title="${esc(a.nome_aluno)}">${esc(a.nome_aluno)}</div>
+            <div class="lembrete-detalhe">${esc(a.plano)} · ${temTel ? esc(a.telefone) : '⚠️ Sem telefone'}</div>
+            <div class="lembrete-venc">📅 ${diasLabel} — ${dataVencStr}</div>
+          </div>
+          <button class="btn-wpp" data-id="${esc(a.id)}" onclick="enviarLembrete('${esc(a.id)}')">
+            📲 Enviar
+          </button>
+        </div>`;
+      }).join('');
+    }
+
+    window.enviarLembrete = function(id) {
+      const a = lembretes.find(x => x.id === id);
       if (!a) return;
-      const temDesc = detectarDesconto(a);
-      const dataC   = a.data_contrato || new Date().toISOString().slice(0,10);
-      try {
-        const resp = await gasCall('asaasVincular', { nome:a.nome, email:a.email, telefone:a.telefone, cpf:a.cpf, plano:'Mensal', formaPag, grupoFamiliar:a.grupo_familiar, temDesconto:temDesc?'true':'false', dataContrato:dataC });
-        if (!resp.ok) { alert('Erro: '+(resp.erro||'desconhecido')); return; }
-        const upd = { asaas_id:resp.customerId||a.asaas_id, asaas_cobranca_id:resp.cobranca_id||'', asaas_tipo:resp.tipo||'avista', asaas_paymentLink:resp.paymentLink||'' };
-        await updateDoc(doc(db,'alunos',alunoId), upd);
-        const idx = todosRegistros.findIndex(r => r.id === alunoId);
-        if (idx>=0) Object.assign(todosRegistros[idx], upd);
-        renderListaFiltrada();
-        alert('✅ Cobrança gerada!');
-      } catch(e) { alert('Erro: '+e.message); }
+      const msg = montarMensagem(a, a.vencimento);
+      abrirWhatsApp(a.telefone, msg);
     };
 
-    function fecharModalVincular() { document.getElementById('modalVincular').classList.remove('open'); }
-    document.getElementById('btnCancelarVincular').addEventListener('click', fecharModalVincular);
-    document.getElementById('btnFecharVincular').addEventListener('click', () => { fecharModalVincular(); renderListaFiltrada(); atualizarResumo(); });
-    document.getElementById('modalVincular').addEventListener('click', function(e) { if(e.target===this) fecharModalVincular(); });
+    document.getElementById('btnEnviarTodos').addEventListener('click', () => {
+      if (!lembretes.length) return;
+      if (!confirm(`Enviar lembretes para ${lembretes.length} aluno(s)?`)) return;
+      let i = 0;
+      function enviarProximo() {
+        if (i >= lembretes.length) return;
+        const a   = lembretes[i];
+        const msg = montarMensagem(a, a.vencimento);
+        abrirWhatsApp(a.telefone, msg);
+        i++;
+        if (i < lembretes.length) setTimeout(enviarProximo, 1500);
+      }
+      enviarProximo();
+    });
 
-    document.querySelectorAll('.btn-filtro').forEach(btn => btn.addEventListener('click', () => {
-      document.querySelectorAll('.btn-filtro').forEach(b => b.classList.remove('ativo'));
-      btn.classList.add('ativo'); filtroAtivo=btn.dataset.filtro; renderListaFiltrada();
-    }));
-    document.getElementById('searchBox').addEventListener('input', renderListaFiltrada);
-    document.getElementById('btnCarregar').addEventListener('click', () => { if(autoSyncTimer) clearInterval(autoSyncTimer); carregarFinanceiro(); });
     document.getElementById('btnHdrSair').addEventListener('click', () => {
-      if(autoSyncTimer) clearInterval(autoSyncTimer);
-      signOut(auth).catch(()=>{});
+      signOut(auth).catch(() => {});
       sessionStorage.removeItem(TOKEN_KEY);
       location.href = './administrativo.html';
     });
