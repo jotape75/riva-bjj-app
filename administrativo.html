@@ -87,21 +87,21 @@
     .content-area { flex: 1; padding: 28px 32px; }
 
     /* ─── DASHBOARD PANELS ─── */
-    #panelWelcome { animation: fadeUp 0.35s ease both; }
+    #panelWelcome { animation: fadeUp 0.35s ease both; color: #fff; }
 
     .dash-header { margin-bottom: 28px; }
-    .dash-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--red); margin-bottom: 6px; }
-    .dash-title { font-size: 26px; font-weight: 700; color: #fff; letter-spacing: -0.6px; }
-    .dash-date { font-size: 13px; color: var(--muted); margin-top: 3px; }
+    .dash-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--red) !important; margin-bottom: 6px; }
+    .dash-title { font-size: 26px; font-weight: 700; color: #fff !important; letter-spacing: -0.6px; }
+    .dash-date { font-size: 13px; color: #888 !important; margin-top: 3px; }
 
     /* ─── CHART CARDS ─── */
     .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-    .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px 20px; }
+    .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px 20px; color: #fff !important; }
     .chart-card.full { grid-column: 1 / -1; }
 
     .chart-header { margin-bottom: 20px; }
-    .chart-title { font-size: 12px; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
-    .chart-subtitle { font-size: 11px; color: var(--muted); }
+    .chart-title { font-size: 12px; font-weight: 700; color: #fff !important; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
+    .chart-subtitle { font-size: 11px; color: #888 !important; }
 
     /* shimmer skeleton */
     .skel { background: var(--surface2); border-radius: 6px; animation: shimmer 1.2s infinite; }
@@ -111,10 +111,10 @@
     .bar-h-list { display: flex; flex-direction: column; gap: 12px; }
     .bar-h-row { display: flex; align-items: center; gap: 10px; }
     .bar-h-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-    .bar-h-name { font-size: 12px; color: #ccc; width: 100px; flex-shrink: 0; }
+    .bar-h-name { font-size: 12px; color: #fff !important; width: 100px; flex-shrink: 0; }
     .bar-h-track { flex: 1; background: rgba(255,255,255,0.05); border-radius: 4px; height: 7px; overflow: hidden; }
     .bar-h-fill { height: 100%; border-radius: 4px; transition: width 0.7s cubic-bezier(.4,0,.2,1); }
-    .bar-h-count { font-size: 12px; color: var(--muted); width: 30px; text-align: right; flex-shrink: 0; font-weight: 600; }
+    .bar-h-count { font-size: 12px; color: #fff !important; width: 30px; text-align: right; flex-shrink: 0; font-weight: 600; }
 
     /* cores das faixas */
     .dot-branca, .fill-branca { background: #e0e0e0; }
@@ -134,10 +134,10 @@
     /* ── BARRAS VERTICAIS — horários ── */
     .bar-v-area { display: flex; align-items: flex-end; gap: 8px; height: 130px; padding-top: 10px; }
     .bar-v-col  { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; min-width: 0; }
-    .bar-v-val  { font-size: 10px; color: var(--muted); line-height: 1; }
+    .bar-v-val  { font-size: 10px; color: #fff !important; line-height: 1; }
     .bar-v-bar  { width: 100%; background: var(--red); border-radius: 4px 4px 0 0; transition: height 0.7s cubic-bezier(.4,0,.2,1); min-height: 2px; opacity: 0.85; }
     .bar-v-bar:hover { opacity: 1; }
-    .bar-v-label { font-size: 9px; color: #666; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .bar-v-label { font-size: 9px; color: #aaa !important; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 
     /* ── LINHA — novos alunos ── */
     .line-wrap { position: relative; height: 130px; }
@@ -146,7 +146,7 @@
     .line-area { fill: url(#lineGrad); }
     .line-dot  { fill: var(--red); }
     .line-labels { display: flex; justify-content: space-between; margin-top: 8px; }
-    .line-label  { font-size: 10px; color: var(--muted); text-align: center; flex: 1; }
+    .line-label  { font-size: 10px; color: #aaa !important; text-align: center; flex: 1; }
 
     /* iframe */
     #panelIframe { display: none; flex-direction: column; height: calc(100vh - var(--header-h)); margin: -28px -32px; }
@@ -680,7 +680,7 @@
         // value labels acima dos dots
         const valLabels = pts.map(([x,y], i) =>
           contagem[i] > 0
-            ? `<text x="${x}" y="${y - 8}" text-anchor="middle" font-size="10" fill="#888" font-family="Geist,sans-serif">${contagem[i]}</text>`
+            ? `<text x="${x}" y="${y - 8}" text-anchor="middle" font-size="10" fill="#fff" font-family="Geist,sans-serif">${contagem[i]}</text>`
             : ''
         ).join('');
 
