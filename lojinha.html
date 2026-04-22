@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#c0392b" />
+  <title>Lojinha – Riva BJJ</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    .admin-hdr-left { display: flex; align-items: center; gap: 14px; }
+    .admin-hdr-titulo { display: none; }
+    .admin-hdr-sair { display: none; }
+    .btn-logout { background: transparent; border: 1px solid var(--border); color: #fff; border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+    .btn-logout:active { opacity: .75; }
+    @media (min-width: 769px) {
+      .admin-hdr-inner { max-width: 1100px; justify-content: space-between; padding: 0 24px; }
+      .admin-logo { width: 48px !important; height: 48px !important; margin-top: 0 !important; }
+      .admin-hdr-titulo { display: inline; font-size: 20px; font-weight: 900; color: #fff; letter-spacing: 0.5px; }
+      .admin-hdr-sair { display: inline-block; }
+      .admin-page { max-width: 1100px; padding: 32px 32px 64px; }
+    }
+    @media (max-width: 768px) { .admin-hdr-inner { justify-content: center; } }
+
+    /* ── TABS ── */
+    .tabs { display: flex; gap: 4px; background: #141414; border: 1px solid var(--border); border-radius: 12px; padding: 4px; margin-bottom: 24px; }
+    .tab-btn { flex: 1; padding: 10px 8px; background: transparent; border: none; border-radius: 9px; color: #888; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; transition: background 0.15s, color 0.15s; white-space: nowrap; }
+    .tab-btn.active { background: var(--card); color: #fff; }
+    .tab-btn:active { opacity: .8; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── RESUMO CARDS ── */
+    .resumo-loja { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+    .resumo-loja-item { background: #141414; border: 1px solid var(--border); border-radius: 12px; padding: 14px 12px; text-align: center; }
+    .resumo-loja-valor { font-size: 20px; font-weight: 900; color: #fff; line-height: 1.1; }
+    .resumo-loja-valor.verde  { color: #2ecc71; }
+    .resumo-loja-valor.azul   { color: #3498db; }
+    .resumo-loja-valor.amarelo{ color: #f39c12; }
+    .resumo-loja-label { font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+
+    /* ── FILTRO PERÍODO ── */
+    .filtro-periodo { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+    .btn-periodo { background: #222; border: 1px solid #444; color: #aaa; border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background 0.15s, color 0.15s, border-color 0.15s; font-family: inherit; }
+    .btn-periodo.ativo { background: var(--red); color: #fff; border-color: var(--red); }
+    .btn-periodo:active { opacity: .75; }
+
+    /* ── LISTA DE VENDAS ── */
+    .venda-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+    .venda-icon { font-size: 24px; flex-shrink: 0; }
+    .venda-info { flex: 1; min-width: 0; }
+    .venda-nome { font-size: 14px; font-weight: 700; color: #fff; }
+    .venda-meta { font-size: 12px; color: #aaa; margin-top: 2px; }
+    .venda-valor { font-size: 16px; font-weight: 900; color: #2ecc71; white-space: nowrap; }
+    .lista-vazia { text-align: center; padding: 32px 0; color: #555; font-size: 14px; }
+
+    /* ── PRODUTOS GRID ── */
+    .produtos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin-bottom: 20px; }
+    .produto-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 12px; text-align: center; cursor: pointer; transition: border-color 0.15s, transform 0.1s; position: relative; }
+    .produto-card:hover { border-color: var(--red); }
+    .produto-card:active { transform: scale(0.97); }
+    .produto-card.sem-estoque { opacity: 0.45; cursor: not-allowed; }
+    .produto-card.sem-estoque:hover { border-color: var(--border); }
+    .produto-emoji { font-size: 32px; margin-bottom: 8px; }
+    .produto-nome { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+    .produto-preco { font-size: 14px; font-weight: 900; color: #2ecc71; }
+    .produto-estoque { font-size: 11px; color: #aaa; margin-top: 3px; }
+    .produto-estoque.baixo { color: #f39c12; }
+    .produto-estoque.zero  { color: #e74c3c; }
+    .btn-edit-produto { position: absolute; top: 8px; right: 8px; background: transparent; border: none; color: #555; font-size: 14px; cursor: pointer; padding: 2px; line-height: 1; }
+    .btn-edit-produto:hover { color: #fff; }
+
+    /* ── FORMULÁRIOS ── */
+    .form-section { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px 16px; margin-bottom: 16px; }
+    .form-section-title { font-size: 14px; font-weight: 900; color: #fff; margin-bottom: 14px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .form-group { margin-bottom: 12px; }
+    .form-group:last-child { margin-bottom: 0; }
+    .form-label { font-size: 11px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; display: block; }
+    .form-input { width: 100%; background: #1a1a1a; border: 1px solid #333; border-radius: 10px; padding: 11px 12px; font-size: 14px; color: #fff; font-family: inherit; outline: none; transition: border-color 0.2s; }
+    .form-input:focus { border-color: var(--red); }
+    .form-input::placeholder { color: #444; }
+    .form-select { width: 100%; background: #1a1a1a; border: 1px solid #333; border-radius: 10px; padding: 11px 12px; font-size: 14px; color: #fff; font-family: inherit; outline: none; appearance: none; transition: border-color 0.2s; }
+    .form-select:focus { border-color: var(--red); }
+
+    /* ── EMOJI PICKER ── */
+    .emoji-picker { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .emoji-opt { font-size: 22px; cursor: pointer; padding: 4px; border-radius: 6px; border: 2px solid transparent; transition: border-color 0.15s; }
+    .emoji-opt.selected { border-color: var(--red); background: rgba(192,57,43,0.12); }
+    .emoji-opt:hover { background: rgba(255,255,255,0.06); }
+
+    /* ── MODAL VENDA ── */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.8); z-index: 50; align-items: flex-end; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 20px 20px 0 0; padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px)); width: 100%; max-width: 480px; }
+    @media (min-width: 769px) { .modal-overlay { align-items: center; } .modal-box { border-radius: 20px; max-width: 420px; } }
+    .modal-title { font-size: 18px; font-weight: 900; color: #fff; margin-bottom: 4px; }
+    .modal-subtitle { font-size: 13px; color: #aaa; margin-bottom: 18px; }
+    .modal-btns { display: flex; gap: 10px; margin-top: 16px; }
+    .modal-btns .btn { margin-top: 0; flex: 1; }
+
+    /* ── FORMA PAGAMENTO PILLS ── */
+    .forma-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 4px; }
+    .forma-pill { padding: 10px; background: #1a1a1a; border: 2px solid #333; border-radius: 10px; text-align: center; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+    .forma-pill.selected { border-color: var(--red); background: rgba(192,57,43,0.1); }
+    .forma-pill-icon { font-size: 18px; display: block; margin-bottom: 2px; }
+    .forma-pill-label { font-size: 11px; font-weight: 700; color: #ccc; }
+    .forma-pill.selected .forma-pill-label { color: #fff; }
+
+    /* ── QUANTIDADE ── */
+    .qty-control { display: flex; align-items: center; gap: 12px; justify-content: center; margin: 14px 0; }
+    .qty-btn { width: 36px; height: 36px; background: #222; border: 1px solid #444; border-radius: 8px; color: #fff; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit; transition: background 0.15s; }
+    .qty-btn:hover { background: #333; }
+    .qty-value { font-size: 24px; font-weight: 900; color: #fff; min-width: 40px; text-align: center; }
+
+    .msg { font-size: 13px; margin-top: 8px; min-height: 18px; }
+    .msg.err  { color: #ff6b6b; }
+    .msg.info { color: #aaa; }
+    .msg.ok   { color: #2ecc71; }
+  </style>
+</head>
+<body>
+  <header class="hdr admin-hdr">
+    <div class="hdr-inner admin-hdr-inner">
+      <div class="admin-hdr-left">
+        <img class="logo admin-logo" src="./logo.png" alt="Riva BJJ" />
+        <span class="admin-hdr-titulo">Lojinha</span>
+      </div>
+      <button class="btn-logout admin-hdr-sair" id="btnHdrSair">Sair</button>
+    </div>
+  </header>
+
+  <main class="page admin-page">
+    <section id="sectionLojinha" class="hidden">
+
+      <!-- TABS -->
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="vendas">🛍️ Nova Venda</button>
+        <button class="tab-btn" data-tab="historico">📋 Histórico</button>
+        <button class="tab-btn" data-tab="produtos">📦 Produtos</button>
+      </div>
+
+      <!-- ── TAB: NOVA VENDA ── -->
+      <div class="tab-panel active" id="tabVendas">
+        <p style="font-size:13px;color:#aaa;margin-bottom:16px;">Selecione um produto para registrar a venda:</p>
+        <div class="produtos-grid" id="produtosGrid">
+          <div style="color:#555;font-size:13px;padding:16px;">Carregando produtos…</div>
+        </div>
+        <p class="msg" id="vendaMsg"></p>
+      </div>
+
+      <!-- ── TAB: HISTÓRICO ── -->
+      <div class="tab-panel" id="tabHistorico">
+        <div class="resumo-loja" id="resumoLoja">
+          <div class="resumo-loja-item"><div class="resumo-loja-valor verde" id="resumoHoje">R$ 0</div><div class="resumo-loja-label">Hoje</div></div>
+          <div class="resumo-loja-item"><div class="resumo-loja-valor azul"  id="resumoSemana">R$ 0</div><div class="resumo-loja-label">Esta semana</div></div>
+          <div class="resumo-loja-item"><div class="resumo-loja-valor amarelo" id="resumoMes">R$ 0</div><div class="resumo-loja-label">Este mês</div></div>
+        </div>
+        <div class="filtro-periodo">
+          <button class="btn-periodo ativo" data-filtro="hoje">Hoje</button>
+          <button class="btn-periodo" data-filtro="semana">Esta semana</button>
+          <button class="btn-periodo" data-filtro="mes">Este mês</button>
+          <button class="btn-periodo" data-filtro="tudo">Tudo</button>
+        </div>
+        <div id="listaVendas"><div class="lista-vazia">Carregando…</div></div>
+      </div>
+
+      <!-- ── TAB: PRODUTOS ── -->
+      <div class="tab-panel" id="tabProdutos">
+        <div class="form-section">
+          <div class="form-section-title" id="formProdutoTitulo">➕ Novo Produto</div>
+          <input type="hidden" id="produtoEditId" />
+
+          <div class="form-group">
+            <label class="form-label">Ícone</label>
+            <div class="emoji-picker" id="emojiPicker">
+              <span class="emoji-opt selected" data-emoji="🛍️">🛍️</span>
+              <span class="emoji-opt" data-emoji="👕">👕</span>
+              <span class="emoji-opt" data-emoji="🥋">🥋</span>
+              <span class="emoji-opt" data-emoji="☕">☕</span>
+              <span class="emoji-opt" data-emoji="💧">💧</span>
+              <span class="emoji-opt" data-emoji="🍫">🍫</span>
+              <span class="emoji-opt" data-emoji="🥤">🥤</span>
+              <span class="emoji-opt" data-emoji="💊">💊</span>
+              <span class="emoji-opt" data-emoji="🎽">🎽</span>
+              <span class="emoji-opt" data-emoji="🩳">🩳</span>
+              <span class="emoji-opt" data-emoji="🧴">🧴</span>
+              <span class="emoji-opt" data-emoji="📦">📦</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="produtoNome">Nome *</label>
+              <input id="produtoNome" class="form-input" type="text" placeholder="Ex: Kimono Adulto" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="produtoPreco">Preço (R$) *</label>
+              <input id="produtoPreco" class="form-input" type="number" min="0" step="0.01" placeholder="0,00" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="produtoEstoque">Estoque</label>
+              <input id="produtoEstoque" class="form-input" type="number" min="0" placeholder="0" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="produtoCategoria">Categoria</label>
+              <select id="produtoCategoria" class="form-select">
+                <option value="Equipamento">Equipamento</option>
+                <option value="Vestuário">Vestuário</option>
+                <option value="Alimentação">Alimentação</option>
+                <option value="Suplemento">Suplemento</option>
+                <option value="Outro">Outro</option>
+              </select>
+            </div>
+          </div>
+
+          <p class="msg" id="produtoMsg"></p>
+          <div style="display:flex;gap:10px;margin-top:4px;">
+            <button class="btn primary" id="btnSalvarProduto" style="flex:1;margin-top:0;">Salvar Produto</button>
+            <button class="btn secondary" id="btnCancelarEdicao" style="display:none;margin-top:0;">Cancelar</button>
+          </div>
+        </div>
+
+        <div style="font-size:12px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">Produtos cadastrados</div>
+        <div id="listaProdutosCad"></div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- MODAL CONFIRMAR VENDA -->
+  <div class="modal-overlay" id="modalVenda">
+    <div class="modal-box">
+      <div class="modal-title" id="modalVendaNome">Produto</div>
+      <div class="modal-subtitle" id="modalVendaPreco">R$ 0,00</div>
+
+      <div class="qty-control">
+        <button class="qty-btn" id="btnQtyMenos">−</button>
+        <div class="qty-value" id="qtyValue">1</div>
+        <button class="qty-btn" id="btnQtyMais">+</button>
+      </div>
+
+      <div style="font-size:12px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;">Forma de Pagamento</div>
+      <div class="forma-grid">
+        <div class="forma-pill selected" data-forma="dinheiro">
+          <span class="forma-pill-icon">💵</span>
+          <span class="forma-pill-label">Dinheiro</span>
+        </div>
+        <div class="forma-pill" data-forma="pix">
+          <span class="forma-pill-icon">📲</span>
+          <span class="forma-pill-label">Pix</span>
+        </div>
+        <div class="forma-pill" data-forma="debito">
+          <span class="forma-pill-icon">💳</span>
+          <span class="forma-pill-label">Débito</span>
+        </div>
+        <div class="forma-pill" data-forma="credito">
+          <span class="forma-pill-icon">💳</span>
+          <span class="forma-pill-label">Crédito</span>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;background:#1a1a1a;border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;color:#aaa;text-transform:uppercase;letter-spacing:0.5px;">Total</span>
+        <span style="font-size:20px;font-weight:900;color:#2ecc71;" id="modalVendaTotal">R$ 0,00</span>
+      </div>
+
+      <p class="msg" id="modalVendaMsg"></p>
+      <div class="modal-btns">
+        <button class="btn secondary" id="btnCancelarVenda">Cancelar</button>
+        <button class="btn primary"   id="btnConfirmarVenda">✅ Confirmar Venda</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { db, auth } from './firebase-config.js';
+    import { collection, doc, addDoc, getDocs, getDoc, updateDoc, deleteDoc, query, orderBy, where, serverTimestamp }
+      from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+
+    const TOKEN_KEY = 'rv_prof_token';
+
+    /* ── Auth ── */
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        document.getElementById('sectionLojinha').classList.remove('hidden');
+        init();
+      } else {
+        location.href = './administrativo.html';
+      }
+    });
+
+    document.getElementById('btnHdrSair').addEventListener('click', () => {
+      signOut(auth).catch(()=>{});
+      sessionStorage.removeItem(TOKEN_KEY);
+      location.href = './administrativo.html';
+    });
+
+    /* ── Tabs ── */
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab' + capitalize(btn.dataset.tab)).classList.add('active');
+        if (btn.dataset.tab === 'historico') carregarHistorico();
+        if (btn.dataset.tab === 'produtos')  carregarListaProdutos();
+      });
+    });
+    function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+    /* ── Estado global ── */
+    let produtos = [];
+    let vendaSelecionada = null;
+    let qtyAtual = 1;
+    let formaAtual = 'dinheiro';
+    let emojiAtual = '🛍️';
+    let filtroAtual = 'hoje';
+    let todasVendas = [];
+
+    /* ── Init ── */
+    async function init() {
+      await carregarProdutos();
+      renderProdutosGrid();
+    }
+
+    /* ────────────── PRODUTOS ────────────── */
+    async function carregarProdutos() {
+      try {
+        const snap = await getDocs(query(collection(db, 'loja_produtos'), orderBy('nome')));
+        produtos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      } catch(e) {
+        produtos = [];
+      }
+    }
+
+    function renderProdutosGrid() {
+      const grid = document.getElementById('produtosGrid');
+      if (!produtos.length) {
+        grid.innerHTML = '<div style="color:#555;font-size:13px;padding:16px;grid-column:1/-1;">Nenhum produto cadastrado. Vá em "Produtos" para adicionar.</div>';
+        return;
+      }
+      grid.innerHTML = produtos.map(p => {
+        const estoque = p.estoque ?? 0;
+        const estoqueClass = estoque === 0 ? 'zero' : estoque <= 3 ? 'baixo' : '';
+        const estoqueLabel = estoque === 0 ? '❌ Sem estoque' : estoque <= 3 ? `⚠️ ${estoque} restantes` : `${estoque} em estoque`;
+        return `
+          <div class="produto-card${estoque === 0 ? ' sem-estoque' : ''}" data-id="${p.id}">
+            <div class="produto-emoji">${p.emoji || '🛍️'}</div>
+            <div class="produto-nome">${esc(p.nome)}</div>
+            <div class="produto-preco">R$ ${parseFloat(p.preco||0).toFixed(2).replace('.',',')}</div>
+            <div class="produto-estoque ${estoqueClass}">${estoqueLabel}</div>
+          </div>`;
+      }).join('');
+
+      grid.querySelectorAll('.produto-card:not(.sem-estoque)').forEach(card => {
+        card.addEventListener('click', () => {
+          const prod = produtos.find(p => p.id === card.dataset.id);
+          if (prod) abrirModalVenda(prod);
+        });
+      });
+    }
+
+    /* ────────────── MODAL VENDA ────────────── */
+    function abrirModalVenda(prod) {
+      vendaSelecionada = prod;
+      qtyAtual = 1;
+      formaAtual = 'dinheiro';
+
+      document.getElementById('modalVendaNome').textContent = `${prod.emoji || '🛍️'} ${prod.nome}`;
+      document.getElementById('modalVendaPreco').textContent = `R$ ${parseFloat(prod.preco).toFixed(2).replace('.',',')} / unidade`;
+      document.getElementById('qtyValue').textContent = '1';
+      document.getElementById('modalVendaMsg').textContent = '';
+      document.getElementById('btnConfirmarVenda').disabled = false;
+      atualizarTotal();
+
+      // Reset forma
+      document.querySelectorAll('.forma-pill').forEach(p => p.classList.remove('selected'));
+      document.querySelector('.forma-pill[data-forma="dinheiro"]').classList.add('selected');
+
+      document.getElementById('modalVenda').classList.add('open');
+    }
+
+    function atualizarTotal() {
+      if (!vendaSelecionada) return;
+      const total = parseFloat(vendaSelecionada.preco) * qtyAtual;
+      document.getElementById('modalVendaTotal').textContent = 'R$ ' + total.toFixed(2).replace('.',',');
+    }
+
+    document.getElementById('btnQtyMenos').addEventListener('click', () => {
+      if (qtyAtual > 1) { qtyAtual--; document.getElementById('qtyValue').textContent = qtyAtual; atualizarTotal(); }
+    });
+    document.getElementById('btnQtyMais').addEventListener('click', () => {
+      const maxEst = vendaSelecionada?.estoque ?? 99;
+      if (qtyAtual < maxEst) { qtyAtual++; document.getElementById('qtyValue').textContent = qtyAtual; atualizarTotal(); }
+    });
+
+    document.querySelectorAll('.forma-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        document.querySelectorAll('.forma-pill').forEach(p => p.classList.remove('selected'));
+        pill.classList.add('selected');
+        formaAtual = pill.dataset.forma;
+      });
+    });
+
+    document.getElementById('btnCancelarVenda').addEventListener('click', () => {
+      document.getElementById('modalVenda').classList.remove('open');
+    });
+    document.getElementById('modalVenda').addEventListener('click', function(e) {
+      if (e.target === this) this.classList.remove('open');
+    });
+
+    document.getElementById('btnConfirmarVenda').addEventListener('click', async () => {
+      if (!vendaSelecionada) return;
+      const btn = document.getElementById('btnConfirmarVenda');
+      const msg = document.getElementById('modalVendaMsg');
+      btn.disabled = true;
+      msg.textContent = 'Registrando…';
+      msg.className = 'msg info';
+
+      try {
+        const total = parseFloat(vendaSelecionada.preco) * qtyAtual;
+        const agora = new Date();
+        const dataStr = agora.toLocaleDateString('pt-BR');
+        const horaStr = agora.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+
+        // Gravar venda
+        await addDoc(collection(db, 'loja_vendas'), {
+          produtoId:   vendaSelecionada.id,
+          produtoNome: vendaSelecionada.nome,
+          produtoEmoji:vendaSelecionada.emoji || '🛍️',
+          quantidade:  qtyAtual,
+          precoUnit:   parseFloat(vendaSelecionada.preco),
+          total,
+          formaPagamento: formaAtual,
+          data:    dataStr,
+          hora:    horaStr,
+          criadoEm: serverTimestamp(),
+        });
+
+        // Atualizar estoque
+        const novoEstoque = (vendaSelecionada.estoque ?? 0) - qtyAtual;
+        await updateDoc(doc(db, 'loja_produtos', vendaSelecionada.id), {
+          estoque: Math.max(0, novoEstoque),
+        });
+
+        // Atualizar local
+        const idx = produtos.findIndex(p => p.id === vendaSelecionada.id);
+        if (idx >= 0) produtos[idx].estoque = Math.max(0, novoEstoque);
+
+        msg.textContent = '✅ Venda registrada!';
+        msg.className = 'msg ok';
+        renderProdutosGrid();
+
+        setTimeout(() => {
+          document.getElementById('modalVenda').classList.remove('open');
+          document.getElementById('vendaMsg').textContent = `✅ Venda de ${vendaSelecionada.nome} registrada — R$ ${total.toFixed(2).replace('.',',')}`;
+          document.getElementById('vendaMsg').className = 'msg ok';
+          setTimeout(() => { document.getElementById('vendaMsg').textContent = ''; }, 4000);
+        }, 800);
+
+      } catch(e) {
+        msg.textContent = 'Erro: ' + e.message;
+        msg.className = 'msg err';
+        btn.disabled = false;
+      }
+    });
+
+    /* ────────────── HISTÓRICO ────────────── */
+    async function carregarHistorico() {
+      document.getElementById('listaVendas').innerHTML = '<div class="lista-vazia">Carregando…</div>';
+      try {
+        const snap = await getDocs(query(collection(db, 'loja_vendas'), orderBy('criadoEm', 'desc')));
+        todasVendas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        atualizarResumo();
+        renderVendas();
+      } catch(e) {
+        document.getElementById('listaVendas').innerHTML = '<div class="lista-vazia">Erro ao carregar.</div>';
+      }
+    }
+
+    function parseDateBR(str) {
+      if (!str) return null;
+      const [d, m, y] = str.split('/');
+      return new Date(`${y}-${m}-${d}T00:00:00`);
+    }
+
+    function atualizarResumo() {
+      const hoje = new Date(); hoje.setHours(0,0,0,0);
+      const inicioSemana = new Date(hoje);
+      const dia = hoje.getDay();
+      inicioSemana.setDate(hoje.getDate() - (dia === 0 ? 6 : dia - 1));
+      const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+
+      let totHoje=0, totSemana=0, totMes=0;
+      todasVendas.forEach(v => {
+        const d = parseDateBR(v.data);
+        if (!d) return;
+        if (d >= hoje)       totHoje   += v.total || 0;
+        if (d >= inicioSemana) totSemana += v.total || 0;
+        if (d >= inicioMes)  totMes    += v.total || 0;
+      });
+
+      const fmt = n => 'R$ ' + n.toFixed(2).replace('.',',');
+      document.getElementById('resumoHoje').textContent   = fmt(totHoje);
+      document.getElementById('resumoSemana').textContent = fmt(totSemana);
+      document.getElementById('resumoMes').textContent    = fmt(totMes);
+    }
+
+    function renderVendas() {
+      const hoje = new Date(); hoje.setHours(0,0,0,0);
+      const inicioSemana = new Date(hoje);
+      const dia = hoje.getDay();
+      inicioSemana.setDate(hoje.getDate() - (dia === 0 ? 6 : dia - 1));
+      const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+
+      let lista = todasVendas;
+      if (filtroAtual === 'hoje')   lista = lista.filter(v => { const d=parseDateBR(v.data); return d && d >= hoje; });
+      if (filtroAtual === 'semana') lista = lista.filter(v => { const d=parseDateBR(v.data); return d && d >= inicioSemana; });
+      if (filtroAtual === 'mes')    lista = lista.filter(v => { const d=parseDateBR(v.data); return d && d >= inicioMes; });
+
+      const container = document.getElementById('listaVendas');
+      if (!lista.length) {
+        container.innerHTML = '<div class="lista-vazia">Nenhuma venda neste período.</div>';
+        return;
+      }
+
+      const formaPag = { dinheiro:'💵 Dinheiro', pix:'📲 Pix', debito:'💳 Débito', credito:'💳 Crédito' };
+      container.innerHTML = lista.map(v => `
+        <div class="venda-card">
+          <div class="venda-icon">${v.produtoEmoji || '🛍️'}</div>
+          <div class="venda-info">
+            <div class="venda-nome">${esc(v.produtoNome || '—')}${v.quantidade > 1 ? ` <span style="color:#aaa;font-weight:400;">x${v.quantidade}</span>` : ''}</div>
+            <div class="venda-meta">${formaPag[v.formaPagamento] || v.formaPagamento || '—'} · ${v.data || ''} ${v.hora || ''}</div>
+          </div>
+          <div class="venda-valor">R$ ${parseFloat(v.total||0).toFixed(2).replace('.',',')}</div>
+        </div>`
+      ).join('');
+    }
+
+    document.querySelectorAll('.btn-periodo').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.btn-periodo').forEach(b => b.classList.remove('ativo'));
+        btn.classList.add('ativo');
+        filtroAtual = btn.dataset.filtro;
+        renderVendas();
+      });
+    });
+
+    /* ────────────── CADASTRO DE PRODUTOS ────────────── */
+
+    // Emoji picker
+    document.querySelectorAll('.emoji-opt').forEach(el => {
+      el.addEventListener('click', () => {
+        document.querySelectorAll('.emoji-opt').forEach(e => e.classList.remove('selected'));
+        el.classList.add('selected');
+        emojiAtual = el.dataset.emoji;
+      });
+    });
+
+    async function carregarListaProdutos() {
+      await carregarProdutos();
+      const container = document.getElementById('listaProdutosCad');
+      if (!produtos.length) {
+        container.innerHTML = '<div style="color:#555;font-size:13px;padding:16px 0;">Nenhum produto ainda.</div>';
+        return;
+      }
+      container.innerHTML = produtos.map(p => `
+        <div class="venda-card" style="margin-bottom:8px;">
+          <div class="venda-icon">${p.emoji || '🛍️'}</div>
+          <div class="venda-info">
+            <div class="venda-nome">${esc(p.nome)}</div>
+            <div class="venda-meta">${esc(p.categoria||'—')} · Estoque: ${p.estoque ?? 0}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+            <div class="venda-valor">R$ ${parseFloat(p.preco||0).toFixed(2).replace('.',',')}</div>
+            <div style="display:flex;gap:6px;">
+              <button class="btn-acao-loja editar" data-id="${p.id}" style="background:#2c3e50;border:none;color:#fff;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">✏️ Editar</button>
+              <button class="btn-acao-loja deletar" data-id="${p.id}" style="background:#c0392b;border:none;color:#fff;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">🗑️</button>
+            </div>
+          </div>
+        </div>`
+      ).join('');
+
+      container.querySelectorAll('.btn-acao-loja.editar').forEach(btn => {
+        btn.addEventListener('click', () => editarProduto(btn.dataset.id));
+      });
+      container.querySelectorAll('.btn-acao-loja.deletar').forEach(btn => {
+        btn.addEventListener('click', () => deletarProduto(btn.dataset.id));
+      });
+    }
+
+    function editarProduto(id) {
+      const p = produtos.find(x => x.id === id);
+      if (!p) return;
+      document.getElementById('produtoEditId').value   = id;
+      document.getElementById('produtoNome').value     = p.nome || '';
+      document.getElementById('produtoPreco').value    = p.preco || '';
+      document.getElementById('produtoEstoque').value  = p.estoque ?? '';
+      document.getElementById('produtoCategoria').value= p.categoria || 'Outro';
+      document.getElementById('formProdutoTitulo').textContent = '✏️ Editar Produto';
+      document.getElementById('btnCancelarEdicao').style.display = '';
+
+      // Emoji
+      emojiAtual = p.emoji || '🛍️';
+      document.querySelectorAll('.emoji-opt').forEach(el => {
+        el.classList.toggle('selected', el.dataset.emoji === emojiAtual);
+      });
+
+      window.scrollTo({ top: document.getElementById('tabProdutos').offsetTop - 80, behavior: 'smooth' });
+    }
+
+    document.getElementById('btnCancelarEdicao').addEventListener('click', resetFormProduto);
+
+    function resetFormProduto() {
+      document.getElementById('produtoEditId').value  = '';
+      document.getElementById('produtoNome').value    = '';
+      document.getElementById('produtoPreco').value   = '';
+      document.getElementById('produtoEstoque').value = '';
+      document.getElementById('produtoCategoria').value = 'Equipamento';
+      document.getElementById('formProdutoTitulo').textContent = '➕ Novo Produto';
+      document.getElementById('btnCancelarEdicao').style.display = 'none';
+      document.getElementById('produtoMsg').textContent = '';
+      emojiAtual = '🛍️';
+      document.querySelectorAll('.emoji-opt').forEach(el => {
+        el.classList.toggle('selected', el.dataset.emoji === '🛍️');
+      });
+    }
+
+    document.getElementById('btnSalvarProduto').addEventListener('click', async () => {
+      const nome     = document.getElementById('produtoNome').value.trim();
+      const preco    = parseFloat(document.getElementById('produtoPreco').value);
+      const estoque  = parseInt(document.getElementById('produtoEstoque').value) || 0;
+      const categoria= document.getElementById('produtoCategoria').value;
+      const editId   = document.getElementById('produtoEditId').value;
+      const msg      = document.getElementById('produtoMsg');
+
+      if (!nome) { msg.textContent='Nome obrigatório.'; msg.className='msg err'; return; }
+      if (isNaN(preco) || preco < 0) { msg.textContent='Preço inválido.'; msg.className='msg err'; return; }
+
+      msg.textContent = 'Salvando…'; msg.className = 'msg info';
+      document.getElementById('btnSalvarProduto').disabled = true;
+
+      try {
+        const dados = { nome, preco, estoque, categoria, emoji: emojiAtual };
+        if (editId) {
+          await updateDoc(doc(db, 'loja_produtos', editId), dados);
+          msg.textContent = '✅ Produto atualizado!';
+        } else {
+          await addDoc(collection(db, 'loja_produtos'), { ...dados, criadoEm: serverTimestamp() });
+          msg.textContent = '✅ Produto cadastrado!';
+        }
+        msg.className = 'msg ok';
+        resetFormProduto();
+        await carregarProdutos();
+        carregarListaProdutos();
+        renderProdutosGrid();
+      } catch(e) {
+        msg.textContent = 'Erro: ' + e.message;
+        msg.className = 'msg err';
+      } finally {
+        document.getElementById('btnSalvarProduto').disabled = false;
+      }
+    });
+
+    async function deletarProduto(id) {
+      const p = produtos.find(x => x.id === id);
+      if (!p) return;
+      if (!confirm(`Remover "${p.nome}"? Esta ação não pode ser desfeita.`)) return;
+      try {
+        await deleteDoc(doc(db, 'loja_produtos', id));
+        await carregarProdutos();
+        carregarListaProdutos();
+        renderProdutosGrid();
+      } catch(e) { alert('Erro: ' + e.message); }
+    }
+
+    /* ── utils ── */
+    function esc(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+  </script>
+</body>
+</html>
