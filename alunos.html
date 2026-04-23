@@ -104,6 +104,9 @@
     .cep-spinner-edit { display: none; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 13px; color: #aaa; pointer-events: none; }
     .fin-msg { font-size: 13px; margin-top: 8px; min-height: 18px; }
 
+    /* VIP notice inside edit form */
+    .vip-edit-notice { display: none; background: linear-gradient(135deg,rgba(255,215,0,.12),rgba(255,165,0,.08)); border: 1px solid rgba(255,215,0,.35); border-radius: 8px; padding: 8px 12px; font-size: 12px; font-weight: 700; color: #ffd700; }
+
     .lista-vazia { color: #aaa; text-align: center; padding: 24px 0; font-size: 15px; }
     .busca-fixa { position: sticky; top: 72px; z-index: 9; background: var(--bg); padding: 12px 0 4px; margin-bottom: 8px; }
     @media (max-width: 768px) { .busca-fixa { top: 68px; } }
@@ -120,7 +123,6 @@
 </head>
 <body>
   <script>
-    // Detecta modo embed (quando aberto dentro do portal via iframe)
     if (new URLSearchParams(location.search).get('embed') === '1') {
       document.documentElement.classList.add('embed-mode');
     }
@@ -309,11 +311,13 @@
           ? `<img src="${esc(a.foto_url)}" alt="" style="width:48px;height:48px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #444;" />`
           : `<div style="width:48px;height:48px;border-radius:50%;background:#2a2a2a;border:2px solid #444;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#888;flex-shrink:0;">${esc((a.nome_aluno||'?')[0].toUpperCase())}</div>`;
         const badgeCls = a.status === 'ATIVO' ? 'badge-ativo' : 'badge-inativo';
+        // Show VIP badge alongside faixa
+        const planoLabel = a.plano === 'VIP' ? ' · ⭐ VIP' : '';
         return `<div class="aluno-card-compact" data-id="${id}">
           ${avatarHtml}
           <div class="compact-info">
             <div class="compact-nome">${esc(a.nome_aluno)}</div>
-            <div class="compact-sub">${esc(a.faixa||'—')} G${esc(String(a.grau_atual??0))} · ${esc(a.email||'—')}</div>
+            <div class="compact-sub">${esc(a.faixa||'—')} G${esc(String(a.grau_atual??0))}${planoLabel} · ${esc(a.email||'—')}</div>
           </div>
           <span class="compact-badge ${badgeCls}">${esc(a.status)}</span>
         </div>`;
@@ -362,6 +366,11 @@
       const badgeCls = a.status === 'ATIVO' ? 'badge-ativo' : 'badge-inativo';
       const toggleLabel = a.status === 'ATIVO' ? 'Desativar' : 'Ativar';
 
+      // VIP badge in modal meta
+      const vipBadge = a.plano === 'VIP'
+        ? `<span style="background:linear-gradient(135deg,rgba(255,215,0,.2),rgba(255,165,0,.15));border:1px solid rgba(255,215,0,.5);border-radius:999px;padding:3px 12px;font-size:11px;font-weight:900;color:#ffd700;">⭐ VIP</span>`
+        : '';
+
       box.innerHTML = `
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
           <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
@@ -378,6 +387,7 @@
         <div class="modal-meta">
           <span class="aluno-faixa" id="modal-faixaLabel-${id}">${esc(a.faixa||'—')} G${esc(String(a.grau_atual??0))}</span>
           <span class="${badgeCls}" id="modal-badge-${id}">${esc(a.status)}</span>
+          ${vipBadge}
         </div>
 
         <div class="modal-btns-acao">
@@ -415,7 +425,7 @@
           <div class="detalhe-row"><span class="detalhe-label">Aulas no Grau</span><span class="detalhe-valor">${esc(String(a.aulas_no_grau??'—'))}</span></div>
           <div class="detalhe-row"><span class="detalhe-label">Aulas Restantes</span><span class="detalhe-valor">${esc(String(a.aulas_restantes??'—'))}</span></div>
           <div class="detalhe-row"><span class="detalhe-label">Último Grau em</span><span class="detalhe-valor">${esc(formatarData(a.data_ultimo_grau))}</span></div>
-          <div class="detalhe-row"><span class="detalhe-label">Plano</span><span class="detalhe-valor">${esc(a.plano||'—')}</span></div>
+          <div class="detalhe-row"><span class="detalhe-label">Plano</span><span class="detalhe-valor">${a.plano === 'VIP' ? '⭐ VIP – Isento' : esc(a.plano||'—')}</span></div>
           <div class="detalhe-row"><span class="detalhe-label">Telefone</span><span class="detalhe-valor">${esc(a.telefone||'—')}</span></div>
           <div class="detalhe-row"><span class="detalhe-label">CPF</span><span class="detalhe-valor">${esc(a.cpf||'—')}</span></div>
           <div class="detalhe-row"><span class="detalhe-label">Data Nasc.</span><span class="detalhe-valor">${esc(formatarData(a.data_nasc))}</span></div>
@@ -496,17 +506,25 @@
             <div><label>Número</label><input type="text" id="modal-editNumero-${id}" value="${esc(a.numero||'')}" placeholder="Ex: 277" /></div>
           </div>
           <div class="editar-secao">💰 Financeiro</div>
-          <div><label>Plano</label>
-            <select id="modal-editPlano-${id}">
+          <div>
+            <label>Plano</label>
+            <select id="modal-editPlano-${id}" onchange="window._onEditPlanoChange('${id}',this.value)">
               <option value=""           ${!a.plano             ?'selected':''}>Não definido</option>
               <option value="Recorrente" ${a.plano==='Recorrente'?'selected':''}>Recorrente – R$ 200,00</option>
               <option value="Semestral"  ${a.plano==='Semestral' ?'selected':''}>Semestral – R$ 220,00</option>
               <option value="Mensal"     ${a.plano==='Mensal'    ?'selected':''}>Mensal – R$ 240,00</option>
+              <option value="Avista"     ${a.plano==='Avista'    ?'selected':''}>À Vista</option>
+              <option value="VIP"        ${a.plano==='VIP'       ?'selected':''}>⭐ VIP – Isento</option>
             </select>
+            <div class="vip-edit-notice" id="modal-vipNotice-${id}" style="${a.plano==='VIP'?'display:block;margin-top:8px;':'display:none;margin-top:8px;'}">
+              ⭐ Aluno VIP — isento de mensalidade. Não aparece no financeiro.
+            </div>
           </div>
-          <div><label>Grupo Familiar</label><input type="text" id="modal-editGrupoFamiliar-${id}" value="${esc(a.grupo_familiar||'')}" placeholder="Ex: Família Silva" /></div>
-          <div><label>Data de Início do Contrato</label><input type="date" id="modal-editDataContrato-${id}" value="${esc(a.data_contrato||'')}" /></div>
-          <div class="editar-inline-btns">
+          <div id="modal-editFinWrap-${id}" style="${a.plano==='VIP'?'display:none':''}">
+            <div style="margin-top:10px;"><label>Grupo Familiar</label><input type="text" id="modal-editGrupoFamiliar-${id}" value="${esc(a.grupo_familiar||'')}" placeholder="Ex: Família Silva" /></div>
+            <div style="margin-top:10px;"><label>Data de Início do Contrato</label><input type="date" id="modal-editDataContrato-${id}" value="${esc(a.data_contrato||'')}" /></div>
+          </div>
+          <div class="editar-inline-btns" style="margin-top:10px;">
             <button class="btn-confirmar-faixa" id="modal-btnSalvar-${id}">💾 Salvar</button>
             <button class="btn-cancelar-faixa"  id="modal-btnCancelarEdit-${id}">Cancelar</button>
           </div>
@@ -538,6 +556,14 @@
       if (btnContrato) btnContrato.addEventListener('click', () => enviarContratoWhatsApp(a));
       document.getElementById('modalAluno').classList.add('open');
     }
+
+    // Toggle VIP notice + hide/show financial fields when plan changes in edit form
+    window._onEditPlanoChange = function(id, valor) {
+      const notice  = document.getElementById(`modal-vipNotice-${id}`);
+      const finWrap = document.getElementById(`modal-editFinWrap-${id}`);
+      if (notice)  notice.style.display  = valor === 'VIP' ? 'block' : 'none';
+      if (finWrap) finWrap.style.display = valor === 'VIP' ? 'none'  : '';
+    };
 
     document.getElementById('modalAluno').addEventListener('click', function(e) {
       if (e.target === this) this.classList.remove('open');
@@ -607,6 +633,8 @@
         const faixaEdit = aluno?.faixa || '';
         const metaGrau = (categoriaEdit === 'Juvenil') ? 30 : (faixaEdit === 'Branca' ? 36 : 56);
         const cepRaw = (document.getElementById(`modal-editCep-${eid}`).value || '').replace(/\D/g,'');
+        const planoEdit = document.getElementById(`modal-editPlano-${eid}`).value;
+
         const updates = {
           nome_aluno:      document.getElementById(`modal-editNome-${eid}`).value.trim(),
           email:           document.getElementById(`modal-editEmail-${eid}`).value.trim().toLowerCase(),
@@ -614,10 +642,11 @@
           cpf:             document.getElementById(`modal-editCpf-${eid}`).value.trim(),
           data_nasc:       document.getElementById(`modal-editDataNasc-${eid}`).value,
           data_inicio:     document.getElementById(`modal-editDataInicio-${eid}`).value,
-          categoria:       document.getElementById(`modal-editCategoria-${eid}`).value,
-          plano:           document.getElementById(`modal-editPlano-${eid}`).value,
-          grupo_familiar:  document.getElementById(`modal-editGrupoFamiliar-${eid}`).value.trim(),
-          data_contrato:   document.getElementById(`modal-editDataContrato-${eid}`).value,
+          categoria:       categoriaEdit,
+          plano:           planoEdit,
+          // Only save group/contract fields when not VIP
+          grupo_familiar:  planoEdit !== 'VIP' ? (document.getElementById(`modal-editGrupoFamiliar-${eid}`)?.value.trim() || '') : '',
+          data_contrato:   planoEdit !== 'VIP' ? (document.getElementById(`modal-editDataContrato-${eid}`)?.value || '')       : '',
           cep:             cepRaw,
           numero:          document.getElementById(`modal-editNumero-${eid}`).value.trim(),
           rua:             document.getElementById(`modal-editRua-${eid}`).value.trim(),
@@ -641,7 +670,10 @@
           if (msg) msg.textContent = '';
           const area = document.getElementById(`modal-editarArea-${eid}`);
           if (area) area.style.display = 'none';
-        }, 1500);
+          // Re-open modal to reflect updated VIP badge / plano label
+          const alunoAtualizado = todosAlunos.find(a => String(a.id) === String(id));
+          if (alunoAtualizado) abrirModalAluno(alunoAtualizado);
+        }, 1200);
       } catch(e) {
         if (msg) msg.textContent = 'Erro ao salvar: '+(e.message||'tente novamente.');
       } finally { if (btn) btn.disabled = false; }
@@ -772,8 +804,8 @@
       });
       if (y > 220) { pdf.addPage(); y = 20; }
       y += 4; pdf.setDrawColor(180); pdf.line(margin, y, pageW - margin, y); y += 8;
-      pdf.setFont('helvetica','bold'); pdf.setFontSize(10); pdf.text('ASSINATURA', margin, y); y += 6;
-      pdf.setFont('helvetica','normal'); pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10); pdf.text('ASSINATURA', margin, y); y += 6;
+      pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9);
       if (a.contrato_assinado_em) { pdf.text(`Assinado digitalmente em: ${new Date(a.contrato_assinado_em).toLocaleString('pt-BR')}`, margin, y); y += 6; }
       if (a.contrato_assinatura) {
         try {
