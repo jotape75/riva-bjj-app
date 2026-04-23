@@ -313,14 +313,15 @@
       return detectarDesconto(a) ? Math.round(base * 0.9 * 100) / 100 : base;
     }
 
+    // ── VIP: alunos isentos não entram no financeiro ──────────
+    function isVip(a) { return (a.plano || '').trim() === 'VIP'; }
+
     // ── Status efetivo — inclui lógica À Vista ──────────────────
     function getEffectiveStatus(a) {
-      // Plano À Vista: verifica se mês/ano selecionado está dentro do período pago
       if (a.plano === 'Avista') {
-        const pagoAte = a.pago_ate; // "YYYY-MM"
+        const pagoAte = a.pago_ate;
         if (!pagoAte) return 'pendente';
         const [anoFim, mesFim] = pagoAte.split('-').map(Number);
-        // Está pago se o mês selecionado <= mês pago
         if (anoSelecionado < anoFim) return 'pago';
         if (anoSelecionado === anoFim && mesSelecionado <= mesFim) return 'pago';
         return 'vencido';
@@ -338,7 +339,7 @@
     function formatData(s) {
       if (!s) return '—';
       if (/^\d{4}-\d{2}-\d{2}/.test(s)) { const p = s.substring(0,10).split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
-      if (/^\d{4}-\d{2}$/.test(s)) { const [y,m] = s.split('-'); return m+'/'+y; } // YYYY-MM
+      if (/^\d{4}-\d{2}$/.test(s)) { const [y,m] = s.split('-'); return m+'/'+y; }
       return s;
     }
     function formatDataBR(d) { return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); }
@@ -385,7 +386,8 @@
     }
 
     async function syncTodos(silencioso = false) {
-      const comAsaas = todosRegistros.filter(a => a.asaas_id && a.plano === 'Recorrente');
+      // VIPs nunca entram no sync
+      const comAsaas = todosRegistros.filter(a => !isVip(a) && a.asaas_id && a.plano === 'Recorrente');
       if (!comAsaas.length) { setSyncStatus('ok', 'Sincronizado.'); return; }
       if (!silencioso) setSyncStatus('syncing', 'Sincronizando com Asaas…');
       let erros = 0;
@@ -483,29 +485,32 @@
         pagSnap.forEach(d => { const p=d.data(); pagByAluno[p.alunoId]=p; });
         const agora  = new Date();
         const isPast = (ano < agora.getFullYear()) || (ano === agora.getFullYear() && mes < agora.getMonth()+1);
-        todosRegistros = alunosSnap.docs.map(d => {
-          const a = d.data(); const id = d.id; const pag = pagByAluno[id];
-          return {
-            id, nome: a.nome_aluno||'', plano: a.plano||'', email: a.email||'',
-            telefone: a.telefone||'', cpf: a.cpf||'', grupo_familiar: a.grupo_familiar||'',
-            data_contrato: a.data_contrato||'', asaas_id: a.asaas_id||'',
-            asaas_assinatura_id: a.asaas_assinatura_id||'', asaas_cobranca_id: a.asaas_cobranca_id||'',
-            asaas_tipo: a.asaas_tipo||'', asaas_paymentLink: a.asaas_paymentLink||'',
-            numero: a.numero||'', primeiro_pagamento: a.primeiro_pagamento||'',
-            // ── À Vista ──
-            pago_ate:        a.pago_ate || '',
-            avista_valor:    a.avista_valor || 0,
-            avista_forma_pag:a.avista_forma_pag || '',
-            // ──────────────
-            valorMensalidade: valorDePlano(a.plano),
-            statusPagamento: pag ? 'pago' : (isPast ? 'vencido' : 'pendente'),
-            valor: pag ? (pag.valor||0) : 0,
-            dataPagamento: pag ? (pag.data||'') : '',
-            formaPagamento: pag ? (pag.formaPagamento||'') : '',
-            resp_nome: a.resp_nome||'', resp_email: a.resp_email||'',
-            resp_telefone: a.resp_telefone||'', resp_cpf: a.resp_cpf||'',
-          };
-        });
+
+        todosRegistros = alunosSnap.docs
+          .map(d => {
+            const a = d.data(); const id = d.id; const pag = pagByAluno[id];
+            return {
+              id, nome: a.nome_aluno||'', plano: a.plano||'', email: a.email||'',
+              telefone: a.telefone||'', cpf: a.cpf||'', grupo_familiar: a.grupo_familiar||'',
+              data_contrato: a.data_contrato||'', asaas_id: a.asaas_id||'',
+              asaas_assinatura_id: a.asaas_assinatura_id||'', asaas_cobranca_id: a.asaas_cobranca_id||'',
+              asaas_tipo: a.asaas_tipo||'', asaas_paymentLink: a.asaas_paymentLink||'',
+              numero: a.numero||'', primeiro_pagamento: a.primeiro_pagamento||'',
+              pago_ate:        a.pago_ate || '',
+              avista_valor:    a.avista_valor || 0,
+              avista_forma_pag:a.avista_forma_pag || '',
+              valorMensalidade: valorDePlano(a.plano),
+              statusPagamento: pag ? 'pago' : (isPast ? 'vencido' : 'pendente'),
+              valor: pag ? (pag.valor||0) : 0,
+              dataPagamento: pag ? (pag.data||'') : '',
+              formaPagamento: pag ? (pag.formaPagamento||'') : '',
+              resp_nome: a.resp_nome||'', resp_email: a.resp_email||'',
+              resp_telefone: a.resp_telefone||'', resp_cpf: a.resp_cpf||'',
+            };
+          })
+          // ── FILTRO VIP: alunos isentos não aparecem no financeiro ──
+          .filter(a => !isVip(a));
+
         document.getElementById('listInfo').textContent = '';
         renderListaFiltrada();
         await syncTodos();
@@ -519,7 +524,8 @@
     function atualizarResumo() {
       if (!todosRegistros.length) { document.getElementById('resumoGrid').style.display='none'; return; }
       let arrecadado=0, pendente=0, emDia=0;
-      todosRegistros.forEach(a => {
+      // VIPs já foram filtrados em todosRegistros, mas protegemos aqui também
+      todosRegistros.filter(a => !isVip(a)).forEach(a => {
         const st = getEffectiveStatus(a);
         if (st==='pago') { arrecadado += parseFloat(a.plano === 'Avista' ? a.avista_valor || 0 : (a.valor || calcularValorFinal(a))); emDia++; }
         else if (a.plano !== 'Avista') pendente += calcularValorFinal(a);
@@ -532,6 +538,7 @@
 
     function renderListaFiltrada() {
       const busca = (document.getElementById('searchBox').value||'').toLowerCase().trim();
+      // VIPs já excluídos de todosRegistros
       let lista = todosRegistros;
       if (filtroAtivo !== 'todos') lista = lista.filter(a => getEffectiveStatus(a) === filtroAtivo);
       if (busca) lista = lista.filter(a =>
@@ -588,7 +595,6 @@
         ? 'R$ '+(a.avista_valor||0).toFixed(2).replace('.',',') + ' <span style="font-size:11px;color:#3498db;">(à vista)</span>'
         : 'R$ '+valorFinal.toFixed(2).replace('.',',')+(temDesconto?' <span class="desconto-tag">10% desc.</span>':'');
 
-      // Vencimento
       let proxVenc = '—';
       if (a.plano === 'Avista') {
         proxVenc = a.pago_ate ? formatData(a.pago_ate) : '—';
