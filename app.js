@@ -10,7 +10,6 @@ const anonAuthPromise = signInAnonymously(auth).catch(() => {});
 
 const SEMANA_TTL          = 600000;   // 10 min
 const PRESENCA_TTL        = 600000;   // 10 min
-const GRADUANDOS_TTL      = 300000; // 5 min
 const NOTIF_TTL           = 900000;   // 15 min
 const BIO_GRACE_MS        = 1800000;  // 30 min
 const RP_NAME             = 'Riva BJJ';
@@ -266,7 +265,6 @@ const LS_BIO_ATIVADA  = 'rv_biometria_ativada';
 const LS_NOTIF_VISTO  = 'rv_notif_visto';
 const LS_BIO_TS       = 'rv_bio_ts';
 const LS_SEMANA_CACHE      = 'rv_semana_cache';
-const LS_GRADUANDOS_CACHE  = 'rv_graduandos_cache';
 
 /* ── sessionStorage key constants ─────────────────────────────── */
 const SS_PAGE  = 'rv_page';
@@ -927,8 +925,6 @@ let aSelDia      = null;
 let aSelSessao   = null;
 let pSelDia      = null;
 let pSelSessao   = null;
-let graduandosCache    = null;  // { ts, data }
-let graduandosInFlight = false;
 let notifCache         = null;  // { ts, data }
 let notifInFlight      = false;
 
@@ -1898,7 +1894,6 @@ function profLogout() {
   sessionStorage.removeItem(SS_PAGE);
   sessionStorage.removeItem(SS_SESSAO);
   // Keep rv_credentialId and rv_biometria_ativada so next login skips re-registration
-  hide('profGraduandosBox');
   hide('cardProf');
   showTab('Home');
 }
@@ -1936,16 +1931,6 @@ function init() {
     hide('cardProfSessao');
     show('cardProf');
   });
-  $('btnGraduandos').addEventListener('click', async () => {
-    const box = $('profGraduandosBox');
-    if (box.classList.contains('hidden')) {
-      show('profGraduandosBox');
-      await carregarGraduandos();
-    } else {
-      hide('profGraduandosBox');
-    }
-  });
-
   // 5) Bottom nav
   $('navHome').addEventListener('click',    () => showTab('Home'));
   $('navAgendar').addEventListener('click', () => showTab('Agendar'));
