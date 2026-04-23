@@ -54,9 +54,7 @@ function _quadradoBicolor(cor1, cor2, borda = false) {
 }
 
 function iconeGrau(faixa) {
-  // Monocores com emoji
   if (EMOJI_FAIXA[faixa]) return EMOJI_FAIXA[faixa];
-  // Bicolores
   if (faixa.includes('/')) {
     const [c1, c2] = faixa.split('/');
     const cor1 = COR_FAIXA[c1] || '#888';
@@ -64,7 +62,6 @@ function iconeGrau(faixa) {
     const borda = c2 === 'Preta';
     return _quadradoBicolor(cor1, cor2, borda);
   }
-  // Monocores sem emoji (Cinza, Preta)
   const cor  = COR_FAIXA[faixa] || '#888';
   const borda = faixa === 'Preta';
   return _quadrado(cor, borda);
@@ -74,19 +71,13 @@ function gerarStatusHTML(faixa, grau) {
   const g = Math.min(Math.max(Number(grau) || 0, 0), MAX_GRAU_POR_FAIXA);
   if (g === 0) return 'Iniciante';
   const icone = iconeGrau(faixa);
-  // Se for emoji (string sem HTML), repete normalmente
   if (!icone.includes('<')) return icone.repeat(g);
-  // Se for HTML, repete o span
   return Array(g).fill(icone).join(' ');
 }
 
-// gerarStatus continua existindo para gravar no Firestore (texto simples)
-// mas agora é só um texto auxiliar — o visual vem de gerarStatusHTML
 function gerarStatus(faixa, grau) {
   return gerarStatusHTML(faixa, grau);
 }
-
-
 
 function hojeDataBR() {
   const now = new Date();
@@ -95,6 +86,7 @@ function hojeDataBR() {
   const yyyy = now.getFullYear();
   return `${dd}/${mm}/${yyyy}`;
 }
+
 function iniciaisDe(nome) {
   if (!nome) return '?';
   const partes = nome.trim().split(' ').filter(Boolean);
@@ -118,7 +110,6 @@ function atualizarAvatar(fotoUrl, nome) {
 }
 
 async function uploadFotoPerfil(file, alunoId) {
-  // Redimensiona para 200x200 e converte para Base64
   const base64 = await new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -127,7 +118,6 @@ async function uploadFotoPerfil(file, alunoId) {
       canvas.width  = 200;
       canvas.height = 200;
       const ctx = canvas.getContext('2d');
-      // Crop centralizado
       const size = Math.min(img.width, img.height);
       const sx   = (img.width  - size) / 2;
       const sy   = (img.height - size) / 2;
@@ -142,6 +132,7 @@ async function uploadFotoPerfil(file, alunoId) {
   await updateDoc(doc(db, 'alunos', alunoId), { foto_url: base64 });
   return base64;
 }
+
 /* ── Contrato ─────────────────────────────────────────────── */
 
 function valorDePlanoContrato(plano) {
@@ -199,6 +190,7 @@ function preencherTextoContrato(a) {
     <p style="text-align:center;margin-top:14px;">Indaiatuba, ${data}</p>
   `;
 }
+
 function verificarBotaoContrato() {
   const leu     = document.getElementById('chkContratoLeitura').checked;
   const assinou = document.getElementById('contratoInputAssinatura').value.trim().length >= 3;
@@ -211,7 +203,6 @@ async function mostrarTelaContrato(a) {
   document.getElementById('btnAssinarContrato').disabled = true;
   document.getElementById('contratoErr').textContent  = '';
   document.getElementById('contratoInfo').textContent = '';
-  // Limpa campo de assinatura
   const input = document.getElementById('contratoInputAssinatura');
   const preview = document.getElementById('contratoTextoAssinatura');
   if (input)   input.value = '';
@@ -222,7 +213,6 @@ async function mostrarTelaContrato(a) {
     if (el) el.classList.add('hidden');
   });
   hide('mainNav');
-  // Atualizar label da assinatura para responsável
   const isResponsavel = ['Kids','Infantil','Juvenil'].includes(a.categoria);
   const labelAss = document.getElementById('contratoLabelAssinatura');
   if (labelAss) {
@@ -254,25 +244,24 @@ async function salvarAssinaturaContrato(a) {
     contrato_assinatura:  assinaturaBase64,
   });
 }
+
 /* ── localStorage key constants ──────────────────────────────── */
 const LS_EMAIL        = 'rv_email';
 const LS_NOME         = 'rv_nome';
 const LS_PROF_EMAIL   = 'rv_prof_email';
 const LS_PROF_NOME    = 'rv_prof_nome';
-// Biometric keys – intentionally kept on logout so next login skips re-registration
 const LS_CREDENTIAL   = 'rv_credentialId';
 const LS_BIO_ATIVADA  = 'rv_biometria_ativada';
 const LS_NOTIF_VISTO  = 'rv_notif_visto';
 const LS_BIO_TS       = 'rv_bio_ts';
-const LS_SEMANA_CACHE      = 'rv_semana_cache';
+const LS_SEMANA_CACHE = 'rv_semana_cache';
 
 /* ── sessionStorage key constants ─────────────────────────────── */
-const SS_PAGE  = 'rv_page';
+const SS_PAGE   = 'rv_page';
 const SS_SESSAO = 'rv_sessao';
 
 /* ── Firebase helpers ─────────────────────────────────────────── */
 
-// Helper: format Firestore Timestamp to "DD/MM/YYYY • HH:MM"
 function formatTimestamp(ts) {
   if (!ts) return '';
   let d;
@@ -288,10 +277,8 @@ function formatTimestamp(ts) {
   return `${dd}/${mm}/${yyyy} • ${hh}:${min}`;
 }
 
-// login: search alunos then professores by email
 async function fbLogin(email) {
   try {
-  // Check alunos
     const alunosQ = query(collection(db, 'alunos'), where('email', '==', email));
     const alunosSnap = await getDocs(alunosQ);
     if (!alunosSnap.empty) {
@@ -329,7 +316,6 @@ async function fbLogin(email) {
         }
       };
     }
-    // Check professores
     const profsQ = query(collection(db, 'professores'), where('email', '==', email));
     const profsSnap = await getDocs(profsQ);
     if (!profsSnap.empty) {
@@ -346,7 +332,6 @@ async function fbLogin(email) {
   }
 }
 
-// profLoginEmail: get professor data by email
 async function fbProfLoginEmail(email) {
   try {
     const q = query(collection(db, 'professores'), where('email', '==', email));
@@ -361,7 +346,6 @@ async function fbProfLoginEmail(email) {
   }
 }
 
-// treinosSemana: get all sessions grouped by diaSemana
 async function fbTreinosSemana() {
   try {
     const snap = await getDocs(collection(db, 'sessoes'));
@@ -371,7 +355,6 @@ async function fbTreinosSemana() {
       if (!byDow[s.diaSemana]) byDow[s.diaSemana] = [];
       byDow[s.diaSemana].push({ horario: s.horario, nome: s.nome });
     });
-    // Sort treinos within each day by horario
     Object.keys(byDow).forEach(dow => {
       byDow[dow].sort((a, b) => a.horario.localeCompare(b.horario));
     });
@@ -385,7 +368,6 @@ async function fbTreinosSemana() {
   }
 }
 
-// listaPresenca: get check-ins for a given date+horario (sem filtro de arquivado)
 async function fbListaPresenca(dataTreino, horario) {
   try {
     const q = query(
@@ -395,12 +377,10 @@ async function fbListaPresenca(dataTreino, horario) {
     );
     const snap = await getDocs(q);
 
-    // Coletar emails únicos para buscar fotos
     const emails = [...new Set(
       snap.docs.map(d => d.data().email).filter(Boolean)
     )];
 
-    // Buscar foto_url de cada aluno em paralelo
     const fotoMap = {};
     await Promise.all(emails.map(async (email) => {
       try {
@@ -427,7 +407,6 @@ async function fbListaPresenca(dataTreino, horario) {
   }
 }
 
-// listaPresencaArquivo: mesma query (sem filtro arquivado — não há arquivamento automático)
 async function fbListaPresencaArquivo(dataTreino, horario) {
   try {
     const q = query(
@@ -467,10 +446,8 @@ async function fbListaPresencaArquivo(dataTreino, horario) {
   }
 }
 
-// checkin: add a new check-in document
 async function fbCheckin(email, nome, horario, dataTreino, alunoId) {
   try {
-    // 1. Buscar checkins do aluno para esta data
     const qDia = query(
       collection(db, 'checkins'),
       where('email', '==', email),
@@ -478,7 +455,6 @@ async function fbCheckin(email, nome, horario, dataTreino, alunoId) {
     );
     const snapDia = await getDocs(qDia);
 
-    // 2. Contar horários únicos ativos (PENDENTE ou VALIDADO) — excluir REPROVADO
     const horariosAtivos = new Set();
     snapDia.forEach(d => {
       const item = d.data();
@@ -487,17 +463,14 @@ async function fbCheckin(email, nome, horario, dataTreino, alunoId) {
       }
     });
 
-    // 3. Verificar se já fez check-in neste horário específico
     if (horariosAtivos.has(horario)) {
       return { ok: false, erro: 'Você já fez check-in para este treino! ❌' };
     }
 
-    // 4. Verificar limite de 2 check-ins por dia
     if (horariosAtivos.size >= 2) {
       return { ok: false, erro: 'Limite diário: você só pode fazer 2 check-ins por dia. ❌' };
     }
 
-    // 5. Criar o check-in
     const checkinData = {
       email,
       nome,
@@ -516,7 +489,6 @@ async function fbCheckin(email, nome, horario, dataTreino, alunoId) {
   }
 }
 
-// deletarCheckin: delete check-in by email + data_treino + horario
 async function fbDeletarCheckin(email, dataTreino, horario) {
   try {
     const q = query(
@@ -534,10 +506,8 @@ async function fbDeletarCheckin(email, dataTreino, horario) {
   }
 }
 
-// aprovar: approve a check-in by document ID and update student's aulas/grau
 async function fbAprovar(linhaId) {
   try {
-    // Ensure anonymous auth is complete before writing to alunos (requires auth)
     await anonAuthPromise;
 
     const checkinRef = doc(db, 'checkins', String(linhaId));
@@ -562,10 +532,10 @@ async function fbAprovar(linhaId) {
       if (alunoRef) {
         const alunoSnap = await getDoc(alunoRef);
         if (alunoSnap.exists()) {
-          const a               = alunoSnap.data();
+          const a         = alunoSnap.data();
           const faixaNorm = (a.faixa || '').replace(' e ', '/').replace(' E ', '/');
-          const metaGrau = a.meta_grau ?? ((a.categoria === 'Juvenil') ? 30 : (faixaNorm === 'Branca' ? 36 : 56));
-          const grauAtual       = a.grau_atual ?? 0;
+          const metaGrau  = a.meta_grau ?? ((a.categoria === 'Juvenil') ? 30 : (faixaNorm === 'Branca' ? 36 : 56));
+          const grauAtual = a.grau_atual ?? 0;
           const novoAulasNoGrau = (a.aulas_no_grau ?? 0) + 1;
 
           try {
@@ -578,16 +548,12 @@ async function fbAprovar(linhaId) {
                   aulas_restantes:  metaGrau,
                   meta_grau:        metaGrau,
                   statusExame:      gerarStatus(faixaNorm, novoGrau),
-
-                  
                   data_ultimo_grau: hojeDataBR(),
                 });
               } else {
-                // Grau máximo: apenas zera restantes e atualiza status
                 await updateDoc(alunoRef, {
                   aulas_restantes: 0,
                   statusExame:     gerarStatus(faixaNorm, MAX_GRAU_POR_FAIXA),
-
                 });
               }
             } else {
@@ -613,7 +579,6 @@ async function fbAprovar(linhaId) {
   }
 }
 
-// reprovar: reject a check-in by document ID
 async function fbReprovar(linhaId) {
   try {
     await updateDoc(doc(db, 'checkins', String(linhaId)), {
@@ -626,33 +591,6 @@ async function fbReprovar(linhaId) {
   }
 }
 
-// graduacoesPendentes: alunos que acabaram de mudar de grau (aulas_no_grau === 0, grau entre 1 e 4)
-async function fbGraduandos() {
-  try {
-    const q = query(collection(db, 'alunos'), where('status', '==', 'ATIVO'));
-    const snap = await getDocs(q);
-    const data = [];
-    snap.forEach(d => {
-      const a = d.data();
-      const grauAtual  = a.grau_atual ?? 0;
-      const aulasNoGrau = a.aulas_no_grau ?? 0;
-      if (aulasNoGrau === 0 && grauAtual >= 1 && grauAtual <= MAX_GRAU_POR_FAIXA) {
-        data.push({
-          id:           d.id,
-          nome:         a.nome_aluno || '',
-          faixa:        a.faixa || '',
-          grau:         grauAtual,
-          dataUltimoGrau: a.data_ultimo_grau || '',
-        });
-      }
-    });
-    data.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
-    return { ok: true, data };
-  } catch (e) {
-    return { ok: false, erro: e.message };
-  }
-}
-// notificacoes: get validated/rejected check-ins for a student in last 30 days
 async function fbNotificacoes(email) {
   try {
     const q = query(
@@ -674,10 +612,10 @@ async function fbNotificacoes(email) {
       }
       if (ts >= thirtyDaysAgo) {
         data.push({
-          status:         item.status,
-          horario:        item.horario || '',
-          dataTreino:     item.data_treino || '',
-          dataAprovacao:  formatTimestamp(item.data_aprovacao)
+          status:        item.status,
+          horario:       item.horario || '',
+          dataTreino:    item.data_treino || '',
+          dataAprovacao: formatTimestamp(item.data_aprovacao)
         });
       }
     });
@@ -692,7 +630,6 @@ const $    = id => document.getElementById(id);
 const show = id => $(id).classList.remove('hidden');
 const hide = id => $(id).classList.add('hidden');
 
-// Retorna quantos dias atrás é dataStr (formato DD/MM/YYYY). Valor positivo = passado.
 function diasDiferenca(dataStr) {
   if (!dataStr || typeof dataStr !== 'string') return 0;
   var p  = dataStr.split('/');
@@ -728,7 +665,7 @@ function enableDragScroll(el) {
 }
 
 /* ── WebAuthn / Biometria ──────────────────────────────────────── */
-let bioAction = 'unlock'; // 'unlock' | 'register'
+let bioAction = 'unlock';
 
 function b64urlEncode(buf) {
   return btoa(String.fromCharCode(...new Uint8Array(buf)))
@@ -769,8 +706,8 @@ async function bioRegister(email) {
       user: { id: userId, name: email, displayName: email },
       challenge,
       pubKeyCredParams: [
-        { type: 'public-key', alg: -7   },  // ES256
-        { type: 'public-key', alg: -257 },  // RS256
+        { type: 'public-key', alg: -7   },
+        { type: 'public-key', alg: -257 },
       ],
       authenticatorSelection: {
         userVerification: 'required',
@@ -780,7 +717,7 @@ async function bioRegister(email) {
       attestation: 'none',
     },
   });
-  localStorage.setItem(LS_CREDENTIAL,      b64urlEncode(cred.rawId));
+  localStorage.setItem(LS_CREDENTIAL,  b64urlEncode(cred.rawId));
   localStorage.setItem(LS_BIO_ATIVADA, '1');
 }
 
@@ -848,7 +785,7 @@ function afterBioSuccess(updateTs = true) {
   const nome   = localStorage.getItem(LS_NOME);
   const pEmail = localStorage.getItem(LS_PROF_EMAIL);
   const pNome  = localStorage.getItem(LS_PROF_NOME);
-  const savedPage = sessionStorage.getItem(SS_PAGE);
+  const savedPage   = sessionStorage.getItem(SS_PAGE);
   const savedSessao = (() => { try { return JSON.parse(sessionStorage.getItem(SS_SESSAO)); } catch(e) { return null; } })();
 
   if (pEmail && pNome) {
@@ -900,7 +837,6 @@ function afterBioSuccess(updateTs = true) {
     return;
   }
 
-  // No session data: show login as fallback
   showTab('Home');
 }
 
@@ -917,16 +853,16 @@ function afterLoginSuccess() {
 /* ── State ────────────────────────────────────────────────────── */
 let alunoData    = null;
 let profData     = null;
-let semanaCache  = null;   // { ts, data }
-let presenceCache = {};    // { "data|horario": { ts, data } }
-let semanaInFlight   = false; // guard for concurrent treinosSemana fetches
-let presencaInFlight = {}; // key -> true (in-flight guard)
+let semanaCache  = null;
+let presenceCache = {};
+let semanaInFlight   = false;
+let presencaInFlight = {};
 let aSelDia      = null;
 let aSelSessao   = null;
 let pSelDia      = null;
 let pSelSessao   = null;
-let notifCache         = null;  // { ts, data }
-let notifInFlight      = false;
+let notifCache   = null;
+let notifInFlight = false;
 
 /* ── Month / day helpers ──────────────────────────────────────── */
 const NOMES_DIA_PT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
@@ -965,15 +901,12 @@ function loadSemanaCache() {
     const raw = localStorage.getItem(LS_SEMANA_CACHE);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-
-    // Invalida se passou da meia-noite (datas mudaram)
     const salvoEm = new Date(parsed.ts);
     const agora   = new Date();
     const mesmoDia = salvoEm.getDate()     === agora.getDate()  &&
                      salvoEm.getMonth()    === agora.getMonth() &&
                      salvoEm.getFullYear() === agora.getFullYear();
     if (!mesmoDia) return null;
-
     if (Date.now() - parsed.ts < SEMANA_TTL) return parsed;
     return null;
   } catch (_) { return null; }
@@ -983,29 +916,6 @@ function getCachedSemana() {
   if (semanaCache && Date.now() - semanaCache.ts < SEMANA_TTL) return semanaCache.data;
   const persisted = loadSemanaCache();
   if (persisted) { semanaCache = persisted; return persisted.data; }
-  return null;
-}
-
-function saveGraduandosCache(data) {
-  try {
-    localStorage.setItem(LS_GRADUANDOS_CACHE, JSON.stringify({ ts: Date.now(), data }));
-  } catch (_) {}
-}
-
-function loadGraduandosCache() {
-  try {
-    const raw = localStorage.getItem(LS_GRADUANDOS_CACHE);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (Date.now() - parsed.ts < GRADUANDOS_TTL) return parsed;
-    return null;
-  } catch (_) { return null; }
-}
-
-function getCachedGraduandos() {
-  if (graduandosCache && Date.now() - graduandosCache.ts < GRADUANDOS_TTL) return graduandosCache.data;
-  const persisted = loadGraduandosCache();
-  if (persisted) { graduandosCache = persisted; return persisted.data; }
   return null;
 }
 
@@ -1026,8 +936,6 @@ function invalidatePresenca(data, horario) {
 }
 
 /* ── UI helpers ───────────────────────────────────────────────── */
-// Shows the loading message only if the response takes longer than `delay` ms,
-// preventing a "Carregando…" flash on fast or cached responses.
 function delayedLoader(el, delay = 250) {
   const t = setTimeout(() => { el.innerHTML = '<p class="loading">Carregando…</p>'; }, delay);
   return () => clearTimeout(t);
@@ -1059,13 +967,6 @@ function showPresencaSkeleton() {
     ).join('');
 }
 
-function showGraduandosSkeleton() {
-  document.getElementById('profGraduandosLista').innerHTML =
-    [1,2,3,4].map(() =>
-      `<div class="presenca-item"><span class="skeleton sk-line"></span></div>`
-    ).join('');
-}
-
 /* ── Navigation ───────────────────────────────────────────────── */
 function showTab(tab) {
   sessionStorage.setItem(SS_PAGE, tab);
@@ -1073,7 +974,6 @@ function showTab(tab) {
   ['cardLogin', 'cardContrato', 'cardAluno', 'cardAgendar', 'cardProf', 'cardBioLock', 'cardNoSupport', 'cardNotificacoes', 'cardSessao', 'cardProfSessao', 'cardSobre'].forEach(hide);
   ['navHome', 'navAgendar', 'navSobre'].forEach(id => $(id).classList.remove('on'));
 
-  // Show nav only for logged-in students; professors have no bottom nav (handled in showProfPage)
   if (alunoData) show('mainNav'); else hide('mainNav');
 
   if (tab === 'Home') {
@@ -1097,15 +997,13 @@ function showProfPage() {
 }
 
 /* ── Week schedule ────────────────────────────────────────────── */
-
-// Background fetch of treinosSemana; updates cache and calls onSuccess if data arrives.
 async function revalidateSemana(onSuccess) {
   if (semanaInFlight) return;
   semanaInFlight = true;
   try {
     const r = await fbTreinosSemana();
     if (r.ok) { semanaCache = { ts: Date.now(), data: r.data }; saveSemanaCache(r.data); onSuccess(r.data); }
-  } catch (_) { /* keep stale */ }
+  } catch (_) {}
   finally { semanaInFlight = false; }
 }
 
@@ -1115,7 +1013,6 @@ async function loadSemana(ctx) {
 
   if (cached) {
     renderDias(ctx, cached);
-    // Background revalidation – keep data fresh without blocking UI
     revalidateSemana(data => renderDias(ctx, data));
     return;
   }
@@ -1148,14 +1045,11 @@ function renderDias(ctx, semana) {
   const row     = $(rowId);
   row.innerHTML = '';
 
-  // Update month header
   $(labelId).textContent = getMesAno();
 
-  // Map treinos by day of week from API data
   const treinosByDow = {};
   semana.forEach(d => { treinosByDow[d.diaSemana] = d.treinos || []; });
 
-  // Build all days of current month
   const monthDays = getMonthDays().map(date => ({
     data:      formatDate(date),
     diaSemana: date.getDay(),
@@ -1167,7 +1061,6 @@ function renderDias(ctx, semana) {
   today.setHours(0, 0, 0, 0);
   const todayStr = formatDate(today);
 
-  // Auto-select: today (if has treinos) → next day with treinos → first day with treinos
   let defaultIdx = monthDays.findIndex(d => d.data === todayStr && d.treinos.length > 0);
   if (defaultIdx < 0) {
     defaultIdx = monthDays.findIndex(d => {
@@ -1214,7 +1107,6 @@ async function loadSemanaProfessor() {
 
   if (cached) {
     renderDias('prof', cached);
-    // Background revalidation
     revalidateSemana(data => renderDias('prof', data));
     return;
   }
@@ -1288,13 +1180,12 @@ function renderSessoes(ctx, dia) {
     lista.appendChild(card);
   });
 
-  // Auto-select first session (highlight only, no presence prefetch)
   if (dia.treinos.length > 0) {
     lista.children[0].classList.add('active');
   }
 }
 
-/* ── Session screens (new flow) ───────────────────────────────── */
+/* ── Session screens ──────────────────────────────────────────── */
 function showSessaoAluno(sessao) {
   aSelSessao = sessao;
   sessionStorage.setItem(SS_PAGE, 'sessaoAluno');
@@ -1323,8 +1214,7 @@ async function loadPresencaSessao(ctx, sessao) {
 
   $(tituloId).textContent = `${sessao.data.slice(0, 5)} · ${sessao.horario} · ${sessao.nome}`;
 
-  // Determina se é dia passado e se já foi arquivado (>2 dias)
-  const daysAgo        = diasDiferenca(sessao.data);
+  const daysAgo    = diasDiferenca(sessao.data);
   sessao.isPast    = ctx !== 'prof' && daysAgo > 0;
   sessao.isArquivo = ctx !== 'prof' && daysAgo > 2;
 
@@ -1339,7 +1229,7 @@ async function loadPresencaSessao(ctx, sessao) {
         setCachedPresenca(sessao.data, sessao.horario, r.data || []);
         renderPresencaLista(ctx, r.data || [], sessao);
       }
-    } catch (_) { /* keep stale */ }
+    } catch (_) {}
     finally { delete presencaInFlight[k]; }
     return;
   }
@@ -1373,10 +1263,8 @@ async function loadPresenca(ctx, sessao) {
   $(tituloId).textContent = `${sessao.data.slice(0, 5)} · ${sessao.horario} · ${sessao.nome}`;
   show(boxId);
 
-  // Set in-flight early so concurrent calls are rejected even in the cached branch
   presencaInFlight[k] = true;
 
-  // Serve from cache immediately, then revalidate in background
   const cached = getCachedPresenca(sessao.data, sessao.horario);
   if (cached) {
     renderPresencaLista(ctx, cached, sessao);
@@ -1386,7 +1274,7 @@ async function loadPresenca(ctx, sessao) {
         setCachedPresenca(sessao.data, sessao.horario, r.data || []);
         renderPresencaLista(ctx, r.data || [], sessao);
       }
-    } catch (_) { /* keep stale */ }
+    } catch (_) {}
     finally { delete presencaInFlight[k]; }
     return;
   }
@@ -1477,7 +1365,6 @@ async function fazerCheckin() {
   if (!aSelSessao || !alunoData) return;
   $('btnSessaoCheckin').disabled = true;
 
-  // ✅ Atualiza DOM ANTES da chamada (igual ao aprovar)
   const lista = $('sessaoPresencaLista');
   const novoItem = document.createElement('div');
   novoItem.className = 'presenca-item';
@@ -1501,7 +1388,6 @@ async function fazerCheckin() {
     if (r.ok) {
       invalidatePresenca(aSelSessao.data, aSelSessao.horario);
     } else {
-      // ❌ Reverte se der erro
       if (lista && novoItem) novoItem.remove();
       show('btnSessaoCheckin');
       hide('btnSessaoDeletarCheckin');
@@ -1522,7 +1408,6 @@ async function deletarCheckin() {
   if (!confirm('Cancelar seu check-in neste treino?')) return;
   $('btnSessaoDeletarCheckin').disabled = true;
 
-  // Remove do DOM ANTES da chamada (otimista)
   const lista = $('sessaoPresencaLista');
   let itemRemovido = null;
   let proximoSibling = null;
@@ -1545,7 +1430,6 @@ async function deletarCheckin() {
     if (r.ok) {
       invalidatePresenca(aSelSessao.data, aSelSessao.horario);
     } else {
-      // Reverte se der erro
       if (lista && itemRemovido) lista.insertBefore(itemRemovido, proximoSibling);
       hide('btnSessaoCheckin');
       show('btnSessaoDeletarCheckin');
@@ -1575,9 +1459,7 @@ async function profAprovar(linha, sessao, btn) {
 
   try {
     const r = await fbAprovar(linha);
-    if (r.ok) {
-      // DOM already updated optimistically above
-    } else {
+    if (!r.ok) {
       if (statusEl) {
         statusEl.textContent = 'PENDENTE';
         statusEl.className   = 'presenca-status status-pend';
@@ -1608,9 +1490,7 @@ async function profReprovar(linha, sessao, btn) {
 
   try {
     const r = await fbReprovar(linha);
-    if (r.ok) {
-      // DOM already updated optimistically above
-    } else {
+    if (!r.ok) {
       if (statusEl) {
         statusEl.textContent = 'PENDENTE';
         statusEl.className   = 'presenca-status status-pend';
@@ -1628,72 +1508,8 @@ async function profReprovar(linha, sessao, btn) {
   }
 }
 
-/* ── Graduandos ───────────────────────────────────────────────── */
-async function carregarGraduandos(force = false) {
-  const lista = $('profGraduandosLista');
-
-  const cached = !force ? getCachedGraduandos() : null;
-  if (cached) {
-    renderGraduandos(cached);
-    return;
-  }
-
-  if (graduandosInFlight) return;
-  graduandosInFlight = true;
-
-  showGraduandosSkeleton();
-  try {
-    const r = await fbGraduandos();
-    if (!r || !r.ok) throw new Error((r && r.erro) ? r.erro : 'Falha ao carregar.');
-    graduandosCache = { ts: Date.now(), data: r.data || [] };
-    saveGraduandosCache(r.data || []);
-    renderGraduandos(graduandosCache.data);
-  } catch (e) {
-    lista.innerHTML = `<p class="msg err">Erro ao carregar graduandos. ${e.message || ''}</p>`;
-  } finally {
-    graduandosInFlight = false;
-  }
-}
-function renderGraduandos(graduandos) {
-  const el = $('profGraduandosLista');
-  if (!graduandos.length) {
-    el.innerHTML = '<p class="presenca-vazia">Nenhuma graduação pendente.</p>';
-    return;
-  }
-  el.innerHTML = graduandos.map(a => {
-    const dataRef = a.dataUltimoGrau
-      ? `<span class="grad-data-ref">📅 ${formatarDataBR(a.dataUltimoGrau)}</span>`
-      : '';
-    return `<div class="presenca-item" id="grad-item-${a.id}">
-      <div class="grad-info">
-        <span class="grad-nome" title="${a.nome}">${a.nome}</span>
-        <div class="grad-badges">
-          <span class="presenca-status status-ok">${a.faixa}</span>
-          <span class="presenca-status status-ok">Grau ${a.grau}</span>
-          ${dataRef}
-        </div>
-      </div>
-      <div class="prof-actions">
-        <button class="btn-ap confirmar" data-id="${a.id}">✓ Confirmar</button>
-      </div>
-    </div>`;
-  }).join('');
-
-  el.querySelectorAll('.btn-ap.confirmar').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const item = document.getElementById(`grad-item-${btn.dataset.id}`);
-      if (item) item.remove();
-      // Se a lista ficou vazia, mostrar mensagem
-      if (!el.querySelector('.presenca-item')) {
-        el.innerHTML = '<p class="presenca-vazia">Nenhuma graduação pendente.</p>';
-      }
-    });
-  });
-}
-
 /* ── Notifications ────────────────────────────────────────────── */
 function notifAprovTs(n) {
-  // n.dataAprovacao = "07/04/2026 • 14:37"
   try {
     const [datePart, timePart] = n.dataAprovacao.split(' • ');
     const [d, m, y] = datePart.split('/');
@@ -1738,7 +1554,6 @@ async function loadNotificacoes() {
   ['cardAluno', 'cardAgendar'].forEach(hide);
   show('cardNotificacoes');
 
-  // Marca como visto agora
   localStorage.setItem(LS_NOTIF_VISTO, String(Date.now()));
   hide('bellBadge');
 
@@ -1791,7 +1606,7 @@ function formatarDataBR(val) {
     const [y, m, d] = s.substring(0, 10).split('-');
     return `${d}/${m}/${y}`;
   }
-  return s; // já está em DD/MM/YYYY ou outro formato
+  return s;
 }
 
 /* ── Student card ─────────────────────────────────────────────── */
@@ -1803,7 +1618,6 @@ function preencherCard(d) {
   $('aGrau').textContent = (g === 0) ? 'Iniciante' : (g != null ? String(g) : '—');
   $('aData').textContent  = d.dataGrau ? formatarDataBR(d.dataGrau) : '—';
 
-  // Status badge: INATIVO aparece em vermelho, ATIVO mostra statusExame
   const statusEl = $('aStatus');
   statusEl.className = 'status';
   if (d.status === 'INATIVO') {
@@ -1816,7 +1630,6 @@ function preencherCard(d) {
     statusEl.style.color = '';
   }
 
-  // Stats cards
   if (d.aulasNoGrau != null) {
     $('statAulasNum').textContent = d.aulasNoGrau;
     const restantes = (d.aulasRestantes != null)
@@ -1875,11 +1688,9 @@ function logout() {
   sessionStorage.removeItem(SS_PAGE);
   sessionStorage.removeItem(SS_SESSAO);
   localStorage.removeItem('rv_foto_url');
-  // Keep rv_credentialId and rv_biometria_ativada so next login skips re-registration
   $('email').value = '';
   hide('mainNav');
   showTab('Home');
-  
 }
 
 /* ── Professor logout ─────────────────────────────────────────── */
@@ -1893,13 +1704,12 @@ function profLogout() {
   localStorage.removeItem(LS_BIO_TS);
   sessionStorage.removeItem(SS_PAGE);
   sessionStorage.removeItem(SS_SESSAO);
-  // Keep rv_credentialId and rv_biometria_ativada so next login skips re-registration
   hide('cardProf');
   showTab('Home');
 }
+
 /* ── init ─────────────────────────────────────────── */
 function init() {
-  // 1) WebAuthn support check (mandatory)
   if (!webAuthnAvailable()) {
     ['cardLogin', 'cardAluno', 'cardAgendar', 'cardProf'].forEach(hide);
     hide('mainNav');
@@ -1907,10 +1717,8 @@ function init() {
     return;
   }
 
-  // 2) Wire up biometric buttons
   $('btnBioAction').addEventListener('click', onBioAction);
 
-  // 3) Wire up student buttons
   $('btnLogin').addEventListener('click', loginGeneric);
   $('email').addEventListener('keydown', e => { if (e.key === 'Enter') loginGeneric(); });
   $('btnSair').addEventListener('click', logout);
@@ -1925,18 +1733,16 @@ function init() {
   $('btnBell').addEventListener('click', loadNotificacoes);
   $('btnNotifBack').addEventListener('click', () => showTab('Home'));
 
-  // 4) Wire up professor buttons
   $('btnProfSair').addEventListener('click', profLogout);
   $('btnProfSessaoBack').addEventListener('click', () => {
     hide('cardProfSessao');
     show('cardProf');
   });
-  // 5) Bottom nav
+
   $('navHome').addEventListener('click',    () => showTab('Home'));
   $('navAgendar').addEventListener('click', () => showTab('Agendar'));
 
-  // 6) Sobre
-   $('navSobre').addEventListener('click', () => {
+  $('navSobre').addEventListener('click', () => {
     sessionStorage.removeItem(SS_PAGE);
     ['cardAluno','cardAgendar','cardNotificacoes','cardSessao','cardSobre'].forEach(hide);
     ['navHome','navAgendar','navSobre'].forEach(id => $(id).classList.remove('on'));
@@ -1951,7 +1757,6 @@ function init() {
     showTab('Home');
   });
 
-  // 7) Listener foto de perfil
   const fotoInput = document.getElementById('fotoInput');
   if (fotoInput) {
     fotoInput.addEventListener('change', async function () {
@@ -1976,11 +1781,9 @@ function init() {
     });
   }
 
-  // 8) Enable mouse drag-to-scroll
   enableDragScroll($('diasRow'));
   enableDragScroll($('profDiasRow'));
 
-  // 9) Contrato — registrar AQUI para funcionar em qualquer fluxo
   document.getElementById('chkContratoLeitura').addEventListener('change', verificarBotaoContrato);
   const contratoInput    = document.getElementById('contratoInputAssinatura');
   const contratoTextoAss = document.getElementById('contratoTextoAssinatura');
@@ -2027,7 +1830,6 @@ function init() {
     }
   });
 
-  // 9) Check for existing session and decide initial screen
   const email  = localStorage.getItem(LS_EMAIL);
   const nome   = localStorage.getItem(LS_NOME);
   const pEmail = localStorage.getItem(LS_PROF_EMAIL);
