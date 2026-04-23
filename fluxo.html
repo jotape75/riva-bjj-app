@@ -24,20 +24,17 @@
     }
     @media (max-width: 768px) { .admin-hdr-inner { justify-content: center; } }
 
-    /* ── HEADER DA PÁGINA ── */
     .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
     .page-header-left { display: flex; flex-direction: column; }
     .page-eyebrow { font-size: 11px; font-weight: 600; color: #c0392b; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
     .page-title-txt { font-size: 22px; font-weight: 900; color: #fff; }
 
-    /* ── MES SELECTOR ── */
     .mes-selector { display: flex; align-items: center; gap: 8px; }
     .select-input { background: #1a1a1a; border: 1px solid #333; border-radius: 10px; padding: 9px 12px; font-size: 14px; color: #fff; font-family: inherit; outline: none; appearance: none; }
     .select-input:focus { border-color: var(--red); }
     .btn-carregar { background: var(--red); border: none; color: #fff; border-radius: 10px; padding: 9px 16px; font-size: 14px; font-weight: 800; cursor: pointer; font-family: inherit; white-space: nowrap; }
     .btn-carregar:active { opacity: .8; }
 
-    /* ── CARDS RESUMO ── */
     .resumo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
     .resumo-card { background: #111; border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; padding: 18px 16px; position: relative; overflow: hidden; }
     .resumo-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; border-radius:14px 14px 0 0; }
@@ -52,7 +49,6 @@
     .resumo-sub { font-size: 11px; color: #555; margin-top: 6px; }
     @media (max-width: 480px) { .resumo-grid { grid-template-columns: 1fr; } }
 
-    /* ── GRÁFICO ── */
     .grafico-card { background: #111; border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
     .grafico-titulo { font-size: 12px; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
     .grafico-sub { font-size: 11px; color: #555; margin-bottom: 20px; }
@@ -70,7 +66,6 @@
     .barra:hover    { opacity: 1; }
     .grafico-label { font-size: 10px; color: #555; text-align: center; white-space: nowrap; }
 
-    /* ── FILTROS ── */
     .filtros-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; justify-content: space-between; }
     .filtros-esquerda { display: flex; gap: 6px; flex-wrap: wrap; }
     .btn-filtro { background: #1a1a1a; border: 1px solid #333; color: #888; border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; transition: all 0.15s; }
@@ -79,7 +74,6 @@
     .btn-nova-despesa { background: #e74c3c; border: none; color: #fff; border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
     .btn-nova-despesa:active { opacity: .8; }
 
-    /* ── LISTA MOVIMENTAÇÕES ── */
     .mov-card { background: #111; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
     .mov-tipo-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     .mov-tipo-dot.entrada  { background: #2ecc71; }
@@ -94,7 +88,6 @@
     .mov-delete:hover { color: #e74c3c; }
     .lista-vazia { text-align: center; padding: 32px 0; color: #444; font-size: 14px; }
 
-    /* ── MODAL DESPESA ── */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 50; align-items: flex-end; justify-content: center; }
     .modal-overlay.open { display: flex; }
     .modal-box { background: #141414; border: 1px solid rgba(255,255,255,0.08); border-radius: 20px 20px 0 0; padding: 24px 20px calc(24px + env(safe-area-inset-bottom,0px)); width: 100%; max-width: 480px; }
@@ -109,7 +102,6 @@
     .form-select { width: 100%; background: #1a1a1a; border: 1px solid #333; border-radius: 10px; padding: 11px 12px; font-size: 14px; color: #fff; font-family: inherit; outline: none; appearance: none; margin-bottom: 12px; }
     .form-select:focus { border-color: var(--red); }
 
-    /* ── CATEGORIA CHIPS ── */
     .cat-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
     .cat-chip { padding: 5px 12px; border-radius: 20px; border: 1px solid #333; background: transparent; color: #888; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.15s; }
     .cat-chip.selected { background: #e74c3c; border-color: #e74c3c; color: #fff; }
@@ -119,7 +111,6 @@
     .msg.info { color: #aaa; }
     .msg.ok   { color: #2ecc71; }
 
-    /* ── LOADING ── */
     .skel { background: #1a1a1a; border-radius: 6px; animation: shimmer 1.2s infinite; }
     @keyframes shimmer { 0%,100%{opacity:.3} 50%{opacity:.7} }
   </style>
@@ -144,7 +135,6 @@
   <main class="page admin-page">
     <section id="sectionFluxo" class="hidden">
 
-      <!-- HEADER -->
       <div class="page-header">
         <div class="page-header-left">
           <div class="page-eyebrow">Riva BJJ · Financeiro</div>
@@ -164,7 +154,6 @@
         </div>
       </div>
 
-      <!-- CARDS RESUMO -->
       <div class="resumo-grid">
         <div class="resumo-card verde">
           <div class="resumo-label">Entradas</div>
@@ -183,7 +172,6 @@
         </div>
       </div>
 
-      <!-- GRÁFICO -->
       <div class="grafico-card">
         <div class="grafico-titulo">Últimos 6 meses</div>
         <div class="grafico-sub">Entradas vs Saídas</div>
@@ -196,7 +184,6 @@
         </div>
       </div>
 
-      <!-- LISTA -->
       <div class="filtros-row">
         <div class="filtros-esquerda">
           <button class="btn-filtro ativo" data-filtro="tudo">Tudo</button>
@@ -290,7 +277,6 @@
       }
       selAno.value = anoSel;
 
-      // Data padrão para nova despesa = hoje
       const hoje = new Date();
       document.getElementById('despesaData').value =
         hoje.getFullYear() + '-' +
@@ -310,18 +296,18 @@
       try {
         const [mensalidades, avista, vendas, despesas] = await Promise.all([
           buscarMensalidades(),
-          buscarAVista(),        // ← adicionar
+          buscarAVista(),
           buscarVendas(),
           buscarDespesas(),
         ]);
-    
+
         todasMovs = [
           ...mensalidades.map(m => ({ ...m, tipo: 'entrada', origem: 'mensalidade' })),
-          ...avista.map(v      => ({ ...v, tipo: 'entrada', origem: 'mensalidade' })), // ← agrupa com mensalidades
+          ...avista.map(v      => ({ ...v, tipo: 'entrada', origem: 'mensalidade' })),
           ...vendas.map(v      => ({ ...v, tipo: 'entrada', origem: 'loja' })),
           ...despesas.map(d    => ({ ...d, tipo: 'saida',   origem: 'despesa' })),
         ].sort((a,b) => (b.dataTs||0) - (a.dataTs||0));
-    
+
         atualizarCards();
         renderGrafico();
         renderLista();
@@ -332,7 +318,6 @@
 
     /* ── Buscar mensalidades do mês (apenas alunos ativos) ── */
     async function buscarMensalidades() {
-      // Buscar IDs dos alunos ativos
       const alunosSnap = await getDocs(query(
         collection(db, 'alunos'),
         where('status', '==', 'ATIVO')
@@ -359,6 +344,7 @@
           };
         });
     }
+
     /* ── Buscar pagamentos À Vista do mês ── */
     async function buscarAVista() {
       const snap = await getDocs(query(
@@ -372,7 +358,6 @@
         const pagoAte = a.pago_ate; // "YYYY-MM"
         if (!pagoAte) return;
         const [anoFim, mesFim] = pagoAte.split('-').map(Number);
-        // Inclui se o mês selecionado está dentro do período pago
         const coberto = (anoSel < anoFim) ||
                         (anoSel === anoFim && mesSel <= mesFim);
         if (!coberto) return;
@@ -380,7 +365,7 @@
           id:        d.id,
           descricao: a.nome_aluno || 'Aluno',
           valor:     parseFloat(a.avista_valor || 0),
-          data:      pagoAte.split('-').reverse().join('/'), // MM/YYYY aprox
+          data:      pagoAte.split('-').reverse().join('/'),
           dataTs:    new Date(anoFim, mesFim - 1, 1).getTime(),
           categoria: 'À Vista',
           forma:     a.avista_forma_pag || '',
@@ -388,7 +373,6 @@
       });
       return resultado;
     }
-        
 
     /* ── Buscar vendas da lojinha do mês ── */
     async function buscarVendas() {
@@ -460,7 +444,6 @@
       container.innerHTML = '<div class="skel" style="width:100%;height:100%;border-radius:6px;"></div>';
 
       try {
-        // Montar últimos 6 meses
         const meses = [];
         for (let i = 5; i >= 0; i--) {
           const d = new Date(anoSel, mesSel - 1 - i, 1);
@@ -471,11 +454,11 @@
           });
         }
 
-        // Buscar IDs dos alunos ativos (uma vez só)
+        // Buscar alunos ativos e à vista uma vez só
         const alunosSnap = await getDocs(query(collection(db,'alunos'), where('status','==','ATIVO')));
         const idsAtivos  = new Set(alunosSnap.docs.map(d => d.id));
+        const avistaSnap = await getDocs(query(collection(db,'alunos'), where('status','==','ATIVO'), where('plano','==','Avista')));
 
-        // Buscar dados de cada mês
         const dadosMeses = await Promise.all(meses.map(async m => {
           const [pagSnap, despSnap, vendasSnap] = await Promise.all([
             getDocs(query(collection(db,'pagamentos'), where('mes','==',m.mes), where('ano','==',m.ano))),
@@ -489,8 +472,16 @@
             .map(d => d.data())
             .filter(v => { const dt = parseDateBR(v.data); return dt && dt.getMonth()+1 === m.mes && dt.getFullYear() === m.ano; })
             .reduce((s,v) => s + parseFloat(v.total||0), 0);
+          // À vista: inclui se pago_ate cobre este mês
+          const entAvista = avistaSnap.docs.reduce((s,d) => {
+            const a = d.data();
+            if (!a.pago_ate) return s;
+            const [anoFim, mesFim] = a.pago_ate.split('-').map(Number);
+            const coberto = (m.ano < anoFim) || (m.ano === anoFim && m.mes <= mesFim);
+            return coberto ? s + parseFloat(a.avista_valor||0) : s;
+          }, 0);
           const saidas = despSnap.docs.reduce((s,d) => s + parseFloat(d.data().valor||0), 0);
-          return { ...m, entradas: entMens + entLoja, saidas };
+          return { ...m, entradas: entMens + entLoja + entAvista, saidas };
         }));
 
         const maxVal = Math.max(...dadosMeses.flatMap(m => [m.entradas, m.saidas]), 1);
@@ -526,7 +517,7 @@
         return;
       }
 
-      const catLabel = { mensalidade:'💳 Mensalidade', loja:'🏪 Lojinha', despesa:'💸 Despesa' };
+      const catLabel   = { mensalidade:'💳 Mensalidade', loja:'🏪 Lojinha', despesa:'💸 Despesa' };
       const formaLabel = { dinheiro:'💵', pix:'📲', debito:'💳', credito:'💳', maquina:'💳', cartao:'💳' };
 
       container.innerHTML = lista.map(m => `
@@ -576,7 +567,6 @@
       if (e.target === this) this.classList.remove('open');
     });
 
-    // Categoria chips
     document.querySelectorAll('.cat-chip').forEach(chip => {
       chip.addEventListener('click', () => {
         document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('selected'));
@@ -599,7 +589,6 @@
       btn.disabled = true;
 
       try {
-        // Formatar data para BR
         let dataBR = '';
         if (dataInput) {
           const [y, m, d] = dataInput.split('-');
