@@ -308,18 +308,20 @@
     async function carregarTudo() {
       document.getElementById('listaMov').innerHTML = '<div class="lista-vazia">Carregando…</div>';
       try {
-        const [mensalidades, vendas, despesas] = await Promise.all([
+        const [mensalidades, avista, vendas, despesas] = await Promise.all([
           buscarMensalidades(),
+          buscarAVista(),        // ← adicionar
           buscarVendas(),
           buscarDespesas(),
         ]);
-
+    
         todasMovs = [
           ...mensalidades.map(m => ({ ...m, tipo: 'entrada', origem: 'mensalidade' })),
+          ...avista.map(v      => ({ ...v, tipo: 'entrada', origem: 'mensalidade' })), // ← agrupa com mensalidades
           ...vendas.map(v      => ({ ...v, tipo: 'entrada', origem: 'loja' })),
           ...despesas.map(d    => ({ ...d, tipo: 'saida',   origem: 'despesa' })),
         ].sort((a,b) => (b.dataTs||0) - (a.dataTs||0));
-
+    
         atualizarCards();
         renderGrafico();
         renderLista();
@@ -357,6 +359,36 @@
           };
         });
     }
+    /* ── Buscar pagamentos À Vista do mês ── */
+    async function buscarAVista() {
+      const snap = await getDocs(query(
+        collection(db, 'alunos'),
+        where('status', '==', 'ATIVO'),
+        where('plano', '==', 'Avista')
+      ));
+      const resultado = [];
+      snap.forEach(d => {
+        const a = d.data();
+        const pagoAte = a.pago_ate; // "YYYY-MM"
+        if (!pagoAte) return;
+        const [anoFim, mesFim] = pagoAte.split('-').map(Number);
+        // Inclui se o mês selecionado está dentro do período pago
+        const coberto = (anoSel < anoFim) ||
+                        (anoSel === anoFim && mesSel <= mesFim);
+        if (!coberto) return;
+        resultado.push({
+          id:        d.id,
+          descricao: a.nome_aluno || 'Aluno',
+          valor:     parseFloat(a.avista_valor || 0),
+          data:      pagoAte.split('-').reverse().join('/'), // MM/YYYY aprox
+          dataTs:    new Date(anoFim, mesFim - 1, 1).getTime(),
+          categoria: 'À Vista',
+          forma:     a.avista_forma_pag || '',
+        });
+      });
+      return resultado;
+    }
+        
 
     /* ── Buscar vendas da lojinha do mês ── */
     async function buscarVendas() {
