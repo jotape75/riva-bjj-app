@@ -80,12 +80,20 @@
     .produto-lista-btn:active { opacity: .8; }
 
     /* ── LISTA DE VENDAS ── */
-    .venda-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+    .venda-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; }
+    .venda-card-top { display: flex; align-items: center; gap: 12px; }
     .venda-info { flex: 1; min-width: 0; }
     .venda-nome { font-size: 14px; font-weight: 700; color: #fff; }
     .venda-meta { font-size: 12px; color: #aaa; margin-top: 2px; }
     .venda-valor { font-size: 16px; font-weight: 900; color: #2ecc71; white-space: nowrap; }
     .lista-vazia { text-align: center; padding: 32px 0; color: #555; font-size: 14px; }
+
+    /* ── AÇÕES VENDA ── */
+    .venda-acoes { display: flex; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #222; }
+    .btn-venda-acao { background: transparent; border: 1px solid #333; color: #888; border-radius: 7px; padding: 5px 12px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+    .btn-venda-acao.editar:hover  { border-color: #3498db; color: #3498db; background: rgba(52,152,219,0.08); }
+    .btn-venda-acao.deletar:hover { border-color: #e74c3c; color: #e74c3c; background: rgba(231,76,60,0.08); }
+    .btn-venda-acao:active { opacity: .7; }
 
     /* ── FORMULÁRIOS ── */
     .form-section { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px 16px; margin-bottom: 16px; }
@@ -100,7 +108,7 @@
     .form-select { width: 100%; background: #1a1a1a; border: 1px solid #333; border-radius: 10px; padding: 11px 12px; font-size: 14px; color: #fff; font-family: inherit; outline: none; appearance: none; }
     .form-select:focus { border-color: var(--red); }
 
-    /* ── MODAL VENDA ── */
+    /* ── MODAL VENDA (nova) ── */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.8); z-index: 50; align-items: flex-end; justify-content: center; }
     .modal-overlay.open { display: flex; }
     .modal-box { background: var(--card); border: 1px solid var(--border); border-radius: 20px 20px 0 0; padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px)); width: 100%; max-width: 480px; }
@@ -109,6 +117,18 @@
     .modal-subtitle { font-size: 13px; color: #aaa; margin-bottom: 18px; }
     .modal-btns { display: flex; gap: 10px; margin-top: 16px; }
     .modal-btns .btn { margin-top: 0; flex: 1; }
+
+    /* ── MODAL EDITAR VENDA ── */
+    .modal-edit-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 60; align-items: flex-end; justify-content: center; }
+    .modal-edit-overlay.open { display: flex; }
+    .modal-edit-box { background: var(--card); border: 1px solid var(--border); border-radius: 20px 20px 0 0; padding: 24px 16px calc(20px + env(safe-area-inset-bottom, 0px)); width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
+    @media (min-width: 769px) { .modal-edit-overlay { align-items: center; } .modal-edit-box { border-radius: 20px; max-width: 440px; } }
+    .modal-edit-title { font-size: 17px; font-weight: 900; color: #fff; margin-bottom: 4px; }
+    .modal-edit-subtitle { font-size: 12px; color: #666; margin-bottom: 20px; }
+    .edit-field-label { font-size: 11px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; display: block; }
+    .edit-resumo { background: #141414; border: 1px solid #2a2a2a; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; }
+    .edit-resumo-nome { font-size: 14px; font-weight: 700; color: #fff; }
+    .edit-resumo-detalhe { font-size: 12px; color: #666; margin-top: 3px; }
 
     /* ── FORMA PAGAMENTO ── */
     .forma-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 4px; }
@@ -231,7 +251,7 @@
     </section>
   </main>
 
-  <!-- MODAL CONFIRMAR VENDA -->
+  <!-- MODAL CONFIRMAR VENDA (nova) -->
   <div class="modal-overlay" id="modalVenda">
     <div class="modal-box">
       <div class="modal-title" id="modalVendaNome">Produto</div>
@@ -260,6 +280,48 @@
       <div class="modal-btns">
         <button class="btn secondary" id="btnCancelarVenda">Cancelar</button>
         <button class="btn primary"   id="btnConfirmarVenda">✅ Confirmar Venda</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EDITAR VENDA -->
+  <div class="modal-edit-overlay" id="modalEditVenda">
+    <div class="modal-edit-box">
+      <div class="modal-edit-title">✏️ Editar Venda</div>
+      <div class="modal-edit-subtitle" id="editVendaSubtitle">Corrija os dados da venda</div>
+
+      <div class="edit-resumo">
+        <div class="edit-resumo-nome" id="editVendaNome">—</div>
+        <div class="edit-resumo-detalhe" id="editVendaDetalhe">—</div>
+      </div>
+
+      <!-- Quantidade -->
+      <label class="edit-field-label">Quantidade</label>
+      <div class="qty-control" style="margin:0 0 16px;">
+        <button class="qty-btn" id="btnEditQtyMenos">−</button>
+        <div class="qty-value" id="editQtyValue">1</div>
+        <button class="qty-btn" id="btnEditQtyMais">+</button>
+      </div>
+
+      <!-- Forma de pagamento -->
+      <label class="edit-field-label" style="margin-bottom:8px;">Forma de Pagamento</label>
+      <div class="forma-grid" id="editFormaGrid">
+        <div class="forma-pill" data-forma="dinheiro"><span class="forma-pill-icon">💵</span><span class="forma-pill-label">Dinheiro</span></div>
+        <div class="forma-pill" data-forma="pix"><span class="forma-pill-icon">📲</span><span class="forma-pill-label">Pix</span></div>
+        <div class="forma-pill" data-forma="debito"><span class="forma-pill-icon">💳</span><span class="forma-pill-label">Débito</span></div>
+        <div class="forma-pill" data-forma="credito"><span class="forma-pill-icon">💳</span><span class="forma-pill-label">Crédito</span></div>
+      </div>
+
+      <!-- Total atualizado -->
+      <div style="margin-top:14px;background:#1a1a1a;border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;color:#aaa;text-transform:uppercase;letter-spacing:0.5px;">Total</span>
+        <span style="font-size:20px;font-weight:900;color:#2ecc71;" id="editVendaTotal">R$ 0,00</span>
+      </div>
+
+      <p class="msg" id="editVendaMsg"></p>
+      <div class="modal-btns">
+        <button class="btn secondary" id="btnCancelarEditVenda">Cancelar</button>
+        <button class="btn primary"   id="btnSalvarEditVenda">💾 Salvar Alterações</button>
       </div>
     </div>
   </div>
@@ -308,6 +370,11 @@
     let filtroAtual = 'hoje';
     let todasVendas = [];
     let termoBusca = '';
+
+    // Estado edição de venda
+    let vendaEditando = null;
+    let editQtyAtual = 1;
+    let editFormaAtual = 'dinheiro';
 
     /* ── Init ── */
     async function init() {
@@ -377,10 +444,9 @@
           </div>`;
       }).join('');
 
-      // Clique no item inteiro OU no botão
       container.querySelectorAll('.produto-lista-item:not(.sem-estoque)').forEach(item => {
         item.addEventListener('click', (e) => {
-          if (e.target.classList.contains('produto-lista-btn')) return; // deixa o botão tratar
+          if (e.target.classList.contains('produto-lista-btn')) return;
           const prod = produtos.find(p => p.id === item.dataset.id);
           if (prod) abrirModalVenda(prod);
         });
@@ -394,7 +460,7 @@
       });
     }
 
-    /* ── Modal Venda ── */
+    /* ── Modal Venda (nova) ── */
     function abrirModalVenda(prod) {
       vendaSelecionada = prod;
       qtyAtual = 1;
@@ -552,13 +618,30 @@
       const formaPag = { dinheiro: '💵 Dinheiro', pix: '📲 Pix', debito: '💳 Débito', credito: '💳 Crédito' };
       container.innerHTML = lista.map(v => `
         <div class="venda-card">
-          <div class="venda-info">
-            <div class="venda-nome">${esc(v.produtoNome || '—')}${v.quantidade > 1 ? ` <span style="color:#aaa;font-weight:400;">x${v.quantidade}</span>` : ''}</div>
-            <div class="venda-meta">${formaPag[v.formaPagamento] || v.formaPagamento || '—'} · ${v.data || ''} ${v.hora || ''}</div>
+          <div class="venda-card-top">
+            <div class="venda-info">
+              <div class="venda-nome">${esc(v.produtoNome || '—')}${v.quantidade > 1 ? ` <span style="color:#aaa;font-weight:400;">x${v.quantidade}</span>` : ''}</div>
+              <div class="venda-meta">${formaPag[v.formaPagamento] || v.formaPagamento || '—'} · ${v.data || ''} ${v.hora || ''}</div>
+            </div>
+            <div class="venda-valor">R$ ${parseFloat(v.total || 0).toFixed(2).replace('.', ',')}</div>
           </div>
-          <div class="venda-valor">R$ ${parseFloat(v.total || 0).toFixed(2).replace('.', ',')}</div>
+          <div class="venda-acoes">
+            <button class="btn-venda-acao editar" data-id="${esc(v.id)}">✏️ Editar</button>
+            <button class="btn-venda-acao deletar" data-id="${esc(v.id)}">🗑️ Excluir</button>
+          </div>
         </div>`
       ).join('');
+
+      // Bind ações
+      container.querySelectorAll('.btn-venda-acao.editar').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const venda = todasVendas.find(v => v.id === btn.dataset.id);
+          if (venda) abrirModalEditarVenda(venda);
+        });
+      });
+      container.querySelectorAll('.btn-venda-acao.deletar').forEach(btn => {
+        btn.addEventListener('click', () => deletarVenda(btn.dataset.id));
+      });
     }
 
     document.querySelectorAll('.btn-periodo').forEach(btn => {
@@ -570,6 +653,140 @@
       });
     });
 
+    /* ── Modal Editar Venda ── */
+    function abrirModalEditarVenda(venda) {
+      vendaEditando = venda;
+      editQtyAtual  = venda.quantidade || 1;
+      editFormaAtual = venda.formaPagamento || 'dinheiro';
+
+      document.getElementById('editVendaNome').textContent    = esc(venda.produtoNome || '—');
+      document.getElementById('editVendaDetalhe').textContent = `${venda.data || ''} ${venda.hora || ''} · preço unit. R$ ${parseFloat(venda.precoUnit || 0).toFixed(2).replace('.', ',')}`;
+      document.getElementById('editVendaSubtitle').textContent = `ID: ${venda.id.slice(0, 8)}…`;
+      document.getElementById('editQtyValue').textContent     = editQtyAtual;
+      document.getElementById('editVendaMsg').textContent     = '';
+      document.getElementById('btnSalvarEditVenda').disabled  = false;
+
+      // Seleciona forma de pagamento
+      document.querySelectorAll('#editFormaGrid .forma-pill').forEach(p => {
+        p.classList.toggle('selected', p.dataset.forma === editFormaAtual);
+      });
+
+      atualizarTotalEdit();
+      document.getElementById('modalEditVenda').classList.add('open');
+    }
+
+    function atualizarTotalEdit() {
+      if (!vendaEditando) return;
+      const total = parseFloat(vendaEditando.precoUnit || 0) * editQtyAtual;
+      document.getElementById('editVendaTotal').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+    }
+
+    document.getElementById('btnEditQtyMenos').addEventListener('click', () => {
+      if (editQtyAtual > 1) { editQtyAtual--; document.getElementById('editQtyValue').textContent = editQtyAtual; atualizarTotalEdit(); }
+    });
+    document.getElementById('btnEditQtyMais').addEventListener('click', () => {
+      editQtyAtual++; document.getElementById('editQtyValue').textContent = editQtyAtual; atualizarTotalEdit();
+    });
+
+    document.querySelectorAll('#editFormaGrid .forma-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        document.querySelectorAll('#editFormaGrid .forma-pill').forEach(p => p.classList.remove('selected'));
+        pill.classList.add('selected');
+        editFormaAtual = pill.dataset.forma;
+      });
+    });
+
+    document.getElementById('btnCancelarEditVenda').addEventListener('click', () => {
+      document.getElementById('modalEditVenda').classList.remove('open');
+    });
+    document.getElementById('modalEditVenda').addEventListener('click', function (e) {
+      if (e.target === this) this.classList.remove('open');
+    });
+
+    document.getElementById('btnSalvarEditVenda').addEventListener('click', async () => {
+      if (!vendaEditando) return;
+      const btn = document.getElementById('btnSalvarEditVenda');
+      const msg = document.getElementById('editVendaMsg');
+      btn.disabled = true;
+      msg.textContent = 'Salvando…';
+      msg.className = 'msg info';
+
+      try {
+        const novoTotal = parseFloat(vendaEditando.precoUnit || 0) * editQtyAtual;
+        const diffQty   = editQtyAtual - (vendaEditando.quantidade || 1);
+
+        // Atualiza a venda no Firestore
+        await updateDoc(doc(db, 'loja_vendas', vendaEditando.id), {
+          quantidade:     editQtyAtual,
+          total:          novoTotal,
+          formaPagamento: editFormaAtual,
+        });
+
+        // Ajusta estoque do produto se a quantidade mudou
+        if (diffQty !== 0 && vendaEditando.produtoId) {
+          const prod = produtos.find(p => p.id === vendaEditando.produtoId);
+          if (prod) {
+            const estoqueAtual = prod.estoque ?? 0;
+            const novoEstoque  = Math.max(0, estoqueAtual - diffQty);
+            await updateDoc(doc(db, 'loja_produtos', vendaEditando.produtoId), { estoque: novoEstoque });
+            const idx = produtos.findIndex(p => p.id === vendaEditando.produtoId);
+            if (idx >= 0) produtos[idx].estoque = novoEstoque;
+          }
+        }
+
+        // Atualiza estado local
+        const idx = todasVendas.findIndex(v => v.id === vendaEditando.id);
+        if (idx >= 0) {
+          todasVendas[idx].quantidade     = editQtyAtual;
+          todasVendas[idx].total          = novoTotal;
+          todasVendas[idx].formaPagamento = editFormaAtual;
+        }
+
+        msg.textContent = '✅ Venda atualizada!';
+        msg.className   = 'msg ok';
+        atualizarResumo();
+
+        setTimeout(() => {
+          document.getElementById('modalEditVenda').classList.remove('open');
+          renderVendas();
+        }, 700);
+
+      } catch (e) {
+        msg.textContent = 'Erro: ' + e.message;
+        msg.className   = 'msg err';
+        btn.disabled    = false;
+      }
+    });
+
+    /* ── Deletar Venda ── */
+    async function deletarVenda(id) {
+      const venda = todasVendas.find(v => v.id === id);
+      if (!venda) return;
+      const confirmMsg = `Excluir venda de "${venda.produtoNome}" (R$ ${parseFloat(venda.total || 0).toFixed(2).replace('.', ',')})?`;
+      if (!confirm(confirmMsg)) return;
+
+      try {
+        await deleteDoc(doc(db, 'loja_vendas', id));
+
+        // Devolve estoque ao produto
+        if (venda.produtoId && venda.quantidade) {
+          const prod = produtos.find(p => p.id === venda.produtoId);
+          if (prod) {
+            const novoEstoque = (prod.estoque ?? 0) + venda.quantidade;
+            await updateDoc(doc(db, 'loja_produtos', venda.produtoId), { estoque: novoEstoque });
+            const idx = produtos.findIndex(p => p.id === venda.produtoId);
+            if (idx >= 0) produtos[idx].estoque = novoEstoque;
+          }
+        }
+
+        todasVendas = todasVendas.filter(v => v.id !== id);
+        atualizarResumo();
+        renderVendas();
+      } catch (e) {
+        alert('Erro ao excluir: ' + e.message);
+      }
+    }
+
     /* ── Cadastro de produtos ── */
     async function carregarListaProdutos() {
       await carregarProdutos();
@@ -580,15 +797,17 @@
       }
       container.innerHTML = produtos.map(p => `
         <div class="venda-card" style="margin-bottom:8px;">
-          <div class="venda-info">
-            <div class="venda-nome">${esc(p.nome)}</div>
-            <div class="venda-meta">${esc(p.categoria || '—')} · Estoque: ${p.estoque ?? 0}</div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
-            <div class="venda-valor">R$ ${parseFloat(p.preco || 0).toFixed(2).replace('.', ',')}</div>
-            <div style="display:flex;gap:6px;">
-              <button class="btn-acao-loja editar" data-id="${p.id}" style="background:#2c3e50;border:none;color:#fff;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">✏️ Editar</button>
-              <button class="btn-acao-loja deletar" data-id="${p.id}" style="background:#c0392b;border:none;color:#fff;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">🗑️</button>
+          <div class="venda-card-top">
+            <div class="venda-info">
+              <div class="venda-nome">${esc(p.nome)}</div>
+              <div class="venda-meta">${esc(p.categoria || '—')} · Estoque: ${p.estoque ?? 0}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+              <div class="venda-valor">R$ ${parseFloat(p.preco || 0).toFixed(2).replace('.', ',')}</div>
+              <div style="display:flex;gap:6px;">
+                <button class="btn-acao-loja editar" data-id="${p.id}" style="background:#2c3e50;border:none;color:#fff;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">✏️ Editar</button>
+                <button class="btn-acao-loja deletar" data-id="${p.id}" style="background:#c0392b;border:none;color:#fff;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">🗑️</button>
+              </div>
             </div>
           </div>
         </div>`
