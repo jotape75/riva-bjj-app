@@ -472,17 +472,22 @@
             .map(d => d.data())
             .filter(v => { const dt = parseDateBR(v.data); return dt && dt.getMonth()+1 === m.mes && dt.getFullYear() === m.ano; })
             .reduce((s,v) => s + parseFloat(v.total||0), 0);
-          // À vista: inclui se pago_ate cobre este mês
+          // À vista: conta apenas no mês em que o pagamento começou (início do período)
+          // Inferimos o mês de início como: pago_ate menos a duração estimada, ou simplesmente
+          // mostramos apenas se este é o mês atual selecionado onde o pagamento foi registrado.
+          // Estratégia: buscar o campo data_contrato do aluno e verificar se bate com m.mes/m.ano
           const entAvista = avistaSnap.docs.reduce((s,d) => {
             const a = d.data();
             if (!a.pago_ate) return s;
-            const [anoFim, mesFim] = a.pago_ate.split('-').map(Number);
-            const coberto = (m.ano < anoFim) || (m.ano === anoFim && m.mes <= mesFim);
-            return coberto ? s + parseFloat(a.avista_valor||0) : s;
+            // Usa data_contrato como mês de referência do pagamento
+            const dataRef = a.data_contrato || ''; // "YYYY-MM-DD"
+            if (!dataRef) return s;
+            const anoRef = parseInt(dataRef.slice(0,4));
+            const mesRef = parseInt(dataRef.slice(5,7));
+            return (m.ano === anoRef && m.mes === mesRef)
+              ? s + parseFloat(a.avista_valor||0)
+              : s;
           }, 0);
-          const saidas = despSnap.docs.reduce((s,d) => s + parseFloat(d.data().valor||0), 0);
-          return { ...m, entradas: entMens + entLoja + entAvista, saidas };
-        }));
 
         const maxVal = Math.max(...dadosMeses.flatMap(m => [m.entradas, m.saidas]), 1);
         const trackH = 130;
