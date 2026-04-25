@@ -9,7 +9,6 @@
   <style>
     html.embed-mode header, html.embed-mode .hdr { display: none !important; }
     html.embed-mode .admin-page { padding-top: 8px !important; }
-
     .admin-hdr-left { display: flex; align-items: center; gap: 14px; }
     .admin-hdr-titulo { display: none; }
     .admin-hdr-sair { display: none; }
@@ -23,18 +22,15 @@
       .admin-page { max-width: 1100px; padding: 32px 32px 64px; }
     }
     @media (max-width: 768px) { .admin-hdr-inner { justify-content: center; } }
-
     .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
     .page-header-left { display: flex; flex-direction: column; }
     .page-eyebrow { font-size: 11px; font-weight: 600; color: #c0392b; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
     .page-title-txt { font-size: 22px; font-weight: 900; color: #fff; }
-
     .mes-selector { display: flex; align-items: center; gap: 8px; }
     .select-input { background: #1a1a1a; border: 1px solid #333; border-radius: 10px; padding: 9px 12px; font-size: 14px; color: #fff; font-family: inherit; outline: none; appearance: none; }
     .select-input:focus { border-color: var(--red); }
     .btn-carregar { background: var(--red); border: none; color: #fff; border-radius: 10px; padding: 9px 16px; font-size: 14px; font-weight: 800; cursor: pointer; font-family: inherit; white-space: nowrap; }
     .btn-carregar:active { opacity: .8; }
-
     .resumo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
     .resumo-card { background: #111; border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; padding: 18px 16px; position: relative; overflow: hidden; }
     .resumo-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; border-radius:14px 14px 0 0; }
@@ -48,7 +44,6 @@
     .resumo-valor.azul    { color: #3498db; }
     .resumo-sub { font-size: 11px; color: #555; margin-top: 6px; }
     @media (max-width: 480px) { .resumo-grid { grid-template-columns: 1fr; } }
-
     .grafico-card { background: #111; border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
     .grafico-titulo { font-size: 12px; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
     .grafico-sub { font-size: 11px; color: #555; margin-bottom: 20px; }
@@ -65,7 +60,6 @@
     .barra.saida   { background: #e74c3c; opacity: 0.85; }
     .barra:hover   { opacity: 1; }
     .grafico-label { font-size: 10px; color: #555; text-align: center; white-space: nowrap; }
-
     .filtros-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; justify-content: space-between; }
     .filtros-esquerda { display: flex; gap: 6px; flex-wrap: wrap; }
     .btn-filtro { background: #1a1a1a; border: 1px solid #333; color: #888; border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; transition: all 0.15s; }
@@ -73,7 +67,6 @@
     .btn-filtro:active { opacity: .75; }
     .btn-nova-despesa { background: #e74c3c; border: none; color: #fff; border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
     .btn-nova-despesa:active { opacity: .8; }
-
     .mov-card { background: #111; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
     .mov-tipo-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     .mov-tipo-dot.entrada { background: #2ecc71; }
@@ -87,7 +80,6 @@
     .mov-delete { background: transparent; border: none; color: #444; font-size: 14px; cursor: pointer; padding: 4px; flex-shrink: 0; }
     .mov-delete:hover { color: #e74c3c; }
     .lista-vazia { text-align: center; padding: 32px 0; color: #444; font-size: 14px; }
-
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 50; align-items: flex-end; justify-content: center; }
     .modal-overlay.open { display: flex; }
     .modal-box { background: #141414; border: 1px solid rgba(255,255,255,0.08); border-radius: 20px 20px 0 0; padding: 24px 20px calc(24px + env(safe-area-inset-bottom,0px)); width: 100%; max-width: 480px; }
@@ -99,16 +91,13 @@
     .form-input { width: 100%; background: #1a1a1a; border: 1px solid #333; border-radius: 10px; padding: 11px 12px; font-size: 14px; color: #fff; font-family: inherit; outline: none; transition: border-color 0.2s; margin-bottom: 12px; }
     .form-input:focus { border-color: var(--red); }
     .form-input::placeholder { color: #444; }
-
     .cat-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
     .cat-chip { padding: 5px 12px; border-radius: 20px; border: 1px solid #333; background: transparent; color: #888; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.15s; }
     .cat-chip.selected { background: #e74c3c; border-color: #e74c3c; color: #fff; }
-
     .msg { font-size: 13px; margin-top: 4px; min-height: 18px; }
     .msg.err  { color: #ff6b6b; }
     .msg.info { color: #aaa; }
     .msg.ok   { color: #2ecc71; }
-
     .skel { background: #1a1a1a; border-radius: 6px; animation: shimmer 1.2s infinite; }
     @keyframes shimmer { 0%,100%{opacity:.3} 50%{opacity:.7} }
   </style>
@@ -118,7 +107,7 @@
     if (new URLSearchParams(location.search).get('embed') === '1') {
       document.documentElement.classList.add('embed-mode');
     }
-  </script>
+  <\/script>
 
   <header class="hdr admin-hdr">
     <div class="hdr-inner admin-hdr-inner">
@@ -132,7 +121,6 @@
 
   <main class="page admin-page">
     <section id="sectionFluxo" class="hidden">
-
       <div class="page-header">
         <div class="page-header-left">
           <div class="page-eyebrow">Riva BJJ · Financeiro</div>
@@ -192,10 +180,7 @@
         <button class="btn-nova-despesa" id="btnNovaDespesa">＋ Despesa</button>
       </div>
 
-      <div id="listaMov">
-        <div class="lista-vazia">Carregando…</div>
-      </div>
-
+      <div id="listaMov"><div class="lista-vazia">Carregando…</div></div>
     </section>
   </main>
 
@@ -203,7 +188,6 @@
   <div class="modal-overlay" id="modalDespesa">
     <div class="modal-box">
       <div class="modal-title">➖ Nova Despesa</div>
-
       <label class="form-label">Categoria</label>
       <div class="cat-chips" id="catChips">
         <button class="cat-chip selected" data-cat="Aluguel">Aluguel</button>
@@ -215,16 +199,12 @@
         <button class="cat-chip" data-cat="Manutenção">Manutenção</button>
         <button class="cat-chip" data-cat="Outro">Outro</button>
       </div>
-
       <label class="form-label" for="despesaDescricao">Descrição *</label>
       <input id="despesaDescricao" class="form-input" type="text" placeholder="Ex: Aluguel de março" />
-
       <label class="form-label" for="despesaValor">Valor (R$) *</label>
       <input id="despesaValor" class="form-input" type="number" min="0" step="0.01" placeholder="0,00" />
-
       <label class="form-label" for="despesaData">Data</label>
       <input id="despesaData" class="form-input" type="date" />
-
       <p class="msg" id="despesaMsg"></p>
       <div class="modal-btns">
         <button class="btn secondary" id="btnCancelarDespesa">Cancelar</button>
@@ -246,7 +226,6 @@
     let catAtual    = 'Aluguel';
     let todasMovs   = [];
 
-    /* ── Auth ── */
     onAuthStateChanged(auth, user => {
       if (user) {
         document.getElementById('sectionFluxo').classList.remove('hidden');
@@ -263,7 +242,6 @@
       location.href = './administrativo.html';
     });
 
-    /* ── Seletores de mês/ano ── */
     function preencherSeletores() {
       document.getElementById('selMes').value = mesSel;
       const selAno   = document.getElementById('selAno');
@@ -274,7 +252,6 @@
         selAno.appendChild(o);
       }
       selAno.value = anoSel;
-
       const hoje = new Date();
       document.getElementById('despesaData').value =
         hoje.getFullYear() + '-' +
@@ -288,7 +265,6 @@
       carregarTudo();
     });
 
-    /* ── Carregar tudo ── */
     async function carregarTudo() {
       document.getElementById('listaMov').innerHTML = '<div class="lista-vazia">Carregando…</div>';
       try {
@@ -298,30 +274,24 @@
           buscarVendas(),
           buscarDespesas(),
         ]);
-
         todasMovs = [
           ...mensalidades.map(m => ({ ...m, tipo: 'entrada', origem: 'mensalidade' })),
           ...avista.map(v      => ({ ...v, tipo: 'entrada', origem: 'mensalidade' })),
           ...vendas.map(v      => ({ ...v, tipo: 'entrada', origem: 'loja' })),
           ...despesas.map(d    => ({ ...d, tipo: 'saida',   origem: 'despesa' })),
         ].sort((a, b) => (b.dataTs || 0) - (a.dataTs || 0));
-
         atualizarCards();
         renderGrafico();
         renderLista();
       } catch (e) {
         document.getElementById('listaMov').innerHTML =
-          `<div class="lista-vazia">Erro ao carregar: ${esc(e.message)}</div>`;
+          `<div class="lista-vazia">Erro ao carregar: \${esc(e.message)}</div>`;
       }
     }
 
-    /* ── Buscar mensalidades do mês ── */
     async function buscarMensalidades() {
-      const alunosSnap = await getDocs(query(
-        collection(db, 'alunos'), where('status', '==', 'ATIVO')
-      ));
-      const idsAtivos = new Set(alunosSnap.docs.map(d => d.id));
-
+      const alunosSnap = await getDocs(query(collection(db, 'alunos'), where('status', '==', 'ATIVO')));
+      const idsAtivos  = new Set(alunosSnap.docs.map(d => d.id));
       const snap = await getDocs(query(
         collection(db, 'pagamentos'),
         where('mes', '==', mesSel),
@@ -332,18 +302,14 @@
         .map(d => {
           const p = d.data();
           return {
-            id:        d.id,
-            descricao: p.nome || 'Aluno',
-            valor:     parseFloat(p.valor || 0),
-            data:      p.data || '',
-            dataTs:    parseDateTS(p.data),
-            categoria: 'Mensalidade',
-            forma:     p.formaPagamento || '',
+            id: d.id, descricao: p.nome || 'Aluno',
+            valor: parseFloat(p.valor || 0), data: p.data || '',
+            dataTs: parseDateTS(p.data), categoria: 'Mensalidade',
+            forma: p.formaPagamento || '',
           };
         });
     }
 
-    /* ── Buscar pagamentos À Vista (exibe no mês selecionado se coberto) ── */
     async function buscarAVista() {
       const snap = await getDocs(query(
         collection(db, 'alunos'),
@@ -358,21 +324,17 @@
         const coberto = (anoSel < anoFim) || (anoSel === anoFim && mesSel <= mesFim);
         if (!coberto) return;
         resultado.push({
-          id:        d.id,
-          descricao: a.nome_aluno || 'Aluno',
-          valor:     parseFloat(a.avista_valor || 0),
-          data:      a.pago_ate.split('-').reverse().join('/'),
-          dataTs:    new Date(anoFim, mesFim - 1, 1).getTime(),
-          categoria: 'À Vista',
-          forma:     a.avista_forma_pag || '',
-          // guarda data_contrato para uso no gráfico
+          id: d.id, descricao: a.nome_aluno || 'Aluno',
+          valor: parseFloat(a.avista_valor || 0),
+          data: a.pago_ate.split('-').reverse().join('/'),
+          dataTs: new Date(anoFim, mesFim - 1, 1).getTime(),
+          categoria: 'À Vista', forma: a.avista_forma_pag || '',
           _dataContrato: a.data_contrato || '',
         });
       });
       return resultado;
     }
 
-    /* ── Buscar vendas da lojinha do mês ── */
     async function buscarVendas() {
       const snap = await getDocs(collection(db, 'loja_vendas'));
       return snap.docs
@@ -384,15 +346,16 @@
         .map(v => ({
           id:        v.id,
           descricao: v.produtoNome || 'Venda',
-          valor:     parseFloat(v.total || 0),
+          // ── USA LÍQUIDO SE TAXA FOI INFORMADA, SENÃO USA BRUTO ──
+          valor:     parseFloat((v.taxaPct != null && v.totalLiquido != null) ? v.totalLiquido : (v.total || 0)),
           data:      v.data || '',
           dataTs:    parseDateTS(v.data),
           categoria: 'Lojinha',
           forma:     v.formaPagamento || '',
+          taxaPct:   v.taxaPct || null,
         }));
     }
 
-    /* ── Buscar despesas do mês ── */
     async function buscarDespesas() {
       const snap = await getDocs(query(
         collection(db, 'fluxo_despesas'),
@@ -402,19 +365,14 @@
       return snap.docs.map(d => {
         const p = d.data();
         return {
-          id:          d.id,
-          descricao:   p.descricao || 'Despesa',
-          valor:       parseFloat(p.valor || 0),
-          data:        p.data || '',
-          dataTs:      parseDateTS(p.data),
-          categoria:   p.categoria || 'Outro',
-          forma:       '',
-          podeDeletar: true,
+          id: d.id, descricao: p.descricao || 'Despesa',
+          valor: parseFloat(p.valor || 0), data: p.data || '',
+          dataTs: parseDateTS(p.data), categoria: p.categoria || 'Outro',
+          forma: '', podeDeletar: true,
         };
       });
     }
 
-    /* ── Cards de resumo ── */
     function atualizarCards() {
       const entradas = todasMovs.filter(m => m.tipo === 'entrada');
       const saidas   = todasMovs.filter(m => m.tipo === 'saida');
@@ -423,238 +381,163 @@
       const saldo    = totEnt - totSai;
       const mens     = entradas.filter(m => m.origem === 'mensalidade').reduce((s, m) => s + m.valor, 0);
       const loja     = entradas.filter(m => m.origem === 'loja').reduce((s, m) => s + m.valor, 0);
-
       const fmt = n => 'R$ ' + n.toFixed(2).replace('.', ',');
       document.getElementById('totalEntradas').textContent = fmt(totEnt);
       document.getElementById('totalSaidas').textContent   = fmt(totSai);
       document.getElementById('totalSaldo').textContent    = fmt(saldo);
-      document.getElementById('subEntradas').textContent   = `Mensalidades: ${fmt(mens)} · Loja: ${fmt(loja)}`;
-      document.getElementById('subSaidas').textContent     = `${saidas.length} lançamento${saidas.length !== 1 ? 's' : ''}`;
+      document.getElementById('subEntradas').textContent   = `Mensalidades: \${fmt(mens)} · Loja: \${fmt(loja)}`;
+      document.getElementById('subSaidas').textContent     = `\${saidas.length} lançamento\${saidas.length !== 1 ? 's' : ''}`;
       document.getElementById('subSaldo').textContent      = saldo >= 0 ? '✅ positivo' : '⚠️ negativo';
       document.getElementById('totalSaldo').style.color    = saldo >= 0 ? '#3498db' : '#e74c3c';
     }
 
-    /* ── Gráfico de barras – últimos 6 meses ── */
     async function renderGrafico() {
       const container = document.getElementById('graficoBarras');
       container.innerHTML = '<div class="skel" style="width:100%;height:100%;border-radius:6px;"></div>';
-
       try {
-        // Montar lista dos últimos 6 meses
         const meses = [];
         for (let i = 5; i >= 0; i--) {
           const d = new Date(anoSel, mesSel - 1 - i, 1);
-          meses.push({
-            mes:   d.getMonth() + 1,
-            ano:   d.getFullYear(),
-            label: d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', ''),
-          });
+          meses.push({ mes: d.getMonth()+1, ano: d.getFullYear(), label: d.toLocaleDateString('pt-BR',{month:'short'}).replace('.','') });
         }
+        const alunosSnap = await getDocs(query(collection(db,'alunos'),where('status','==','ATIVO')));
+        const idsAtivos  = new Set(alunosSnap.docs.map(d=>d.id));
+        const avistaSnap = await getDocs(query(collection(db,'alunos'),where('status','==','ATIVO'),where('plano','==','Avista')));
 
-        // Buscar alunos ativos e à vista uma única vez
-        const alunosSnap = await getDocs(query(collection(db, 'alunos'), where('status', '==', 'ATIVO')));
-        const idsAtivos  = new Set(alunosSnap.docs.map(d => d.id));
-
-        const avistaSnap = await getDocs(query(
-          collection(db, 'alunos'),
-          where('status', '==', 'ATIVO'),
-          where('plano', '==', 'Avista')
-        ));
-
-        // Buscar dados de cada mês em paralelo
         const dadosMeses = await Promise.all(meses.map(async m => {
           const [pagSnap, despSnap, vendasSnap] = await Promise.all([
-            getDocs(query(collection(db, 'pagamentos'), where('mes', '==', m.mes), where('ano', '==', m.ano))),
-            getDocs(query(collection(db, 'fluxo_despesas'), where('mes', '==', m.mes), where('ano', '==', m.ano))),
-            getDocs(collection(db, 'loja_vendas')),
+            getDocs(query(collection(db,'pagamentos'),where('mes','==',m.mes),where('ano','==',m.ano))),
+            getDocs(query(collection(db,'fluxo_despesas'),where('mes','==',m.mes),where('ano','==',m.ano))),
+            getDocs(collection(db,'loja_vendas')),
           ]);
+          const entMens = pagSnap.docs.filter(d=>idsAtivos.has(d.data().alunoId)).reduce((s,d)=>s+parseFloat(d.data().valor||0),0);
 
-          const entMens = pagSnap.docs
-            .filter(d => idsAtivos.has(d.data().alunoId))
-            .reduce((s, d) => s + parseFloat(d.data().valor || 0), 0);
+          // ── Gráfico também usa líquido quando disponível ──
+          const entLoja = vendasSnap.docs.map(d=>d.data())
+            .filter(v=>{ const dt=parseDateBR(v.data); return dt&&dt.getMonth()+1===m.mes&&dt.getFullYear()===m.ano; })
+            .reduce((s,v)=>s+parseFloat((v.taxaPct!=null&&v.totalLiquido!=null)?v.totalLiquido:(v.total||0)),0);
 
-          const entLoja = vendasSnap.docs
-            .map(d => d.data())
-            .filter(v => {
-              const dt = parseDateBR(v.data);
-              return dt && dt.getMonth() + 1 === m.mes && dt.getFullYear() === m.ano;
-            })
-            .reduce((s, v) => s + parseFloat(v.total || 0), 0);
+          const entAvista = avistaSnap.docs.reduce((s,d)=>{
+            const a=d.data();
+            if(!a.pago_ate||!a.data_contrato) return s;
+            const anoRef=parseInt(a.data_contrato.slice(0,4));
+            const mesRef=parseInt(a.data_contrato.slice(5,7));
+            return (m.ano===anoRef&&m.mes===mesRef)?s+parseFloat(a.avista_valor||0):s;
+          },0);
 
-          // À vista: conta apenas no mês do data_contrato (quando o pagamento ocorreu de fato)
-          const entAvista = avistaSnap.docs.reduce((s, d) => {
-            const a = d.data();
-            if (!a.pago_ate || !a.data_contrato) return s;
-            const anoRef = parseInt(a.data_contrato.slice(0, 4));
-            const mesRef = parseInt(a.data_contrato.slice(5, 7));
-            return (m.ano === anoRef && m.mes === mesRef)
-              ? s + parseFloat(a.avista_valor || 0)
-              : s;
-          }, 0);
-
-          const saidas = despSnap.docs.reduce((s, d) => s + parseFloat(d.data().valor || 0), 0);
-
-          return { ...m, entradas: entMens + entLoja + entAvista, saidas };
+          const saidas = despSnap.docs.reduce((s,d)=>s+parseFloat(d.data().valor||0),0);
+          return { ...m, entradas: entMens+entLoja+entAvista, saidas };
         }));
 
-        const maxVal = Math.max(...dadosMeses.flatMap(m => [m.entradas, m.saidas]), 1);
+        const maxVal = Math.max(...dadosMeses.flatMap(m=>[m.entradas,m.saidas]),1);
         const trackH = 130;
-
         container.innerHTML = dadosMeses.map(m => {
-          const hEnt = Math.max(2, Math.round((m.entradas / maxVal) * trackH));
-          const hSai = Math.max(2, Math.round((m.saidas   / maxVal) * trackH));
-          return `
-            <div class="grafico-col">
-              <div class="grafico-barras-pair">
-                <div class="barra entrada" style="height:${hEnt}px"
-                  title="Entradas: R$ ${m.entradas.toFixed(2).replace('.', ',')}"></div>
-                <div class="barra saida" style="height:${hSai}px"
-                  title="Saídas: R$ ${m.saidas.toFixed(2).replace('.', ',')}"></div>
-              </div>
-              <div class="grafico-label">${m.label}/${String(m.ano).slice(2)}</div>
-            </div>`;
+          const hEnt = Math.max(2,Math.round((m.entradas/maxVal)*trackH));
+          const hSai = Math.max(2,Math.round((m.saidas/maxVal)*trackH));
+          return `<div class="grafico-col">
+            <div class="grafico-barras-pair">
+              <div class="barra entrada" style="height:\${hEnt}px" title="Entradas: R$ \${m.entradas.toFixed(2).replace('.',',')}"></div>
+              <div class="barra saida"   style="height:\${hSai}px" title="Saídas: R$ \${m.saidas.toFixed(2).replace('.',',')}"></div>
+            </div>
+            <div class="grafico-label">\${m.label}/\${String(m.ano).slice(2)}</div>
+          </div>`;
         }).join('');
-
-      } catch (e) {
+      } catch(e) {
         container.innerHTML = '<p style="color:#555;font-size:12px;">Erro ao carregar gráfico.</p>';
       }
     }
 
-    /* ── Lista de movimentações ── */
     function renderLista() {
       let lista = todasMovs;
-      if (filtroAtivo === 'mensalidade') lista = lista.filter(m => m.origem === 'mensalidade');
-      if (filtroAtivo === 'loja')        lista = lista.filter(m => m.origem === 'loja');
-      if (filtroAtivo === 'despesa')     lista = lista.filter(m => m.origem === 'despesa');
-
+      if (filtroAtivo === 'mensalidade') lista = lista.filter(m=>m.origem==='mensalidade');
+      if (filtroAtivo === 'loja')        lista = lista.filter(m=>m.origem==='loja');
+      if (filtroAtivo === 'despesa')     lista = lista.filter(m=>m.origem==='despesa');
       const container = document.getElementById('listaMov');
-      if (!lista.length) {
-        container.innerHTML = '<div class="lista-vazia">Nenhuma movimentação neste período.</div>';
-        return;
-      }
-
-      const catLabel   = { mensalidade: '💳 Mensalidade', loja: '🏪 Lojinha', despesa: '💸 Despesa' };
-      const formaLabel = { dinheiro: '💵', pix: '📲', debito: '💳', credito: '💳', maquina: '💳', cartao: '💳' };
-
-      container.innerHTML = lista.map(m => `
-        <div class="mov-card">
-          <div class="mov-tipo-dot ${m.tipo}"></div>
+      if (!lista.length) { container.innerHTML='<div class="lista-vazia">Nenhuma movimentação neste período.</div>'; return; }
+      const catLabel   = {mensalidade:'💳 Mensalidade',loja:'🏪 Lojinha',despesa:'💸 Despesa'};
+      const formaLabel = {dinheiro:'💵',pix:'📲',debito:'💳',credito:'💳',maquina:'💳',cartao:'💳'};
+      container.innerHTML = lista.map(m => {
+        const taxaInfo = m.taxaPct ? ` · taxa \${m.taxaPct}%` : '';
+        return `<div class="mov-card">
+          <div class="mov-tipo-dot \${m.tipo}"></div>
           <div class="mov-info">
-            <div class="mov-nome">${esc(m.descricao)}</div>
+            <div class="mov-nome">\${esc(m.descricao)}</div>
             <div class="mov-meta">
-              ${catLabel[m.origem] || ''} · ${esc(m.categoria)}
-              ${m.forma ? ' · ' + (formaLabel[m.forma] || '') + ' ' + esc(m.forma) : ''}
-              ${m.data ? ' · ' + esc(m.data) : ''}
+              \${catLabel[m.origem]||''} · \${esc(m.categoria)}
+              \${m.forma?' · '+(formaLabel[m.forma]||'')+' '+esc(m.forma):''}
+              \${m.data?' · '+esc(m.data):''}
+              \${taxaInfo}
             </div>
           </div>
-          <div class="mov-valor ${m.tipo}">
-            ${m.tipo === 'entrada' ? '+' : '−'} R$ ${m.valor.toFixed(2).replace('.', ',')}
+          <div class="mov-valor \${m.tipo}">
+            \${m.tipo==='entrada'?'+':'−'} R$ \${m.valor.toFixed(2).replace('.',',')}
           </div>
-          ${m.podeDeletar ? `<button class="mov-delete" data-id="${esc(m.id)}" title="Remover">🗑️</button>` : ''}
-        </div>`
-      ).join('');
-
-      container.querySelectorAll('.mov-delete').forEach(btn => {
-        btn.addEventListener('click', () => deletarDespesa(btn.dataset.id));
+          \${m.podeDeletar?`<button class="mov-delete" data-id="\${esc(m.id)}" title="Remover">🗑️</button>`:''}
+        </div>`;
+      }).join('');
+      container.querySelectorAll('.mov-delete').forEach(btn=>{
+        btn.addEventListener('click',()=>deletarDespesa(btn.dataset.id));
       });
     }
 
-    /* ── Filtros ── */
-    document.querySelectorAll('.btn-filtro').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.btn-filtro').forEach(b => b.classList.remove('ativo'));
-        btn.classList.add('ativo');
-        filtroAtivo = btn.dataset.filtro;
-        renderLista();
+    document.querySelectorAll('.btn-filtro').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        document.querySelectorAll('.btn-filtro').forEach(b=>b.classList.remove('ativo'));
+        btn.classList.add('ativo'); filtroAtivo=btn.dataset.filtro; renderLista();
       });
     });
 
-    /* ── Modal despesa ── */
-    document.getElementById('btnNovaDespesa').addEventListener('click', () => {
-      document.getElementById('despesaDescricao').value = '';
-      document.getElementById('despesaValor').value     = '';
-      document.getElementById('despesaMsg').textContent = '';
+    document.getElementById('btnNovaDespesa').addEventListener('click',()=>{
+      document.getElementById('despesaDescricao').value='';
+      document.getElementById('despesaValor').value='';
+      document.getElementById('despesaMsg').textContent='';
       document.getElementById('modalDespesa').classList.add('open');
     });
-    document.getElementById('btnCancelarDespesa').addEventListener('click', () => {
-      document.getElementById('modalDespesa').classList.remove('open');
-    });
-    document.getElementById('modalDespesa').addEventListener('click', function (e) {
-      if (e.target === this) this.classList.remove('open');
-    });
+    document.getElementById('btnCancelarDespesa').addEventListener('click',()=>document.getElementById('modalDespesa').classList.remove('open'));
+    document.getElementById('modalDespesa').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
 
-    document.querySelectorAll('.cat-chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('selected'));
-        chip.classList.add('selected');
-        catAtual = chip.dataset.cat;
+    document.querySelectorAll('.cat-chip').forEach(chip=>{
+      chip.addEventListener('click',()=>{
+        document.querySelectorAll('.cat-chip').forEach(c=>c.classList.remove('selected'));
+        chip.classList.add('selected'); catAtual=chip.dataset.cat;
       });
     });
 
-    document.getElementById('btnSalvarDespesa').addEventListener('click', async () => {
-      const descricao = document.getElementById('despesaDescricao').value.trim();
-      const valor     = parseFloat(document.getElementById('despesaValor').value);
-      const dataInput = document.getElementById('despesaData').value;
-      const msg       = document.getElementById('despesaMsg');
-      const btn       = document.getElementById('btnSalvarDespesa');
-
-      if (!descricao) { msg.textContent = 'Informe a descrição.'; msg.className = 'msg err'; return; }
-      if (isNaN(valor) || valor <= 0) { msg.textContent = 'Informe um valor válido.'; msg.className = 'msg err'; return; }
-
-      msg.textContent = 'Salvando…'; msg.className = 'msg info';
-      btn.disabled = true;
-
+    document.getElementById('btnSalvarDespesa').addEventListener('click', async()=>{
+      const descricao=document.getElementById('despesaDescricao').value.trim();
+      const valor=parseFloat(document.getElementById('despesaValor').value);
+      const dataInput=document.getElementById('despesaData').value;
+      const msg=document.getElementById('despesaMsg');
+      const btn=document.getElementById('btnSalvarDespesa');
+      if(!descricao){msg.textContent='Informe a descrição.';msg.className='msg err';return;}
+      if(isNaN(valor)||valor<=0){msg.textContent='Informe um valor válido.';msg.className='msg err';return;}
+      msg.textContent='Salvando…';msg.className='msg info';btn.disabled=true;
       try {
-        let dataBR = '';
-        if (dataInput) {
-          const [y, m, d] = dataInput.split('-');
-          dataBR = `${d}/${m}/${y}`;
-        }
-        await addDoc(collection(db, 'fluxo_despesas'), {
-          descricao,
-          valor,
-          categoria: catAtual,
-          data:      dataBR,
-          mes:       mesSel,
-          ano:       anoSel,
-          criadoEm:  serverTimestamp(),
+        let dataBR='';
+        if(dataInput){const[y,m,d]=dataInput.split('-');dataBR=`\${d}/\${m}/\${y}`;}
+        await addDoc(collection(db,'fluxo_despesas'),{
+          descricao,valor,categoria:catAtual,data:dataBR,mes:mesSel,ano:anoSel,criadoEm:serverTimestamp(),
         });
-        msg.textContent = '✅ Despesa lançada!';
-        msg.className   = 'msg ok';
-        setTimeout(() => {
-          document.getElementById('modalDespesa').classList.remove('open');
-          carregarTudo();
-        }, 700);
-      } catch (e) {
-        msg.textContent = 'Erro: ' + e.message;
-        msg.className   = 'msg err';
-      } finally {
-        btn.disabled = false;
-      }
+        msg.textContent='✅ Despesa lançada!';msg.className='msg ok';
+        setTimeout(()=>{document.getElementById('modalDespesa').classList.remove('open');carregarTudo();},700);
+      } catch(e){msg.textContent='Erro: '+e.message;msg.className='msg err';}
+      finally{btn.disabled=false;}
     });
 
-    async function deletarDespesa(id) {
-      if (!confirm('Remover este lançamento?')) return;
-      try {
-        await deleteDoc(doc(db, 'fluxo_despesas', id));
-        carregarTudo();
-      } catch (e) { alert('Erro: ' + e.message); }
+    async function deletarDespesa(id){
+      if(!confirm('Remover este lançamento?')) return;
+      try{await deleteDoc(doc(db,'fluxo_despesas',id));carregarTudo();}
+      catch(e){alert('Erro: '+e.message);}
     }
 
-    /* ── Utils ── */
-    function parseDateBR(str) {
-      if (!str) return null;
-      const [d, m, y] = str.split('/');
-      if (!d || !m || !y) return null;
-      return new Date(`${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}T00:00:00`);
+    function parseDateBR(str){
+      if(!str) return null;
+      const[d,m,y]=str.split('/');
+      if(!d||!m||!y) return null;
+      return new Date(`\${y}-\${m.padStart(2,'0')}-\${d.padStart(2,'0')}T00:00:00`);
     }
-    function parseDateTS(str) {
-      const d = parseDateBR(str);
-      return d ? d.getTime() : 0;
-    }
-    function esc(s) {
-      return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
+    function parseDateTS(str){const d=parseDateBR(str);return d?d.getTime():0;}
+    function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
   </script>
 </body>
 </html>
