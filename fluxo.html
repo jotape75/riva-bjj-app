@@ -107,7 +107,7 @@
     if (new URLSearchParams(location.search).get('embed') === '1') {
       document.documentElement.classList.add('embed-mode');
     }
-  <\/script>
+  </script>
 
   <header class="hdr admin-hdr">
     <div class="hdr-inner admin-hdr-inner">
@@ -285,7 +285,7 @@
         renderLista();
       } catch (e) {
         document.getElementById('listaMov').innerHTML =
-          `<div class="lista-vazia">Erro ao carregar: \${esc(e.message)}</div>`;
+          `<div class="lista-vazia">Erro ao carregar: ${esc(e.message)}</div>`;
       }
     }
 
@@ -385,8 +385,8 @@
       document.getElementById('totalEntradas').textContent = fmt(totEnt);
       document.getElementById('totalSaidas').textContent   = fmt(totSai);
       document.getElementById('totalSaldo').textContent    = fmt(saldo);
-      document.getElementById('subEntradas').textContent   = `Mensalidades: \${fmt(mens)} · Loja: \${fmt(loja)}`;
-      document.getElementById('subSaidas').textContent     = `\${saidas.length} lançamento\${saidas.length !== 1 ? 's' : ''}`;
+      document.getElementById('subEntradas').textContent   = `Mensalidades: ${fmt(mens)} · Loja: ${fmt(loja)}`;
+      document.getElementById('subSaidas').textContent     = `${saidas.length} lançamento${saidas.length !== 1 ? 's' : ''}`;
       document.getElementById('subSaldo').textContent      = saldo >= 0 ? '✅ positivo' : '⚠️ negativo';
       document.getElementById('totalSaldo').style.color    = saldo >= 0 ? '#3498db' : '#e74c3c';
     }
@@ -436,10 +436,10 @@
           const hSai = Math.max(2,Math.round((m.saidas/maxVal)*trackH));
           return `<div class="grafico-col">
             <div class="grafico-barras-pair">
-              <div class="barra entrada" style="height:\${hEnt}px" title="Entradas: R$ \${m.entradas.toFixed(2).replace('.',',')}"></div>
-              <div class="barra saida"   style="height:\${hSai}px" title="Saídas: R$ \${m.saidas.toFixed(2).replace('.',',')}"></div>
+              <div class="barra entrada" style="height:${hEnt}px" title="Entradas: R$ ${m.entradas.toFixed(2).replace('.',',')}"></div>
+              <div class="barra saida"   style="height:${hSai}px" title="Saídas: R$ ${m.saidas.toFixed(2).replace('.',',')}"></div>
             </div>
-            <div class="grafico-label">\${m.label}/\${String(m.ano).slice(2)}</div>
+            <div class="grafico-label">${m.label}/${String(m.ano).slice(2)}</div>
           </div>`;
         }).join('');
       } catch(e) {
@@ -457,22 +457,22 @@
       const catLabel   = {mensalidade:'💳 Mensalidade',loja:'🏪 Lojinha',despesa:'💸 Despesa'};
       const formaLabel = {dinheiro:'💵',pix:'📲',debito:'💳',credito:'💳',maquina:'💳',cartao:'💳'};
       container.innerHTML = lista.map(m => {
-        const taxaInfo = m.taxaPct ? ` · taxa \${m.taxaPct}%` : '';
+        const taxaInfo = m.taxaPct ? ` · taxa ${m.taxaPct}%` : '';
         return `<div class="mov-card">
-          <div class="mov-tipo-dot \${m.tipo}"></div>
+          <div class="mov-tipo-dot ${m.tipo}"></div>
           <div class="mov-info">
-            <div class="mov-nome">\${esc(m.descricao)}</div>
+            <div class="mov-nome">${esc(m.descricao)}</div>
             <div class="mov-meta">
-              \${catLabel[m.origem]||''} · \${esc(m.categoria)}
-              \${m.forma?' · '+(formaLabel[m.forma]||'')+' '+esc(m.forma):''}
-              \${m.data?' · '+esc(m.data):''}
-              \${taxaInfo}
+              ${catLabel[m.origem]||''} · ${esc(m.categoria)}
+              ${m.forma?' · '+(formaLabel[m.forma]||'')+' '+esc(m.forma):''}
+              ${m.data?' · '+esc(m.data):''}
+              ${taxaInfo}
             </div>
           </div>
-          <div class="mov-valor \${m.tipo}">
-            \${m.tipo==='entrada'?'+':'−'} R$ \${m.valor.toFixed(2).replace('.',',')}
+          <div class="mov-valor ${m.tipo}">
+            ${m.tipo==='entrada'?'+':'−'} R$ ${m.valor.toFixed(2).replace('.',',')}
           </div>
-          \${m.podeDeletar?`<button class="mov-delete" data-id="\${esc(m.id)}" title="Remover">🗑️</button>`:''}
+          ${m.podeDeletar?`<button class="mov-delete" data-id="${esc(m.id)}" title="Remover">🗑️</button>`:''}
         </div>`;
       }).join('');
       container.querySelectorAll('.mov-delete').forEach(btn=>{
@@ -514,7 +514,7 @@
       msg.textContent='Salvando…';msg.className='msg info';btn.disabled=true;
       try {
         let dataBR='';
-        if(dataInput){const[y,m,d]=dataInput.split('-');dataBR=`\${d}/\${m}/\${y}`;}
+        if(dataInput){const[y,m,d]=dataInput.split('-');dataBR=`${d}/${m}/${y}`;}
         await addDoc(collection(db,'fluxo_despesas'),{
           descricao,valor,categoria:catAtual,data:dataBR,mes:mesSel,ano:anoSel,criadoEm:serverTimestamp(),
         });
@@ -534,7 +534,7 @@
       if(!str) return null;
       const[d,m,y]=str.split('/');
       if(!d||!m||!y) return null;
-      return new Date(`\${y}-\${m.padStart(2,'0')}-\${d.padStart(2,'0')}T00:00:00`);
+      return new Date(`${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}T00:00:00`);
     }
     function parseDateTS(str){const d=parseDateBR(str);return d?d.getTime():0;}
     function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
